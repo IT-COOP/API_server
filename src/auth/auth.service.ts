@@ -22,12 +22,14 @@ export class AuthService {
     });
     console.log('response:', response);
     console.log('response.source: ', response.source);
-    response.subscribe((each) => console.log('each: ', each));
+    response.subscribe((each) => console.log('each: ', each.data));
     const piped = response.pipe(map((response) => response.data));
 
     console.log('piped: ', piped);
     console.log('piped response: ', response);
     return response;
+
+    this.httpService.get();
   }
 
   googleLogin(code: string): Observable<AxiosResponse> {
