@@ -25,9 +25,11 @@ export class AuthService {
       code,
     };
     console.log(code);
+    console.log(URL);
+    console.log(data);
     try {
       return this.httpService
-        .post(URL, data, {
+        .post(URL, {
           headers: {
             'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
           },
