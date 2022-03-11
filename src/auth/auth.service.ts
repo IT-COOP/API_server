@@ -25,6 +25,18 @@ export class AuthService {
       console.log(value.data);
     });
 
+    response.subscribe({
+      next(val) {
+        console.log(val);
+      },
+      error(err) {
+        console.error(err);
+      },
+      complete() {
+        console.log('done!');
+      },
+    });
+
     return response;
   }
 
