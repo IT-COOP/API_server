@@ -70,7 +70,10 @@ export class AuthService {
       refreshToken = data.refresh_token;
     } catch (err) {
       console.log(err);
-      throw new HttpException(err, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        `error: ${err.data.error}, errorDescription: ${err.data.error_description}`,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return this.getUserInfoByToken(accessToken, refreshToken, 'google');
