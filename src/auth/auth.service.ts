@@ -13,6 +13,7 @@ export class AuthService {
   kakaoLoginGetToken(
     code: string,
   ): Observable<AxiosResponse> | { error: Error } {
+    console.log(code);
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
     const grantType = 'authorization_code';
@@ -23,6 +24,7 @@ export class AuthService {
       redirect_uri: redirectURL,
       code,
     };
+    console.log(code);
     try {
       return this.httpService
         .post(URL, data, {
