@@ -71,7 +71,7 @@ export class AuthService {
     } catch (err) {
       console.log(err);
       throw new HttpException(
-        `error: ${err.data.error}, errorDescription: ${err.data.error_description}`,
+        `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
         HttpStatus.UNAUTHORIZED,
       );
     }
