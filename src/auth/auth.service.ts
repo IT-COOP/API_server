@@ -3,6 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { map, Observable } from 'rxjs';
+import axios from 'axios';
+import qs from 'qs';
 
 @Injectable()
 export class AuthService {
@@ -20,17 +22,32 @@ export class AuthService {
         'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
-    let data;
-    response.subscribe((value) => {
-      console.log(value.data);
-      data = value.data;
-    });
-    console.log(
-      '----------====================-----------------==================-----------',
-      data,
-    );
     response.subscribe((val) => console.log(val.data));
+    console.log(typeof response);
+    console.log(response.pipe());
+    response.pipe().subscribe((val) => console.log(val.data));
     return response;
+  }
+
+  async getKakaoToken(code) {
+    try {
+      const result = await axios({
+        method: 'POST',
+        url: 'https://kauth.kakao.com/oauth/token',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+        data: qs.stringify({
+          grant_type: 'authorization_code',
+          redirect_uri: this.configService.get<string>('KAKAO_REDIRECT_URL'),
+          client_id: this.configService.get<string>('KAKAO_REST_API_KEY'),
+          code,
+        }),
+      });
+      return result;
+    } catch (err) {
+      console.log('에러 났어요! ㅠㅠ');
+    }
   }
 
   // googleLogin(code: string): Observable<AxiosResponse> {

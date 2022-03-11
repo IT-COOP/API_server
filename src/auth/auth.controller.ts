@@ -6,7 +6,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Post('kakao')
   kakaoLoginGetToken(@Body('code') code: string) {
-    return this.authService.kakaoLoginGetToken(code);
+    return this.authService.getKakaoToken(code);
   }
 
   // @Post('google')
