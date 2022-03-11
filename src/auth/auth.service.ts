@@ -71,6 +71,7 @@ export class AuthService {
       accessToken = data.access_token;
       refreshToken = data.refresh_token;
     } catch (err) {
+      console.error(err);
       throw new HttpException(
         'Wrong Authorization code',
         HttpStatus.UNAUTHORIZED,
