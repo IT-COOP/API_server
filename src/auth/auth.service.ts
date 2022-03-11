@@ -34,7 +34,7 @@ export class AuthService {
       console.log(data);
       console.log(accessToken);
     } catch (err) {
-      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
 
     return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
@@ -69,7 +69,8 @@ export class AuthService {
       accessToken = data.access_token;
       refreshToken = data.refresh_token;
     } catch (err) {
-      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
+      console.log(err);
+      throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
 
     return this.getUserInfoByToken(accessToken, refreshToken, 'google');
@@ -102,7 +103,7 @@ export class AuthService {
       return result.data;
     } catch (err) {
       console.error(err);
-      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(err, HttpStatus.UNAUTHORIZED);
       return;
     }
   }
