@@ -28,8 +28,6 @@ export class AuthService {
     console.log('piped: ', piped);
     console.log('piped response: ', response);
     return response;
-
-    this.httpService.get();
   }
 
   googleLogin(code: string): Observable<AxiosResponse> {
