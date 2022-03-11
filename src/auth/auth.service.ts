@@ -43,7 +43,10 @@ export class AuthService {
       });
       console.log('이건 되냐?');
       console.log('타입은 이것이다!', typeof result);
-      console.log(result);
+      const data = result.data;
+      const accessToken = data.access_token;
+      console.log(data);
+      console.log(accessToken);
     } catch (err) {
       console.log(code);
       console.log('에러 났어요! ㅠㅠ');
