@@ -28,6 +28,7 @@ export class AuthService {
     response.subscribe({
       next(val) {
         console.log(val);
+        console.log(val.data);
       },
       error(err) {
         console.error(err);
