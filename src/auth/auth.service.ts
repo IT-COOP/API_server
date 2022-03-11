@@ -36,12 +36,14 @@ export class AuthService {
       })
       .pipe(map((response) => response.data));
     const result = JSON.stringify(response);
+    const list = [];
     console.log('response:', response);
     console.log('result:', result);
     console.log(
       'response.source: ',
-      response.subscribe((each) => console.log('each: ', each)),
+      response.subscribe((each) => list.push(each)),
     );
+    console.log(list);
     return response;
   }
 
