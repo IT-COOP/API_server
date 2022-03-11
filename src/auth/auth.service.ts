@@ -20,11 +20,10 @@ export class AuthService {
         'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
-    let tokens;
+
     response.subscribe((value) => {
-      tokens = value.data;
+      console.log(value.data);
     });
-    console.log(tokens);
 
     return response;
   }
