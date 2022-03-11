@@ -60,6 +60,7 @@ export class AuthService {
         },
       });
       console.log(userInfo.data);
+      return userInfo.data;
     }
   }
 
