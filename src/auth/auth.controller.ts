@@ -24,8 +24,8 @@ export class AuthController {
   }
 
   @All('google')
-  googleLogin(@Query('code') code: string) {
-    return this.authService.getGoogleToken(code);
+  googleLogin(@Query('code') code: string, @Res() res: Response) {
+    return this.authService.getGoogleToken(code, res);
   }
 
   @Post('github')

@@ -5,6 +5,7 @@ import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
 // import { Connection, Repository } from 'typeorm';
 import { Users } from './entity/users.entity';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +38,7 @@ export class AuthService {
     return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
   }
 
-  async getGoogleToken(code: string): Promise<any> {
+  async getGoogleToken(code: string, res: Response): Promise<any> {
     console.log(code);
     console.log(typeof code);
     let accessToken: string;
@@ -77,7 +78,11 @@ export class AuthService {
       console.log(345345345345);
       console.log(result);
       console.log(result.data);
-      return result.data;
+      return res.redirect(
+        `http://localhost:3000/auth/test?accessToken=${result.data.access_token}`,
+      );
+      result.data;
+
       // const data = result.data;
       // accessToken = data.access_token;
       // refreshToken = data.refresh_token;
