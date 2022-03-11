@@ -75,9 +75,12 @@ export class AuthService {
         },
       });
       console.log(345345345345);
-      const data = result.data;
-      accessToken = data.access_token;
-      refreshToken = data.refresh_token;
+      console.log(result);
+      console.log(result.data);
+      return result.data;
+      // const data = result.data;
+      // accessToken = data.access_token;
+      // refreshToken = data.refresh_token;
     } catch (err) {
       console.log(
         '------------------------------------------------------------',
@@ -89,7 +92,7 @@ export class AuthService {
       );
     }
 
-    return this.getUserInfoByToken(accessToken, refreshToken, 'google');
+    // return this.getUserInfoByToken(accessToken, refreshToken, 'google');
   }
 
   async getGithubToken(code: string) {
