@@ -51,8 +51,9 @@ export class AuthController {
   @Get('test')
   testLogin(@Res() res: Response) {
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    res.redirect(
-      `https://accounts.google.com/o/oauth2/v2/auth?scope=email&include_granted_scopes=true&response_type=code&redirect_uri=http://seungmin.shop/login/google&client_id=${clientId}`,
+
+    return res.redirect(
+      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=http://seungmin.shop/login/google&response_type=code&include_granted_scopes=true&scope=https://www.googleapis.com/auth/userinfo.email`,
     );
   }
 }
