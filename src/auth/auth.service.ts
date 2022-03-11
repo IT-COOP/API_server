@@ -47,6 +47,7 @@ export class AuthService {
       const accessToken = data.access_token;
       console.log(data);
       console.log(accessToken);
+      return data;
     } catch (err) {
       console.log(code);
       console.log('에러 났어요! ㅠㅠ');
