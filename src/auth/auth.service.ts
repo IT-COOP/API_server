@@ -31,18 +31,15 @@ export class AuthService {
 
   async getKakaoToken(code) {
     try {
+      const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
+      const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
+      const grantType = 'authorization_code';
       const result = await axios({
         method: 'POST',
-        url: 'https://kauth.kakao.com/oauth/token',
+        url: `https://kauth.kakao.com/oauth/token?grant_type=${grantType}&client_id=${clientId}&redirect_uri=${redirectURL}&code=${code}`,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
         },
-        data: qs.stringify({
-          grant_type: 'authorization_code',
-          redirect_uri: this.configService.get<string>('KAKAO_REDIRECT_URL'),
-          client_id: this.configService.get<string>('KAKAO_REST_API_KEY'),
-          code,
-        }),
       });
       return result;
     } catch (err) {
