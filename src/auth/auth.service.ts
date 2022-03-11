@@ -41,8 +41,9 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
         },
       });
+      console.log('이건 되냐?');
       console.log('타입은 이것이다!', typeof result);
-      return result;
+      console.log(result);
     } catch (err) {
       console.log(code);
       console.log('에러 났어요! ㅠㅠ');
