@@ -64,7 +64,7 @@ export class AuthService {
         method: 'POST',
         url: URL,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
       const data = result.data;
@@ -86,22 +86,33 @@ export class AuthService {
     const clientPassword = this.configService.get<string>(
       'GITHUB_CLIENT_PASSWORD',
     );
-    const URL = this.configService.get<string>('GITHUB_REQUEST_URL');
-    const data = {
+    const URL = 'https://github.com/login/oauth/access_token';
+    let data = {
       client_id: clientId,
       client_secret: clientPassword,
       code,
     };
+    try {
+      const result = await axios({
+        method: 'POST',
+        url: URL,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+        data,
+      });
 
-    const result = await axios({
-      method: 'POST',
-      url: URL,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-      },
-    });
-
-    return result;
+      data = result.data;
+      console.log(data);
+      return result.data;
+    } catch (err) {
+      console.error(err);
+      throw new HttpException(
+        'Wrong Authorization Code',
+        HttpStatus.UNAUTHORIZED,
+      );
+      return;
+    }
   }
 
   async getUserInfoByToken(
