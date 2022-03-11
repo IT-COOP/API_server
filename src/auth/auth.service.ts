@@ -20,11 +20,15 @@ export class AuthService {
         'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
-
+    let data;
     response.subscribe((value) => {
       console.log(value.data);
+      data = value.data;
     });
-
+    console.log(
+      '----------====================-----------------==================-----------',
+      data,
+    );
     response.subscribe((val) => console.log(val.data));
     return response;
   }
