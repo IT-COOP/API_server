@@ -17,33 +17,14 @@ export class AuthService {
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
     const grantType = 'authorization_code';
     const URL = `https://kauth.kakao.com/oauth/token?grant_type=${grantType}&client_id=${clientId}&redirect_uri=${redirectURL}&code=${code}`;
-    const data = {
-      grant_type: grantType,
-      client_id: clientId,
-      redirect_uri: redirectURL,
-      code,
-    };
-    console.log('code: ', code);
-    console.log('URL: ', URL);
-    console.log('redirectURL: ', redirectURL);
-    console.log('data: ', data);
-
-    const response = this.httpService
-      .post(URL, {
-        headers: {
-          'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
-        },
-      })
-      .pipe(map((response) => response.data));
-    const result = JSON.stringify(response);
-    const list = [];
+    const response = this.httpService.post(URL, {
+      headers: {
+        'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+      },
+    });
     console.log('response:', response);
-    console.log('result:', result);
     console.log('response.source: ', response.source);
-    response.subscribe((each) => {
-      list.push(each, console.log('each: ', each));
-    }),
-      console.log(list);
+    response.subscribe((each) => console.log('each: ', each));
     const piped = response.pipe(map((response) => response.data));
 
     console.log('piped: ', piped);
