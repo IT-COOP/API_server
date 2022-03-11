@@ -56,6 +56,10 @@ export class AuthService {
     console.log('여기는 도착!');
     const URL = `https://oauth2.googleapis.com/token?code=${code}e&clientid=${clientId}&clientsecret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
     try {
+      console.log(URL);
+      console.log(clientId);
+      console.log(clientPassword);
+
       const result = await axios({
         method: 'POST',
         url: URL,
