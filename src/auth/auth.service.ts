@@ -14,8 +14,8 @@ export class AuthService {
     code: string,
   ): Observable<AxiosResponse> | { error: Error } {
     console.log(code);
-    const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
-    const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
+    const clientId = 'f06308e77ffc6f2e63ffcc82a20673f1';
+    const redirectURL = 'http://localhost:3000/auth/kakao';
     const grantType = 'authorization_code';
     const URL = `https://kauth.kakao.com/oauth/token?grant_type=${grantType}&client_id=${clientId}&redirect_uri=${redirectURL}&code=${code}`;
     const data = {
