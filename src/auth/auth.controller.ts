@@ -9,14 +9,14 @@ export class AuthController {
     return this.authService.kakaoLoginGetToken(code);
   }
 
-  @Post('google')
-  googleLogin(@Body('code') code: string) {
-    return code;
-  }
+  // @Post('google')
+  // googleLogin(@Body('code') code: string) {
+  //   return code;
+  // }
 
-  @Post('github')
-  githubLogin(@Body('code') code: string) {
-    console.log(code);
-    return this.authService.githubLogin(code);
-  }
+  // @Post('github')
+  // githubLogin(@Body('code') code: string) {
+  //   console.log(code);
+  //   return this.authService.githubLogin(code);
+  // }
 }
