@@ -25,19 +25,13 @@ export class AuthService {
       console.log(value.data);
     });
 
-    response.subscribe({
-      next(val) {
-        console.log(val);
-        console.log(val.data);
-      },
-      error(err) {
-        console.error(err);
-      },
-      complete() {
-        console.log('done!');
-      },
-    });
-
+    response.subscribe((val) => console.log(val.data));
+    response.forEach((each) =>
+      console.log(
+        '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------',
+        each,
+      ),
+    );
     return response;
   }
 
