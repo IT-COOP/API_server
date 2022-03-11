@@ -38,6 +38,10 @@ export class AuthService {
     const result = JSON.stringify(response);
     console.log('response:', response);
     console.log('result:', result);
+    console.log(
+      'response.source: ',
+      response.subscribe((each) => console.log('each: ', each)),
+    );
     return response;
   }
 
