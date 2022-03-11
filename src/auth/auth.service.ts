@@ -34,7 +34,7 @@ export class AuthService {
         },
       })
       .pipe(map((response) => response.data));
-
+    JSON.stringify(response);
     console.log(response);
     return response;
   }
