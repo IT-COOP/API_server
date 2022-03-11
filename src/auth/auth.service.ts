@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
-import { Connection, Repository } from 'typeorm';
+// import { Connection, Repository } from 'typeorm';
 import { Users } from './entity/users.entity';
 
 @Injectable()
@@ -11,9 +11,8 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    @Inject('USER_REPOSITORY')
-    private userRepository: Repository<Users>,
-  ) {}
+  ) {} // @Inject('USER_REPOSITORY')
+  // private userRepository: Repository<Users>,
 
   async getKakaoToken(code) {
     let accessToken: string;
@@ -112,12 +111,13 @@ export class AuthService {
       });
       const id = userInfo.data.id;
       // 여기서 DB에 접근해서 해당 유저가 존재하는 지 알아본다.
-      const existUser = await this.userRepository.findOne({
-        where: {
-          loginType: 1,
-          loginToken: id.toString(),
-        },
-      });
+      const existUser = true;
+      // await this.userRepository.findOne({
+      //   where: {
+      //     loginType: 1,
+      //     loginToken: id.toString(),
+      //   },
+      // });
       if (existUser) {
         return this.existUserLogin(accessToken, refreshToken, 1, id);
       } else {
@@ -134,12 +134,13 @@ export class AuthService {
         },
       });
       const id = userInfo.data.id;
-      const existUser = await this.userRepository.findOne({
-        where: {
-          loginType: 2,
-          loginToken: id.toString(),
-        },
-      });
+      const existUser = true;
+      // await this.userRepository.findOne({
+      //   where: {
+      //     loginType: 2,
+      //     loginToken: id.toString(),
+      //   },
+      // });
       if (existUser) {
         return this.existUserLogin(accessToken, refreshToken, 2, id);
       } else {

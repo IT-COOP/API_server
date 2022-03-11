@@ -11,7 +11,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+/**
+ * TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
       port: 3306,
@@ -21,8 +27,4 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       entities: ['./src/auth/entity/users.entity.ts'],
       synchronize: true,
     }),
-  ],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
+ */
