@@ -1,9 +1,23 @@
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
-import { All, Body, Controller, Param, Post, Query } from '@nestjs/common';
+import {
+  All,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller('login')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
   @Post('kakao')
   kakaoLoginGetToken(@Body('code') code: string) {
     return this.authService.getKakaoToken(code);
@@ -32,5 +46,13 @@ export class AuthController {
   @All('google/token')
   getGoogleToken(@Param() param, @Body() body, @Query() query) {
     console.log(param, body, query);
+  }
+
+  @Get('test')
+  testLogin(@Res() res: Response) {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    res.redirect(
+      `https://accounts.google.com/o/oauth2/v2/auth?scope=email&include_granted_scopes=true&response_type=code&redirect_uri=http://seungmin.shop/login/google&client_id=${clientId}`,
+    );
   }
 }

@@ -8,10 +8,7 @@ import { Users } from './entity/users.entity';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
-  ) {} // @Inject('USER_REPOSITORY')
+  constructor(private readonly configService: ConfigService) {} // @Inject('USER_REPOSITORY')
   // private userRepository: Repository<Users>,
 
   async getKakaoToken(code) {
