@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { All, Body, Controller, Param, Post, Query } from '@nestjs/common';
 
 @Controller('login')
 export class AuthController {
@@ -28,4 +28,9 @@ export class AuthController {
 
   // @Post('novelUser')
   // novelUserRegister(@Param('Authorization'))
+
+  @All('google/token')
+  getGoogleToken(@Param() param, @Body() body, @Query() query) {
+    console.log(param, body, query);
+  }
 }
