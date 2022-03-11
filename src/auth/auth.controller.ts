@@ -23,8 +23,8 @@ export class AuthController {
     return this.authService.getKakaoToken(code);
   }
 
-  @Post('google')
-  googleLogin(@Body('code') code: string) {
+  @All('google')
+  googleLogin(@Query('code') code: string) {
     return this.authService.getGoogleToken(code);
   }
 
