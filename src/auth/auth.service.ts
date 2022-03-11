@@ -20,13 +20,12 @@ export class AuthService {
         'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
       },
     });
-    console.log('response:', response);
-    console.log('response.source: ', response.source);
-    response.subscribe((each) => console.log('each: ', each.data));
-    const piped = response.pipe(map((response) => response.data));
+    let tokens;
+    response.subscribe((value) => {
+      tokens = value.data;
+    });
+    console.log(tokens);
 
-    console.log('piped: ', piped);
-    console.log('piped response: ', response);
     return response;
   }
 
