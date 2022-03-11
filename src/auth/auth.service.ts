@@ -26,44 +26,45 @@ export class AuthService {
     });
 
     response.subscribe((val) => console.log(val.data));
-    response.forEach((each) =>
-      console.log(
-        '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------',
-        each,
-      ),
-    );
     return response;
   }
 
-  googleLogin(code: string): Observable<AxiosResponse> {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const clientPassword = this.configService.get<string>(
-      'GOOGLE_CLIENT_PASSWORD',
-    );
-    const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
-    const URL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectURL}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`;
+  // googleLogin(code: string): Observable<AxiosResponse> {
+  //   const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+  //   const clientPassword = this.configService.get<string>(
+  //     'GOOGLE_CLIENT_PASSWORD',
+  //   );
+  //   const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
+  //   const URL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectURL}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`;
 
-    return this.httpService.post(URL);
-  }
+  //   return this.httpService.post(URL);
+  // }
 
-  githubLogin(code: string): Observable<AxiosResponse> {
-    const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
-    const clientPassword = this.configService.get<string>(
-      'GITHUB_CLIENT_PASSWORD',
-    );
-    const URL = this.configService.get<string>('GITHUB_REQUEST_URL');
-    const data = {
-      client_id: clientId,
-      client_secret: clientPassword,
-      code,
-    };
+  // githubLogin(code: string): Observable<AxiosResponse> {
+  //   const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
+  //   const clientPassword = this.configService.get<string>(
+  //     'GITHUB_CLIENT_PASSWORD',
+  //   );
+  //   const URL = this.configService.get<string>('GITHUB_REQUEST_URL');
+  //   const data = {
+  //     client_id: clientId,
+  //     client_secret: clientPassword,
+  //     code,
+  //   };
 
-    const response = this.httpService.post(URL, data, {
-      headers: {
-        accept: 'application/json',
-      },
-    });
+  //   const response = this.httpService.post(URL, data, {
+  //     headers: {
+  //       accept: 'application/json',
+  //     },
+  //   });
 
-    return response.pipe(map((response) => response.data));
+  //   return response.pipe(map((response) => response.data));
+  // }
+
+  getTokenFromUrl(
+    url: string,
+    option: AxiosResponse,
+  ): Observable<AxiosResponse> {
+    return this.httpService.post(url, option);
   }
 }
