@@ -13,9 +13,8 @@ export class AuthService {
   kakaoLoginGetToken(
     code: string,
   ): Observable<AxiosResponse> | { error: Error } {
-    console.log(code);
-    const clientId = 'f06308e77ffc6f2e63ffcc82a20673f1';
-    const redirectURL = 'http://localhost:3000/auth/kakao';
+    const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
+    const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
     const grantType = 'authorization_code';
     const URL = `https://kauth.kakao.com/oauth/token?grant_type=${grantType}&client_id=${clientId}&redirect_uri=${redirectURL}&code=${code}`;
     const data = {
@@ -27,19 +26,17 @@ export class AuthService {
     console.log(code);
     console.log(URL);
     console.log(data);
-    console.log(this.configService.get<string>('KAKAO_REST_API_KEY'));
-    console.log(this.configService.get<string>('KAKAO_REST_API_KEY'));
-    try {
-      return this.httpService
-        .post(URL, {
-          headers: {
-            'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
-          },
-        })
-        .pipe(map((response) => response.data));
-    } catch (err) {
-      return { error: err };
-    }
+
+    const response = this.httpService
+      .post(URL, {
+        headers: {
+          'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      })
+      .pipe(map((response) => response.data));
+
+    console.log(response);
+    return response;
   }
 
   googleLogin(code: string): Observable<AxiosResponse> {
