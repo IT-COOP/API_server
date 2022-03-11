@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
-import { map, Observable, pipe } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +27,8 @@ export class AuthService {
     console.log(code);
     console.log(URL);
     console.log(data);
+    console.log(this.configService.get<string>('KAKAO_REST_API_KEY'));
+    console.log(this.configService.get<string>('KAKAO_REST_API_KEY'));
     try {
       return this.httpService
         .post(URL, {
