@@ -54,7 +54,7 @@ export class AuthService {
     );
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
     console.log('여기는 도착!');
-    const URL = `https://oauth2.googleapis.com/token?code=${code}&clientid=${clientId}&clientsecret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
+    const URL = `https://oauth2.googleapis.com/token?code=${code}&client_id=${clientId}&client_secret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
     try {
       console.log(URL);
       console.log(clientId);
