@@ -84,7 +84,8 @@ export class AuthService {
     const clientPassword = this.configService.get<string>(
       'GITHUB_CLIENT_PASSWORD',
     );
-    const URL = 'https://github.com/login/oauth/access_token';
+
+    const URL = `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientPassword}&code=${code}`;
     let data = {
       client_id: clientId,
       client_secret: clientPassword,
@@ -98,7 +99,6 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
           Accept: 'application/json',
         },
-        data,
       });
 
       data = result.data;
