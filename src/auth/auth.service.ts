@@ -52,15 +52,7 @@ export class AuthService {
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
     console.log('여기는 도착!');
 
-    `?code=${code}&client_id=${clientId}&client_secret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
-    const URL = `https://oauth2.googleapis.com/token`;
-    const body = {
-      client_id: clientId,
-      client_secret: clientPassword,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: redirectURL,
-    };
+    const URL = `https://oauth2.googleapis.com/token?code=${code}&client_id=${clientId}&client_secret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
     try {
       const result = await axios({
         method: 'POST',
@@ -68,7 +60,6 @@ export class AuthService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        data: body,
       });
       const data = result.data;
       accessToken = data.access_token;
