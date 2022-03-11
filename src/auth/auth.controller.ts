@@ -14,11 +14,11 @@ export class AuthController {
     return this.authService.getGoogleToken(code);
   }
 
-  // @Post('github')
-  // githubLogin(@Body('code') code: string) {
-  //   console.log(code);
-  //   return this.authService.githubLogin(code);
-  // }
+  @Post('github')
+  githubLogin(@Body('code') code: string) {
+    console.log(code);
+    return this.authService.getGithubToken(code);
+  }
 
   @Post('refresh')
   getRefreshToken(@Param('Authorization') Authorization: string) {

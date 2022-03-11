@@ -34,10 +34,7 @@ export class AuthService {
       console.log(data);
       console.log(accessToken);
     } catch (err) {
-      throw new HttpException(
-        'Wrong Authorization code',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
     }
 
     return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
@@ -72,17 +69,13 @@ export class AuthService {
       accessToken = data.access_token;
       refreshToken = data.refresh_token;
     } catch (err) {
-      console.error(err);
-      throw new HttpException(
-        'Wrong Authorization code',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
     }
 
     return this.getUserInfoByToken(accessToken, refreshToken, 'google');
   }
 
-  async githubLogin(code: string) {
+  async getGithubToken(code: string) {
     const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
     const clientPassword = this.configService.get<string>(
       'GITHUB_CLIENT_PASSWORD',
@@ -109,10 +102,7 @@ export class AuthService {
       return result.data;
     } catch (err) {
       console.error(err);
-      throw new HttpException(
-        'Wrong Authorization Code',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException(`err: ${err}`, HttpStatus.UNAUTHORIZED);
       return;
     }
   }
