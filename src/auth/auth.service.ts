@@ -46,7 +46,9 @@ export class AuthService {
       });
       return result;
     } catch (err) {
+      console.log(code);
       console.log('에러 났어요! ㅠㅠ');
+      console.log(err);
     }
   }
 
