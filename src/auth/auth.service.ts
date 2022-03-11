@@ -52,6 +52,14 @@ export class AuthService {
 
     const URL = 'https://oauth2.googleapis.com/token';
     try {
+      console.log(123123123);
+      console.log({
+        code,
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientPassword,
+        redirect_uri: redirectURL,
+      });
       const result = await axios({
         method: 'POST',
         url: URL,
@@ -66,10 +74,14 @@ export class AuthService {
           redirect_uri: redirectURL,
         },
       });
+      console.log(345345345345);
       const data = result.data;
       accessToken = data.access_token;
       refreshToken = data.refresh_token;
     } catch (err) {
+      console.log(
+        '------------------------------------------------------------',
+      );
       console.log(err);
       throw new HttpException(
         `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
