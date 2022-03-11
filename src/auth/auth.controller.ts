@@ -5,8 +5,8 @@ import { Body, Controller, Post } from '@nestjs/common';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Post('kakao')
-  kakaoLogin(@Body('code') code: string) {
-    return this.authService.kakaoLogin(code); // 고민의 잔재
+  kakaoLoginGetToken(@Body('code') code: string) {
+    return this.authService.kakaoLoginGetToken(code);
   }
 
   @Post('google')
