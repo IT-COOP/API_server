@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { map, Observable } from 'rxjs';
 import axios from 'axios';
@@ -30,6 +30,7 @@ export class AuthService {
   }
 
   async getKakaoToken(code) {
+    let accessToken: string;
     try {
       const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
       const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
@@ -41,17 +42,24 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
         },
       });
-      console.log('이건 되냐?');
-      console.log('타입은 이것이다!', typeof result);
       const data = result.data;
-      const accessToken = data.access_token;
+      accessToken = data.access_token;
       console.log(data);
       console.log(accessToken);
-      return data;
     } catch (err) {
-      console.log(code);
-      console.log('에러 났어요! ㅠㅠ');
-      console.log(err);
+      throw new HttpException('응 안돼 돌아가', HttpStatus.FORBIDDEN);
+    }
+
+    // 불필요할듯?
+    if (accessToken) {
+      const userInfo = await axios({
+        method: 'GET',
+        url: `https://kapi.kakao.com/v1/user/access_token_info`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(userInfo.data);
     }
   }
 
