@@ -44,6 +44,8 @@ export class AuthService {
   }
 
   async getGoogleToken(code: string): Promise<any> {
+    console.log(code);
+    console.log(typeof code);
     let accessToken: string;
     let refreshToken: string;
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
