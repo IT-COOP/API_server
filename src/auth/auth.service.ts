@@ -1,36 +1,23 @@
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
-import { map, Observable } from 'rxjs';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
-import qs from 'qs';
+import * as jwt from 'jsonwebtoken';
+import { Connection, Repository } from 'typeorm';
+import { Users } from './entity/users.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Inject('USER_REPOSITORY')
+    private userRepository: Repository<Users>,
   ) {}
-  kakaoLoginGetToken(code: string): Observable<AxiosResponse> {
-    const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
-    const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
-    const grantType = 'authorization_code';
-    const URL = `https://kauth.kakao.com/oauth/token?grant_type=${grantType}&client_id=${clientId}&redirect_uri=${redirectURL}&code=${code}`;
-    const response = this.httpService.post(URL, {
-      headers: {
-        'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
-      },
-    });
-    response.subscribe((val) => console.log(val.data));
-    console.log(typeof response);
-    console.log(response.pipe());
-    response.pipe().subscribe((val) => console.log(val.data));
-    return response;
-  }
 
   async getKakaoToken(code) {
     let accessToken: string;
+    let refreshToken: string;
     try {
       const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
       const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
@@ -44,14 +31,78 @@ export class AuthService {
       });
       const data = result.data;
       accessToken = data.access_token;
+      refreshToken = data.refresh_token;
       console.log(data);
       console.log(accessToken);
     } catch (err) {
-      throw new HttpException('응 안돼 돌아가', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Wrong Authorization code',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
-    // 불필요할듯?
-    if (accessToken) {
+    return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
+  }
+
+  async getGoogleToken(code: string): Promise<any> {
+    let accessToken: string;
+    let refreshToken: string;
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientPassword = this.configService.get<string>(
+      'GOOGLE_CLIENT_PASSWORD',
+    );
+    const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
+    const URL = `https://oauth2.googleapis.com/token?code=${code}e&clientid=${clientId}&clientsecret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
+    try {
+      const result = await axios({
+        method: 'POST',
+        url: URL,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      });
+      const data = result.data;
+      accessToken = data.access_token;
+      refreshToken = data.refresh_token;
+    } catch (err) {
+      throw new HttpException(
+        'Wrong Authorization code',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return this.getUserInfoByToken(accessToken, refreshToken, 'google');
+  }
+
+  async githubLogin(code: string) {
+    const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
+    const clientPassword = this.configService.get<string>(
+      'GITHUB_CLIENT_PASSWORD',
+    );
+    const URL = this.configService.get<string>('GITHUB_REQUEST_URL');
+    const data = {
+      client_id: clientId,
+      client_secret: clientPassword,
+      code,
+    };
+
+    const result = await axios({
+      method: 'POST',
+      url: URL,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+      },
+    });
+
+    return result;
+  }
+
+  async getUserInfoByToken(
+    accessToken: string,
+    refreshToken: string,
+    site: string,
+  ) {
+    if (site === 'kakao') {
       const userInfo = await axios({
         method: 'GET',
         url: `https://kapi.kakao.com/v1/user/access_token_info`,
@@ -59,47 +110,58 @@ export class AuthService {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log(userInfo.data);
-      return userInfo.data;
+      const id = userInfo.data.id;
+      // 여기서 DB에 접근해서 해당 유저가 존재하는 지 알아본다.
+      const existUser = await this.userRepository.findOne({
+        where: {
+          loginType: 1,
+          loginToken: id.toString(),
+        },
+      });
+      if (existUser) {
+        return this.existUserLogin(accessToken, refreshToken, 1, id);
+      } else {
+        return this.novelUserLogin(accessToken, refreshToken, 1, id);
+      }
+    }
+
+    if (site === 'google') {
+      const userInfo = await axios({
+        method: 'POST',
+        url: `https://www.googleapis.com/oauth2/v2/userinfo/?access_token="${accessToken}"`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const id = userInfo.data.id;
+      const existUser = await this.userRepository.findOne({
+        where: {
+          loginType: 2,
+          loginToken: id.toString(),
+        },
+      });
+      if (existUser) {
+        return this.existUserLogin(accessToken, refreshToken, 2, id);
+      } else {
+        return this.novelUserLogin(accessToken, refreshToken, 2, id);
+      }
     }
   }
 
-  // googleLogin(code: string): Observable<AxiosResponse> {
-  //   const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-  //   const clientPassword = this.configService.get<string>(
-  //     'GOOGLE_CLIENT_PASSWORD',
-  //   );
-  //   const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
-  //   const URL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectURL}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`;
+  async getNovelAccessToken(refreshToken: string) {
+    const secret = this.configService.get<string>('MY_SECRET_KEY');
+    // const { userId } = jwt.verify(refreshToken, secret).userId;
 
-  //   return this.httpService.post(URL);
-  // }
+    return 'new access token';
+  }
 
-  // githubLogin(code: string): Observable<AxiosResponse> {
-  //   const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
-  //   const clientPassword = this.configService.get<string>(
-  //     'GITHUB_CLIENT_PASSWORD',
-  //   );
-  //   const URL = this.configService.get<string>('GITHUB_REQUEST_URL');
-  //   const data = {
-  //     client_id: clientId,
-  //     client_secret: clientPassword,
-  //     code,
-  //   };
+  existUserLogin(accessToken, refreshToken, loginType, id) {
+    console.log('existUser');
+    console.log(accessToken, refreshToken, loginType, id);
+  }
 
-  //   const response = this.httpService.post(URL, data, {
-  //     headers: {
-  //       accept: 'application/json',
-  //     },
-  //   });
-
-  //   return response.pipe(map((response) => response.data));
-  // }
-
-  getTokenFromUrl(
-    url: string,
-    option: AxiosResponse,
-  ): Observable<AxiosResponse> {
-    return this.httpService.post(url, option);
+  novelUserLogin(accessToken, refreshToken, loginType, id) {
+    console.log('novelUser');
+    console.log(accessToken, refreshToken, loginType, id);
   }
 }
