@@ -23,9 +23,10 @@ export class AuthService {
       redirect_uri: redirectURL,
       code,
     };
-    console.log(code);
-    console.log(URL);
-    console.log(data);
+    console.log('code: ', code);
+    console.log('URL: ', URL);
+    console.log('redirectURL: ', redirectURL);
+    console.log('data: ', data);
 
     const response = this.httpService
       .post(URL, {
@@ -34,8 +35,9 @@ export class AuthService {
         },
       })
       .pipe(map((response) => response.data));
-    JSON.stringify(response);
-    console.log(response);
+    const result = JSON.stringify(response);
+    console.log('response:', response);
+    console.log('result:', result);
     return response;
   }
 
