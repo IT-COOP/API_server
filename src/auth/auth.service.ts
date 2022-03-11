@@ -10,9 +10,7 @@ export class AuthService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
-  kakaoLoginGetToken(
-    code: string,
-  ): Observable<AxiosResponse> | { error: Error } {
+  kakaoLoginGetToken(code: string): Observable<AxiosResponse> {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
     const grantType = 'authorization_code';
