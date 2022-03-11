@@ -39,11 +39,15 @@ export class AuthService {
     const list = [];
     console.log('response:', response);
     console.log('result:', result);
-    console.log(
-      'response.source: ',
-      response.subscribe((each) => list.push(each)),
-    );
-    console.log(list);
+    console.log('response.source: ', response.source);
+    response.subscribe((each) => {
+      list.push(each, console.log('each: ', each));
+    }),
+      console.log(list);
+    const piped = response.pipe(map((response) => response.data));
+
+    console.log('piped: ', piped);
+    console.log('piped response: ', response);
     return response;
   }
 
