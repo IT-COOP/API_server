@@ -169,6 +169,7 @@ export class AuthService {
     }
 
     if (site === LoginType['google']) {
+      console.log(`idToken : ${idToken}`);
       const userInfo = await axios({
         method: 'GET',
         url: `https://oauth2.googleapis.com/tokeninfo"`,
