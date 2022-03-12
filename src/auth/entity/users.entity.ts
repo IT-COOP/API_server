@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, UpdateDateColumn } from 'typeorm';
 
-@Entity('users', { schema: 'test' })
+@Entity('users')
 export class Users {
   @Column('varchar', { primary: true, name: 'userId', length: 100 })
   userId: string;
