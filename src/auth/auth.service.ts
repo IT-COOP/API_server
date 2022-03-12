@@ -39,13 +39,14 @@ export class AuthService {
           redirect_uri: redirectURL,
         },
       });
-
       accessToken = result.data.access_token;
+
+      console.log('google:', result.data);
+      res.redirect(`${redirectToFront}${accessToken}`);
     } catch (err) {
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
 
-    res.redirect(`${redirectToFront}${accessToken}`);
     // return this.getUserInfoByToken(accessToken, LoginType['kakao'], res);
   }
 
@@ -80,7 +81,7 @@ export class AuthService {
        *
        * 임시로 query string으로 front server로 보내주는 중. (리디렉션을 통해서)
        */
-      console.log(result.data);
+      console.log('google:', result.data);
       res.redirect(`${redirectToFront}${accessToken}`);
       // refreshToken = data.refresh_token;
     } catch (err) {
@@ -117,6 +118,7 @@ export class AuthService {
           client_secret: clientPassword,
         },
       });
+      accessToken = result.data.access_token;
       /**
        * {
         access_token: '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',
@@ -124,7 +126,7 @@ export class AuthService {
         scope: ''
       }
       */
-      accessToken = result.data.access_token;
+      console.log(result.data);
       res.redirect(`${redirectToFront}${accessToken}`);
     } catch (err) {
       console.error(err);
