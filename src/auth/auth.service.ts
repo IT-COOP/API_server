@@ -33,7 +33,7 @@ export class AuthService {
     } catch (err) {
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
-    res.redirect('https://naver.com');
+    res.redirect(`http://localhost:3000/auth/test?accessToken=${accessToken}`);
     // return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
   }
 
@@ -64,6 +64,9 @@ export class AuthService {
       accessToken = result.data.access_token;
 
       console.log('google data :', result.data);
+      res.redirect(
+        `http://localhost:3000/auth/test?accessToken=${accessToken}`,
+      );
       // refreshToken = data.refresh_token;
     } catch (err) {
       throw new HttpException(
@@ -100,7 +103,7 @@ export class AuthService {
       */
       const accessToken = result.data.access_token;
       return res.redirect(
-        `http://localhost:3000/auth/test?access_token=${accessToken}`,
+        `http://localhost:3000/auth/test?accessToken=${accessToken}`,
       );
     } catch (err) {
       console.error(err);
@@ -142,7 +145,7 @@ export class AuthService {
     if (site === 'google') {
       const userInfo = await axios({
         method: 'POST',
-        url: `https://www.googleapis.com/oauth2/v2/userinfo/?access_token="${accessToken}"`,
+        url: `https://www.googleapis.com/oauth2/v2/userinfo/?accessToken="${accessToken}"`,
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
