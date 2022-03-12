@@ -181,7 +181,7 @@ export class AuthService {
       try {
         const userInfo = await axios({
           method: 'GET',
-          url: `https://oauth2.googleapis.com/oauth2/v1/tokeninfo"`,
+          url: `https://oauth2.googleapis.com/tokeninfo"`,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
           },
