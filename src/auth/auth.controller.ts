@@ -6,7 +6,7 @@ import { Response } from 'express';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Get('kakao')
-  kakaoLoginGetToken(@Query('code') code: string, @Res(), res: Response) {
+  kakaoLoginGetToken(@Query('code') code: string, @Res() res: Response) {
     return this.authService.getKakaoToken(code, res);
   }
 
