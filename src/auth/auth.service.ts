@@ -18,7 +18,6 @@ export class AuthService {
     private userRepository: Repository<Users>,
   ) {}
   async getKakaoToken(code: string, res: Response) {
-    const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
     const grantType = 'authorization_code';
@@ -41,17 +40,15 @@ export class AuthService {
       });
       accessToken = result.data.access_token;
 
-      console.log('google:', result.data);
-      res.redirect(`${redirectToFront}${accessToken}`);
+      console.log('kakao:', result.data);
     } catch (err) {
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
 
-    // return this.getUserInfoByToken(accessToken, LoginType['kakao'], res);
+    return this.getUserInfoByToken(accessToken, LoginType['kakao'], res);
   }
 
   async getGoogleToken(code: string, res: Response): Promise<any> {
-    const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
     const clientPassword = this.configService.get<string>(
       'GOOGLE_CLIENT_PASSWORD',
@@ -81,8 +78,8 @@ export class AuthService {
        *
        * 임시로 query string으로 front server로 보내주는 중. (리디렉션을 통해서)
        */
-      console.log('google:', result.data);
-      res.redirect(`${redirectToFront}${accessToken}`);
+      console.log('google Token:', result.data);
+
       // refreshToken = data.refresh_token;
     } catch (err) {
       throw new HttpException(
@@ -91,7 +88,7 @@ export class AuthService {
       );
     }
 
-    // return this.getUserInfoByToken(accessToken, LoginType['google'], res);
+    return this.getUserInfoByToken(accessToken, LoginType['google'], res);
   }
 
   async getGithubToken(code: string, res: Response) {
@@ -101,7 +98,6 @@ export class AuthService {
     );
     const URL = `https://github.com/login/oauth/access_token`;
     let accessToken: string;
-    const redirectToFront = this.configService.get<string>('FRONT_SERVER');
 
     try {
       const result = await axios({
@@ -126,18 +122,22 @@ export class AuthService {
         scope: ''
       }
       */
-      console.log(result.data);
-      res.redirect(`${redirectToFront}${accessToken}`);
+      console.log('github Token:', result.data);
     } catch (err) {
       console.error(err);
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
       return;
     }
 
-    // return this.getUserInfoByToken(accessToken, LoginType['github'], res);
+    return this.getUserInfoByToken(accessToken, LoginType['github'], res);
   }
 
-  async getUserInfoByToken(accessToken: string, site: number, res: Response) {
+  async getUserInfoByToken(
+    accessToken: string,
+    site: number,
+    res: Response,
+    idToken?: string,
+  ) {
     if (site === LoginType['kakao']) {
       const userInfo = await axios({
         method: 'GET',
@@ -157,7 +157,9 @@ export class AuthService {
       // });
 
       // 여기에 넘겨 줄 정보를 채워넣어야 함.
-      return this.createLocalTokenViaUserInfo();
+      const redirectToFront = this.configService.get<string>('FRONT_SERVER');
+      res.redirect(`${redirectToFront}${accessToken}`);
+      // return this.createLocalTokenViaUserInfo();
     }
 
     if (site === LoginType['google']) {
@@ -176,9 +178,13 @@ export class AuthService {
       //     loginToken: id.toString(),
       //   },
       // });
+      const redirectToFront = this.configService.get<string>('FRONT_SERVER');
+      res.redirect(`${redirectToFront}${accessToken}`);
     }
 
     if (site === LoginType['github']) {
+      const redirectToFront = this.configService.get<string>('FRONT_SERVER');
+      res.redirect(`${redirectToFront}${accessToken}`);
     }
   }
 
