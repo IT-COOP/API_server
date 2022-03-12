@@ -1,17 +1,20 @@
-import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
-// import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Users } from './entity/users.entity';
 import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {} // @Inject('USER_REPOSITORY')
-  // private userRepository: Repository<Users>,
-
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+    @Inject('USER_REPOSITORY')
+    private userRepository: Repository<Users>,
+  ) {}
   async getKakaoToken(code) {
     let accessToken: string;
     let refreshToken: string;
@@ -41,16 +44,13 @@ export class AuthService {
   async getGoogleToken(code: string, res: Response): Promise<any> {
     console.log(code);
     console.log(typeof code);
-    let accessToken: string;
-    let refreshToken: string;
+    let accessToken = '';
+    const refreshToken = '';
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
     const clientPassword = this.configService.get<string>(
       'GOOGLE_CLIENT_PASSWORD',
     );
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
-    console.log('여기는 도착!');
-    `https://oauth2.googleapis.com/token?code=${code}&client_id=${clientId}&client_secret=${clientPassword}&redirect_uri=${redirectURL}&grant_type=authorization_code`;
-
     const URL = 'https://oauth2.googleapis.com/token';
     try {
       console.log(123123123);
@@ -75,43 +75,27 @@ export class AuthService {
           redirect_uri: redirectURL,
         },
       });
-      console.log(345345345345);
-      console.log(result);
-      console.log(result.data);
-      return res.redirect(
-        `http://localhost:3000/auth/test?accessToken=${result.data.access_token}`,
-      );
-      result.data;
+      accessToken = result.data.access_token;
 
-      // const data = result.data;
-      // accessToken = data.access_token;
+      console.log(result.data);
       // refreshToken = data.refresh_token;
     } catch (err) {
-      console.log(
-        '------------------------------------------------------------',
-      );
-      console.log(err);
       throw new HttpException(
         `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
         HttpStatus.UNAUTHORIZED,
       );
     }
 
-    // return this.getUserInfoByToken(accessToken, refreshToken, 'google');
+    return this.getUserInfoByToken(accessToken, refreshToken, 'google', res);
   }
 
-  async getGithubToken(code: string) {
+  async getGithubToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('GITHUB_CLIENT_ID');
     const clientPassword = this.configService.get<string>(
       'GITHUB_CLIENT_PASSWORD',
     );
 
     const URL = `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientPassword}&code=${code}`;
-    let data = {
-      client_id: clientId,
-      client_secret: clientPassword,
-      code,
-    };
     try {
       const result = await axios({
         method: 'POST',
@@ -121,9 +105,6 @@ export class AuthService {
           Accept: 'application/json',
         },
       });
-
-      data = result.data;
-      console.log(data);
       /**
        * {
         access_token: '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',
@@ -131,7 +112,10 @@ export class AuthService {
         scope: ''
       }
       */
-      return result.data;
+      const accessToken = result.data.access_token;
+      return res.redirect(
+        `http://localhost:3000/auth/test?access_token=${accessToken}`,
+      );
     } catch (err) {
       console.error(err);
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
@@ -143,6 +127,7 @@ export class AuthService {
     accessToken: string,
     refreshToken: string,
     site: string,
+    res?: Response,
   ) {
     if (site === 'kakao') {
       const userInfo = await axios({
@@ -178,12 +163,12 @@ export class AuthService {
       });
       const id = userInfo.data.id;
       const existUser = true;
-      // await this.userRepository.findOne({
-      //   where: {
-      //     loginType: 2,
-      //     loginToken: id.toString(),
-      //   },
-      // });
+      await this.userRepository.findOne({
+        where: {
+          loginType: 2,
+          loginToken: id.toString(),
+        },
+      });
       if (existUser) {
         return this.existUserLogin(accessToken, refreshToken, 2, id);
       } else {
