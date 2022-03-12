@@ -34,11 +34,4 @@ export class AuthController {
   getGoogleToken(@Param() param, @Body() body, @Query() query) {
     console.log(param, body, query);
   }
-
-  @Get('test')
-  testLogin(@Res() res: Response) {
-    return res.redirect(
-      `https://accounts.google.com/o/oauth2/v2/auth?client_id=608654268789-laflmuqietchnqdcrrdpm57gmpe0g0l7.apps.googleusercontent.com&redirect_uri=http://seungmin.shop/login/google&response_type=code&include_granted_scopes=true&scope=https://www.googleapis.com/auth/userinfo.email`,
-    );
-  }
 }

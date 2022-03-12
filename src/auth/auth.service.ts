@@ -56,6 +56,7 @@ export class AuthService {
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
     const URL = 'https://oauth2.googleapis.com/token';
     let accessToken = '';
+    let idToken: string;
 
     try {
       const result = await axios({
@@ -73,6 +74,7 @@ export class AuthService {
         },
       });
       accessToken = result.data.access_token;
+      idToken = result.data.id_token;
       /**
        * 현재 구글 access token 발급 받음
        *
@@ -88,7 +90,12 @@ export class AuthService {
       );
     }
 
-    return this.getUserInfoByToken(accessToken, LoginType['google'], res);
+    return this.getUserInfoByToken(
+      accessToken,
+      LoginType['google'],
+      res,
+      idToken,
+    );
   }
 
   async getGithubToken(code: string, res: Response) {
@@ -146,9 +153,8 @@ export class AuthService {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      const id = userInfo.data.id;
-      // 여기서 DB에 접근해서 해당 유저가 존재하는 지 알아본다.
-      const existUser = true;
+      console.log('kakao userInfo: ', userInfo.data);
+
       // await this.userRepository.findOne({
       //   where: {
       //     loginType: LoginType['kakao'],
@@ -164,14 +170,14 @@ export class AuthService {
 
     if (site === LoginType['google']) {
       const userInfo = await axios({
-        method: 'POST',
-        url: `https://www.googleapis.com/oauth2/v2/userinfo/?accessToken="${accessToken}"`,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+        method: 'GET',
+        url: `https://oauth2.googleapis.com/tokeninfo"`,
+        params: {
+          id_token: `Bearer ${idToken}`,
         },
       });
-      const id = userInfo.data.id;
-      const existUser = true;
+      console.log('google userInfo:', userInfo.data);
+
       // await this.userRepository.findOne({
       //   where: {
       //     loginType: LoginType['google'],
@@ -183,6 +189,15 @@ export class AuthService {
     }
 
     if (site === LoginType['github']) {
+      const userInfo = await axios({
+        method: 'GET',
+        url: 'https://api.github.com/user',
+        headers: {
+          Authorization: `token ${accessToken}`,
+        },
+      });
+      console.log(userInfo.data);
+
       const redirectToFront = this.configService.get<string>('FRONT_SERVER');
       res.redirect(`${redirectToFront}${accessToken}`);
     }
