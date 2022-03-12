@@ -11,7 +11,7 @@ export class AuthService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
-  async getKakaoToken(code) {
+  async getKakaoToken(code: string, res: Response) {
     let accessToken: string;
     let refreshToken: string;
     try {
@@ -38,8 +38,6 @@ export class AuthService {
   }
 
   async getGoogleToken(code: string, res: Response): Promise<any> {
-    console.log(code);
-    console.log(typeof code);
     let accessToken = '';
     const refreshToken = '';
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
@@ -49,14 +47,6 @@ export class AuthService {
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
     const URL = 'https://oauth2.googleapis.com/token';
     try {
-      console.log(123123123);
-      console.log({
-        code,
-        grant_type: 'authorization_code',
-        client_id: clientId,
-        client_secret: clientPassword,
-        redirect_uri: redirectURL,
-      });
       const result = await axios({
         method: 'POST',
         url: URL,
@@ -73,7 +63,7 @@ export class AuthService {
       });
       accessToken = result.data.access_token;
 
-      console.log(result.data);
+      console.log('google data :', result.data);
       // refreshToken = data.refresh_token;
     } catch (err) {
       throw new HttpException(
