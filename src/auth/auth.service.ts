@@ -176,7 +176,7 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
         },
         params: {
-          id_token: `Bearer ${idToken}`,
+          id_token: `${idToken}`,
         },
       });
       console.log('google userInfo:', userInfo.data);
@@ -201,7 +201,7 @@ export class AuthService {
           Accept: 'application/json',
         },
       });
-      console.log(userInfo.data);
+      console.log('github userInfo:', userInfo.data);
 
       const redirectToFront = this.configService.get<string>('FRONT_SERVER');
       res.redirect(`${redirectToFront}${accessToken}`);
