@@ -172,6 +172,9 @@ export class AuthService {
       const userInfo = await axios({
         method: 'GET',
         url: `https://oauth2.googleapis.com/tokeninfo"`,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
         params: {
           id_token: `Bearer ${idToken}`,
         },
@@ -194,6 +197,8 @@ export class AuthService {
         url: 'https://api.github.com/user',
         headers: {
           Authorization: `token ${accessToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+          Accept: 'application/json',
         },
       });
       console.log(userInfo.data);
