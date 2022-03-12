@@ -33,8 +33,8 @@ export class AuthService {
     } catch (err) {
       throw new HttpException(err, HttpStatus.UNAUTHORIZED);
     }
-
-    return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
+    res.redirect('https://naver.com');
+    // return this.getUserInfoByToken(accessToken, refreshToken, 'kakao');
   }
 
   async getGoogleToken(code: string, res: Response): Promise<any> {
