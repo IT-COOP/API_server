@@ -191,6 +191,7 @@ export class AuthService {
         });
         console.log('google userInfo:', userInfo.data);
       } catch (err) {
+        console.log(err);
         throw new HttpException(
           `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
           HttpStatus.UNAUTHORIZED,
