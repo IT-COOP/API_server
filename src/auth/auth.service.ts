@@ -131,8 +131,10 @@ export class AuthService {
       */
       console.log('github Token:', result.data);
     } catch (err) {
-      console.error(err);
-      throw new HttpException(err, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
+        HttpStatus.UNAUTHORIZED,
+      );
       return;
     }
 
@@ -146,15 +148,21 @@ export class AuthService {
     idToken?: string,
   ) {
     if (site === LoginType['kakao']) {
-      const userInfo = await axios({
-        method: 'GET',
-        url: `https://kapi.kakao.com/v1/user/access_token_info`,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      console.log('kakao userInfo: ', userInfo.data);
-
+      try {
+        const userInfo = await axios({
+          method: 'GET',
+          url: `https://kapi.kakao.com/v1/user/access_token_info`,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        console.log('kakao userInfo: ', userInfo.data);
+      } catch (err) {
+        throw new HttpException(
+          `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       // await this.userRepository.findOne({
       //   where: {
       //     loginType: LoginType['kakao'],
@@ -170,17 +178,24 @@ export class AuthService {
 
     if (site === LoginType['google']) {
       console.log(`idToken : ${idToken}`);
-      const userInfo = await axios({
-        method: 'GET',
-        url: `https://oauth2.googleapis.com/oauth2/v1/tokeninfo"`,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-        },
-        params: {
-          id_token: `${idToken}`,
-        },
-      });
-      console.log('google userInfo:', userInfo.data);
+      try {
+        const userInfo = await axios({
+          method: 'GET',
+          url: `https://oauth2.googleapis.com/oauth2/v1/tokeninfo"`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+          },
+          params: {
+            id_token: `${idToken}`,
+          },
+        });
+        console.log('google userInfo:', userInfo.data);
+      } catch (err) {
+        throw new HttpException(
+          `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
 
       // await this.userRepository.findOne({
       //   where: {
@@ -193,17 +208,23 @@ export class AuthService {
     }
 
     if (site === LoginType['github']) {
-      const userInfo = await axios({
-        method: 'GET',
-        url: 'https://api.github.com/user',
-        headers: {
-          Authorization: `token ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-          Accept: 'application/json',
-        },
-      });
-      console.log('github userInfo:', userInfo.data);
-
+      try {
+        const userInfo = await axios({
+          method: 'GET',
+          url: 'https://api.github.com/user',
+          headers: {
+            Authorization: `token ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+            Accept: 'application/json',
+          },
+        });
+        console.log('github userInfo:', userInfo.data);
+      } catch (err) {
+        throw new HttpException(
+          `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       const redirectToFront = this.configService.get<string>('FRONT_SERVER');
       res.redirect(`${redirectToFront}${accessToken}`);
     }
