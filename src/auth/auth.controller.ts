@@ -1,14 +1,10 @@
-import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 
 @Controller('login')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
   @Post('kakao')
   kakaoLoginGetToken(@Body('code') code: string) {
     return this.authService.getKakaoToken(code);

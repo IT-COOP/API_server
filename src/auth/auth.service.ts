@@ -3,8 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
-import { Repository } from 'typeorm';
-import { Users } from './entity/users.entity';
 import { Response } from 'express';
 
 @Injectable()
@@ -12,8 +10,6 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    @Inject('USER_REPOSITORY')
-    private userRepository: Repository<Users>,
   ) {}
   async getKakaoToken(code) {
     let accessToken: string;
@@ -163,12 +159,12 @@ export class AuthService {
       });
       const id = userInfo.data.id;
       const existUser = true;
-      await this.userRepository.findOne({
-        where: {
-          loginType: 2,
-          loginToken: id.toString(),
-        },
-      });
+      // await this.userRepository.findOne({
+      //   where: {
+      //     loginType: 2,
+      //     loginToken: id.toString(),
+      //   },
+      // });
       if (existUser) {
         return this.existUserLogin(accessToken, refreshToken, 2, id);
       } else {
