@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Param,
   Post,
   Query,
@@ -40,9 +41,8 @@ export class AuthController {
   }
 
   @Get('validation')
-  userValidation(@Param('authorization') payload: string, @Param() param) {
-    console.log(param);
-    console.log(payload);
-    return this.authService.userValidation(payload.split(' ')[1]);
+  userValidation(@Req() req) {
+    console.log(req);
+    // return this.authService.userValidation(payload.split(' ')[1]);
   }
 }
