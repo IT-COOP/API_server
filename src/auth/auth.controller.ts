@@ -1,16 +1,7 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { AuthService } from './auth.service';
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  Req,
-  Res,
-} from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller('login')
 export class AuthController {
