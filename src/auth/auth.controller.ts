@@ -1,6 +1,15 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 
 @Controller('login')
@@ -30,14 +39,17 @@ export class AuthController {
     return this.authService.completeFirstLogin(payload.split(' ')[1], body);
   }
 
-  @Post('validation')
-  userValidation(@Body('authorization') accessToken: string) {
+  @Get('validation')
+  userValidation(
+    @Headers() Headers,
+    @Body('authorization') accessToken: string,
+    @Body('refreshToken') refreshToken: string,
+  ) {
     console.log('여기는 와써용');
-    return this.authService.userValidation(accessToken.split(' ')[1]);
-  }
-
-  @Post('refresh')
-  refreshToken(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshAccessToken(refreshToken.split(' ')[1]);
+    console.log(Headers);
+    return this.authService.userValidation(
+      accessToken.split(' ')[1],
+      refreshToken.split(' ')[1],
+    );
   }
 }

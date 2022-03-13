@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
 import bcrypt from 'bcrypt';
+import { access } from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private userRepository: Repository<Users>,
   ) {}
   SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  HASH_SALT = this.configService.get<string>('HASH_SALT');
 
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -183,7 +185,7 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       }
-
+      id = bcrypt.hashSync(id, this.HASH_SALT);
       const existUser = await this.userRepository.findOne({
         where: {
           loginType: site,
@@ -293,19 +295,45 @@ export class AuthService {
     };
   }
 
-  async userValidation(token: string) {
+  async userValidation(accessToken: string, refreshToken: string) {
     console.log('여기도 와써용');
     let payload: jwt.JwtPayload;
     try {
-      const verified = jwt.verify(token, this.SECRET_KEY);
+      const verified = jwt.verify(accessToken, this.SECRET_KEY);
       if (typeof verified === 'string') {
         throw new Error('잘못된 요청입니다.');
         return;
       }
       payload = verified;
-    } catch (err) {
-      throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
-      return;
+    } catch {
+      // refresh 토큰이 있어야겠지?
+      try {
+        // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
+        const userId = jwt.decode(accessToken).sub;
+        const existUser = await this.userRepository.findOne({
+          select: ['nickname', 'profileImgUrl'],
+          where: {
+            userId,
+            refreshToken,
+          },
+        });
+        if (existUser) {
+          const novelAccessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
+            expiresIn: '10h',
+          });
+
+          return {
+            success: true,
+            data: {
+              userInfo: existUser,
+              authorization: `Bearer ${novelAccessToken}`,
+            },
+          };
+        }
+      } catch (err) {
+        throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
+        return;
+      }
     }
     console.log('페이로드 따써용');
     const userId = payload.sub;
@@ -318,7 +346,7 @@ export class AuthService {
     console.log('existUser 게또');
     console.log(payload);
     console.log(existUser, '설마 닉네임 프로필이 없어서?');
-    if (existUser && existUser.isValid) {
+    if (existUser && existUser.nickname) {
       console.log('이건 안 들어갈거야');
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
         expiresIn: '10h',
@@ -326,7 +354,7 @@ export class AuthService {
       return {
         success: true,
         data: {
-          existUser,
+          userInfo: existUser,
           authorization: `Bearer ${accessToken}`,
         },
       };
@@ -338,6 +366,7 @@ export class AuthService {
       return {
         success: true,
         data: {
+          userinFo: existUser,
           authorization: `Bearer ${accessToken}`,
         },
       };
