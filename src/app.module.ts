@@ -21,6 +21,7 @@ import { Users } from './auth/entity/users.entity';
       database: 'test',
       entities: [Users],
       synchronize: true,
+      logger: 'debug',
     }),
   ],
   controllers: [AppController],

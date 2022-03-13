@@ -23,14 +23,15 @@ export class Users {
   @Column('varchar', { name: 'portfolioUrl', nullable: true, length: 100 })
   portfolioUrl: string | null;
 
-  @Column('varchar', { name: 'password', nullable: true, length: 100 })
-  password: string | null;
-
   @Column('int', { name: 'loginType', nullable: true })
   loginType: number | null;
 
+  // Unique로 이름 변경
   @Column('varchar', { name: 'loginToken', nullable: true, length: 100 })
-  loginToken: string | null;
+  indigenousKey: string | null;
+
+  @Column('varchar', { name: 'refreshToken', nullable: true })
+  refreshToken: string | null;
 
   @Column('tinyint', { name: 'isValid', nullable: true, width: 1 })
   isValid: boolean | null;

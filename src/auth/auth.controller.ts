@@ -1,5 +1,6 @@
+import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { Response } from 'express';
 
 @Controller('login')
@@ -21,17 +22,8 @@ export class AuthController {
     return this.authService.getGithubToken(code, res);
   }
 
-  @Post('refresh')
-  getRefreshToken(@Param('Authorization') Authorization: string) {
-    const refreshToken = Authorization.split(' ')[1];
-    return this.authService.getNovelAccessToken(refreshToken);
-  }
-
-  // @Post('novelUser')
-  // novelUserRegister(@Param('Authorization'))
-
-  @Get('google/token')
-  getGoogleToken(@Param() param, @Body() body, @Query() query) {
-    console.log(param, body, query);
+  @Post('completion')
+  completeFirstLogin(@Req() req, @Body() body: CompleteFirstLoginDTO) {
+    return this.completeFirstLogin(req.id, body);
   }
 }
