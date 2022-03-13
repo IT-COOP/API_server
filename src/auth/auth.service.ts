@@ -186,7 +186,9 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      id = bcrypt.hashSync(id, this.HASH_SALT);
+      console.log(id);
+      id = await bcrypt.hash(id, this.HASH_SALT);
+      console.log('hashed ID', id);
       existUser = await this.userRepository.findOne({
         where: {
           loginType: site,
