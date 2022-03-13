@@ -187,7 +187,7 @@ export class AuthService {
         );
       }
       console.log(id);
-      id = await bcrypt.hash(id, this.HASH_SALT);
+      // id = await bcrypt.hash(id, this.HASH_SALT);
       console.log('hashed ID', id);
       existUser = await this.userRepository.findOne({
         where: {
