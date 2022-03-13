@@ -11,8 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
-import bcrypt from 'bcrypt';
-import { access } from 'fs';
+import md5 from 'md5';
 
 @Injectable()
 export class AuthService {
@@ -187,7 +186,7 @@ export class AuthService {
         );
       }
       console.log(id);
-      // id = await bcrypt.hash(id, this.HASH_SALT);
+      id = md5(id);
       console.log('hashed ID', id);
       existUser = await this.userRepository.findOne({
         where: {
