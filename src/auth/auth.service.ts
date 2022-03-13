@@ -141,6 +141,7 @@ export class AuthService {
     idToken?: string,
   ) {
     let id: string;
+    let existUser: Users | undefined;
     try {
       if (site === LoginType['kakao']) {
         const userInfo = await axios({
@@ -186,17 +187,20 @@ export class AuthService {
         );
       }
       id = bcrypt.hashSync(id, this.HASH_SALT);
-      const existUser = await this.userRepository.findOne({
+      existUser = await this.userRepository.findOne({
         where: {
           loginType: site,
           indigenousKey: id,
         },
       });
-
-      return this.internalTokenCreation(existUser, id, site, res);
     } catch (err) {
-      throw new HttpException(`error: ${err}`, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        `소셜 로그인 요청 에러, error: ${err}`,
+        HttpStatus.UNAUTHORIZED,
+      );
+      return;
     }
+    return this.internalTokenCreation(existUser, id, site, res);
   }
 
   async internalTokenCreation(
@@ -212,7 +216,7 @@ export class AuthService {
       // 다회차 고인물
       payload = { sub: existUser.userId };
       const accessToken = jwt.sign(payload, this.SECRET_KEY, {
-        expiresIn: '1h',
+        expiresIn: '10h',
       });
       const refreshToken = jwt.sign(
         { sub: existUser.userId },
@@ -247,56 +251,12 @@ export class AuthService {
     return res.redirect(`${redirectToFront}accessToken=${accessToken}`);
   }
 
-  async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
-    let userId: string;
-    try {
-      const verified = jwt.verify(token, this.SECRET_KEY);
-      if (typeof verified === 'string') {
-        throw new HttpException(
-          'Unprocessable Entity',
-          HttpStatus.UNPROCESSABLE_ENTITY,
-        );
-      }
-      const payload: jwt.JwtPayload = verified;
-      userId = payload.sub;
-    } catch (err) {
-      throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
-    }
-    const intermediateUser = await this.userRepository.findOne({
-      where: {
-        userId,
-      },
-    });
-
-    const payload: payload = { sub: body.userId };
-    const accessToken = jwt.sign(payload, this.SECRET_KEY, {
-      expiresIn: '10h',
-    });
-
-    for (const element in body) {
-      intermediateUser[element] = body[element];
-    }
-    const refreshToken = jwt.sign(
-      { sub: intermediateUser.userId },
-      this.SECRET_KEY,
-      {
-        expiresIn: '24h',
-      },
-    );
-    intermediateUser.refreshToken = refreshToken;
-    await this.userRepository.save(intermediateUser);
-
-    return {
-      authorization: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
-    };
-  }
-
   async userValidation(accessToken: string, refreshToken: string) {
     console.log('여기도 와써용');
     let payload: jwt.JwtPayload;
     try {
       const verified = jwt.verify(accessToken, this.SECRET_KEY);
+      console.log('259번째 줄 verified', verified);
       if (typeof verified === 'string') {
         throw new Error();
         return;
@@ -377,5 +337,50 @@ export class AuthService {
     }
     console.log('이건 유저가 아예 없을 때니까 에러가 나는 거야!');
     throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
+  }
+
+  async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
+    let userId: string;
+    try {
+      const verified = jwt.verify(token, this.SECRET_KEY);
+      if (typeof verified === 'string') {
+        throw new HttpException(
+          'Unprocessable Entity',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+      const payload: jwt.JwtPayload = verified;
+      userId = payload.sub;
+    } catch (err) {
+      throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
+    }
+    const intermediateUser = await this.userRepository.findOne({
+      where: {
+        userId,
+      },
+    });
+
+    const payload: payload = { sub: body.userId };
+    const accessToken = jwt.sign(payload, this.SECRET_KEY, {
+      expiresIn: '10h',
+    });
+
+    for (const element in body) {
+      intermediateUser[element] = body[element];
+    }
+    const refreshToken = jwt.sign(
+      { sub: intermediateUser.userId },
+      this.SECRET_KEY,
+      {
+        expiresIn: '24h',
+      },
+    );
+    intermediateUser.refreshToken = refreshToken;
+    await this.userRepository.save(intermediateUser);
+
+    return {
+      authorization: `Bearer ${accessToken}`,
+      refreshToken: `Bearer ${refreshToken}`,
+    };
   }
 }
