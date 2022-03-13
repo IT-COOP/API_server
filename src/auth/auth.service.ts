@@ -238,6 +238,8 @@ export class AuthService {
       newUser.loginType = site;
       newUser.indigenousKey = id;
       newUser.isValid = false;
+      newUser.profileImgUrl = '';
+      newUser.nickname = '';
       await this.userRepository.save(newUser);
       payload = { sub: userId };
       accessToken = jwt.sign(payload, this.SECRET_KEY, {
