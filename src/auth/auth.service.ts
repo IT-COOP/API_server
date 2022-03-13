@@ -211,9 +211,10 @@ export class AuthService {
     const SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
+    let payload: payload;
     if (existUser && existUser.nickname) {
       // 다회차 고인물
-      const payload: payload = { userId: existUser.userId };
+      payload = { userId: existUser.userId };
       const accessToken = jwt.sign(payload, SECRET_KEY, {
         expiresIn: '1h',
       });
@@ -222,11 +223,12 @@ export class AuthService {
       });
       existUser.refreshToken = refreshToken;
       await this.userRepository.save(existUser);
+      console.log(payload);
       return res.redirect(
         `${redirectToFront}accessToken=${accessToken}&refreshToken=${refreshToken}&isFirst=`,
       );
     } else if (existUser) {
-      const payload: payload = { userId: existUser.userId };
+      payload = { userId: existUser.userId };
       accessToken = jwt.sign(payload, SECRET_KEY, {
         expiresIn: '10m',
       });
@@ -237,11 +239,12 @@ export class AuthService {
       newUser.loginType = site;
       newUser.indigenousKey = id;
       await this.userRepository.save(newUser);
-      const payload: payload = { userId };
+      payload = { userId };
       accessToken = jwt.sign(payload, SECRET_KEY, {
         expiresIn: '10m',
       });
     }
+    console.log(payload);
     return res.redirect(
       `${redirectToFront}accessToken=${accessToken}&isFirst=1`,
     );
