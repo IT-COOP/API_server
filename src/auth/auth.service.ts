@@ -195,10 +195,7 @@ export class AuthService {
 
       return this.internalTokenCreation(existUser, id, site, res);
     } catch (err) {
-      throw new HttpException(
-        `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException(`error: ${err}`, HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -380,44 +377,5 @@ export class AuthService {
     }
     console.log('이건 유저가 아예 없을 때니까 에러가 나는 거야!');
     throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
-  }
-
-  async refreshAccessToken(refreshToken) {
-    let payload: jwt.JwtPayload;
-    try {
-      const verified = jwt.verify(refreshToken, this.SECRET_KEY);
-      if (typeof verified === 'string') {
-        throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
-      }
-      payload = verified;
-    } catch (err) {
-      throw new HttpException(
-        '다시 로그인 해주시기 바랍니다.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    const existUser = this.userRepository.findOne({
-      where: {
-        userId: payload.sub,
-        refreshToken,
-      },
-    });
-
-    if (!existUser) {
-      throw new HttpException(
-        '다시 로그인 해주시기 바랍니다.',
-        HttpStatus.UNAUTHORIZED,
-      );
-      return;
-    }
-    const accessToken = jwt.sign(payload, this.SECRET_KEY, {
-      expiresIn: '10m',
-    });
-    return {
-      success: true,
-      data: {
-        authorization: `Bearer ${accessToken}`,
-      },
-    };
   }
 }
