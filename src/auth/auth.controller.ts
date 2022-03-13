@@ -45,7 +45,8 @@ export class AuthController {
     @Headers('refreshToken') refreshToken: string,
   ) {
     console.log('여기는 와써용');
-    console.log('header!', Headers);
+    console.log('accessToken', accessToken);
+    console.log('refreshToken', refreshToken);
     return this.authService.userValidation(
       accessToken.split(' ')[1],
       refreshToken.split(' ')[1],
