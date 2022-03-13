@@ -32,15 +32,17 @@ export class AuthController {
   }
 
   @Post('completion')
-  completeFirstLogin(
+  firstLogin(
     @Param('authorization') payload: string,
     @Body() body: CompleteFirstLoginDTO,
   ) {
-    return this.completeFirstLogin(payload.split(' ')[1], body);
+    return this.authService.completeFirstLogin(payload.split(' ')[1], body);
   }
 
   @Get('validation')
-  userValidation(@Param('authorization') payload: string) {
-    return this.userValidation(payload.split(' ')[1]);
+  userValidation(@Param('authorization') payload: string, @Param() param) {
+    console.log(param);
+    console.log(payload);
+    return this.authService.userValidation(payload.split(' ')[1]);
   }
 }
