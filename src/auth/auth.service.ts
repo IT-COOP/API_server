@@ -196,6 +196,7 @@ export class AuthService {
         },
       });
     } catch (err) {
+      console.log(err);
       throw new HttpException(
         `소셜 로그인 요청 에러, error: ${err}`,
         HttpStatus.UNAUTHORIZED,
