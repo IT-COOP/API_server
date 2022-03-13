@@ -175,12 +175,9 @@ export class AuthService {
           },
         });
         id = userInfo.data.id.toString();
-
-        const redirectToFront = this.configService.get<string>('FRONT_SERVER');
-        res.redirect(`${redirectToFront}${accessToken}`);
       } else {
         throw new HttpException(
-          'error: Bad Request, errorDescription: wrong ',
+          'error: Bad Request, errorDescription: 잘못된 요청입니다.',
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -191,8 +188,6 @@ export class AuthService {
           indigenousKey: id,
         },
       });
-      const redirectToFront = this.configService.get<string>('FRONT_SERVER');
-      res.redirect(`${redirectToFront}${accessToken}`);
 
       return this.internalTokenCreation(existUser, id, site, res);
     } catch (err) {
