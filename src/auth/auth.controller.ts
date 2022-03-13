@@ -1,6 +1,15 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 
 @Controller('login')
@@ -23,7 +32,10 @@ export class AuthController {
   }
 
   @Post('completion')
-  completeFirstLogin(@Req() req, @Body() body: CompleteFirstLoginDTO) {
-    return this.completeFirstLogin(req.id, body);
+  completeFirstLogin(
+    @Param('authorization') authorization: string,
+    @Body() body: CompleteFirstLoginDTO,
+  ) {
+    return this.completeFirstLogin(authorization.split(' ')[1], body);
   }
 }

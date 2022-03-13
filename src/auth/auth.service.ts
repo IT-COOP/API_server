@@ -213,7 +213,7 @@ export class AuthService {
       const accessToken = jwt.sign(payload, SECRET_KEY, {
         expiresIn: '1h',
       });
-      const refreshToken = jwt.sign({}, SECRET_KEY, {
+      const refreshToken = jwt.sign({ userId: v1() }, SECRET_KEY, {
         expiresIn: '24h',
       });
       existUser.refreshToken = refreshToken;
