@@ -207,7 +207,7 @@ export class AuthService {
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
     let payload: jwt.JwtPayload;
-    if (existUser && existUser.nickname) {
+    if (existUser && existUser.isValid) {
       // 다회차 고인물
       payload = { sub: existUser.userId };
       const accessToken = jwt.sign(payload, this.SECRET_KEY, {
@@ -237,6 +237,7 @@ export class AuthService {
       newUser.userId = userId;
       newUser.loginType = site;
       newUser.indigenousKey = id;
+      newUser.isValid = false;
       await this.userRepository.save(newUser);
       payload = { sub: userId };
       accessToken = jwt.sign(payload, this.SECRET_KEY, {
@@ -298,28 +299,41 @@ export class AuthService {
       const verified = jwt.verify(token, this.SECRET_KEY);
       if (typeof verified === 'string') {
         throw new Error('잘못된 요청입니다.');
-      } else {
-        payload = verified;
+        return;
       }
+      payload = verified;
     } catch (err) {
       throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
+      return;
     }
     const userId = payload.sub;
-    const existUser = this.userRepository.findOne({
+    const existUser = await this.userRepository.findOne({
       where: {
         userId,
       },
       select: ['nickname', 'profileImgUrl'],
     });
 
-    if (existUser) {
+    if (existUser && existUser.isValid) {
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
         expiresIn: '10h',
       });
       return {
         success: true,
         data: {
+          isFirst: false,
           existUser,
+          authorization: `Bearer ${accessToken}`,
+        },
+      };
+    } else if (existUser) {
+      const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
+        expiresIn: '10h',
+      });
+      return {
+        success: true,
+        data: {
+          isFirst: true,
           authorization: `Bearer ${accessToken}`,
         },
       };
