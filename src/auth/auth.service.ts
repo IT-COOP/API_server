@@ -316,6 +316,8 @@ export class AuthService {
       select: ['nickname', 'profileImgUrl'],
     });
     console.log('existUser 게또');
+    console.log(payload);
+    console.log(existUser, '설마 닉네임 프로필이 없어서?');
     if (existUser && existUser.isValid) {
       console.log('이건 안 들어갈거야');
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
