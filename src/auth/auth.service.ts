@@ -20,6 +20,8 @@ export class AuthService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
+  SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
@@ -195,34 +197,34 @@ export class AuthService {
       );
     }
   }
+
   async internalTokenCreation(
     existUser: Users | undefined,
     id: string,
     site: number,
     res: Response,
   ) {
-    const SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
-    let payload: payload;
+    let payload: jwt.JwtPayload;
     if (existUser && existUser.nickname) {
       // 다회차 고인물
-      payload = { userId: existUser.userId };
-      const accessToken = jwt.sign(payload, SECRET_KEY, {
+      payload = { sub: existUser.userId };
+      const accessToken = jwt.sign(payload, this.SECRET_KEY, {
         expiresIn: '1h',
       });
-      const refreshToken = jwt.sign({ userId: v1() }, SECRET_KEY, {
+      const refreshToken = jwt.sign({}, this.SECRET_KEY, {
         expiresIn: '24h',
       });
       existUser.refreshToken = refreshToken;
       await this.userRepository.save(existUser);
       console.log(payload);
       return res.redirect(
-        `${redirectToFront}accessToken=${accessToken}&refreshToken=${refreshToken}&isFirst=`,
+        `${redirectToFront}accessToken=${accessToken}&refreshToken=${refreshToken}`,
       );
     } else if (existUser) {
-      payload = { userId: existUser.userId };
-      accessToken = jwt.sign(payload, SECRET_KEY, {
+      payload = { sub: existUser.userId };
+      accessToken = jwt.sign(payload, this.SECRET_KEY, {
         expiresIn: '10m',
       });
     } else {
@@ -232,28 +234,29 @@ export class AuthService {
       newUser.loginType = site;
       newUser.indigenousKey = id;
       await this.userRepository.save(newUser);
-      payload = { userId };
-      accessToken = jwt.sign(payload, SECRET_KEY, {
+      payload = { sub: userId };
+      accessToken = jwt.sign(payload, this.SECRET_KEY, {
         expiresIn: '10m',
       });
     }
     console.log(payload);
-    return res.redirect(
-      `${redirectToFront}accessToken=${accessToken}&isFirst=1`,
-    );
+    return res.redirect(`${redirectToFront}accessToken=${accessToken}`);
   }
 
   async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
-    const SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
     let userId: string;
     try {
-      const payload: any = jwt.verify(token, SECRET_KEY);
-      userId = payload.userId;
+      const verified = jwt.verify(token, this.SECRET_KEY);
+      if (typeof verified === 'string') {
+        throw new HttpException(
+          'Unprocessable Entity',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+      const payload: jwt.JwtPayload = verified;
+      userId = payload.sub;
     } catch (err) {
-      throw new HttpException(
-        'error: Bad Request, errorDescription: 잘못된 요청입니다.',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
     }
     const intermediateUser = await this.userRepository.findOne({
       where: {
@@ -261,15 +264,15 @@ export class AuthService {
       },
     });
 
-    const payload: payload = { userId: body.userId };
-    const accessToken = jwt.sign(payload, SECRET_KEY, {
+    const payload: payload = { sub: body.userId };
+    const accessToken = jwt.sign(payload, this.SECRET_KEY, {
       expiresIn: '10m',
     });
 
     for (const element in body) {
       intermediateUser[element] = body[element];
     }
-    const refreshToken = jwt.sign({}, SECRET_KEY, { expiresIn: '24h' });
+    const refreshToken = jwt.sign({}, this.SECRET_KEY, { expiresIn: '24h' });
     intermediateUser.refreshToken = refreshToken;
     await this.userRepository.save(intermediateUser);
 
@@ -277,5 +280,40 @@ export class AuthService {
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
+  }
+
+  async userValidation(token: string) {
+    let payload: jwt.JwtPayload;
+    try {
+      const verified = jwt.verify(token, this.SECRET_KEY);
+      if (typeof verified === 'string') {
+        throw new Error('잘못된 요청입니다.');
+      } else {
+        payload = verified;
+      }
+    } catch (err) {
+      throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
+    }
+    const userId = payload.sub;
+    const existUser = this.userRepository.findOne({
+      where: {
+        userId,
+      },
+      select: ['nickname', 'profileImgUrl'],
+    });
+
+    if (existUser) {
+      const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
+        expiresIn: '10m',
+      });
+      return {
+        success: true,
+        data: {
+          existUser,
+          authorization: `Bearer ${accessToken}`,
+        },
+      };
+    }
+    throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
   }
 }

@@ -1,3 +1,3 @@
 export type payload = {
-  userId: string;
+  sub: string;
 };
