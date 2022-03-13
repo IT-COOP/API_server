@@ -39,7 +39,7 @@ export class AuthController {
     return this.authService.completeFirstLogin(payload.split(' ')[1], body);
   }
 
-  @Get('validation')
+  @Post('validation')
   userValidation(
     @Headers() Headers,
     @Body('authorization') accessToken: string,
