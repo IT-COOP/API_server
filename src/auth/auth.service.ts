@@ -301,12 +301,13 @@ export class AuthService {
     try {
       const verified = jwt.verify(accessToken, this.SECRET_KEY);
       if (typeof verified === 'string') {
-        throw new Error('잘못된 요청입니다.');
+        throw new Error();
         return;
       }
       payload = verified;
     } catch {
-      // refresh 토큰이 있어야겠지?
+      console.log('308 refreshToken 있냐');
+      console.log('refreshToken', refreshToken);
       try {
         // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
         const userId = jwt.decode(accessToken).sub;
@@ -318,6 +319,8 @@ export class AuthService {
           },
         });
         if (existUser) {
+          console.log('refreshToken 괜찮네');
+          console.log('리프레시 토큰으로 existUser:', existUser);
           const novelAccessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
             expiresIn: '10h',
           });
@@ -331,7 +334,10 @@ export class AuthService {
           };
         }
       } catch (err) {
-        throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
+        throw new HttpException(
+          `다시 로그인 해주세요`,
+          HttpStatus.UNAUTHORIZED,
+        );
         return;
       }
     }
@@ -366,7 +372,7 @@ export class AuthService {
       return {
         success: true,
         data: {
-          userinFo: existUser,
+          userInfo: existUser,
           authorization: `Bearer ${accessToken}`,
         },
       };

@@ -39,11 +39,10 @@ export class AuthController {
     return this.authService.completeFirstLogin(payload.split(' ')[1], body);
   }
 
-  @Post('validation')
+  @Get('validation')
   userValidation(
-    @Headers() Headers,
-    @Body('authorization') accessToken: string,
-    @Body('refreshToken') refreshToken: string,
+    @Headers('authorization') accessToken: string,
+    @Headers('refreshToken') refreshToken: string,
   ) {
     console.log('여기는 와써용');
     console.log('header!', Headers);
