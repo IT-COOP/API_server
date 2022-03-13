@@ -283,8 +283,12 @@ export class AuthService {
   }
 
   async userValidation(rawHeaders: string[]) {
-    const index = req.rawHeaders.indexOf('authorization');
-    const token = req.rawHeaders[index + 1];
+    const index = rawHeaders.indexOf('authorization');
+    if (index === -1) {
+      throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
+      return;
+    }
+    const token = rawHeaders[index + 1];
     let payload: jwt.JwtPayload;
     try {
       const verified = jwt.verify(token, this.SECRET_KEY);
