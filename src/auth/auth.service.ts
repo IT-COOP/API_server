@@ -118,8 +118,6 @@ export class AuthService {
         },
       });
       accessToken = result.data.access_token;
-
-      console.log('github Token:', result.data);
     } catch (err) {
       throw new HttpException(
         `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
@@ -245,11 +243,21 @@ export class AuthService {
     );
   }
 
-  async completeFirstLogin(id, body: CompleteFirstLoginDTO) {
+  async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
     const SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+    let userId: string;
+    try {
+      const payload: any = jwt.verify(token, SECRET_KEY);
+      userId = payload.userId;
+    } catch (err) {
+      throw new HttpException(
+        'error: Bad Request, errorDescription: 잘못된 요청입니다.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const intermediateUser = await this.userRepository.findOne({
       where: {
-        userId: id,
+        userId,
       },
     });
 
@@ -257,10 +265,11 @@ export class AuthService {
     const accessToken = jwt.sign(payload, SECRET_KEY, {
       expiresIn: '10m',
     });
-    const refreshToken = jwt.sign({}, SECRET_KEY, { expiresIn: '24h' });
+
     for (const element in body) {
       intermediateUser[element] = body[element];
     }
+    const refreshToken = jwt.sign({}, SECRET_KEY, { expiresIn: '24h' });
     intermediateUser.refreshToken = refreshToken;
     await this.userRepository.save(intermediateUser);
 
