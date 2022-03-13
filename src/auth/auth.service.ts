@@ -306,40 +306,41 @@ export class AuthService {
       }
       payload = verified;
     } catch {
-      console.log('308 refreshToken 있냐');
+      console.log('refreshToken 있냐');
       console.log('refreshToken', refreshToken);
-      try {
-        // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
-        const userId = jwt.decode(accessToken).sub;
-        const existUser = await this.userRepository.findOne({
-          select: ['nickname', 'profileImgUrl'],
-          where: {
-            userId,
-            refreshToken,
-          },
-        });
-        if (existUser) {
-          console.log('refreshToken 괜찮네');
-          console.log('리프레시 토큰으로 existUser:', existUser);
-          const novelAccessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
-            expiresIn: '10h',
-          });
-
-          return {
-            success: true,
-            data: {
-              userInfo: existUser,
-              authorization: `Bearer ${novelAccessToken}`,
+      if (refreshToken) {
+        try {
+          // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
+          const userId = jwt.decode(accessToken).sub;
+          const existUser = await this.userRepository.findOne({
+            select: ['nickname', 'profileImgUrl'],
+            where: {
+              userId,
+              refreshToken,
             },
-          };
-        }
-      } catch (err) {
-        throw new HttpException(
-          `다시 로그인 해주세요`,
-          HttpStatus.UNAUTHORIZED,
-        );
-        return;
+          });
+          if (existUser) {
+            console.log('refreshToken 괜찮네');
+            console.log('리프레시 토큰으로 existUser:', existUser);
+            const novelAccessToken = jwt.sign(
+              { sub: userId },
+              this.SECRET_KEY,
+              {
+                expiresIn: '10h',
+              },
+            );
+
+            return {
+              success: true,
+              data: {
+                userInfo: existUser,
+                authorization: `Bearer ${novelAccessToken}`,
+              },
+            };
+          }
+        } catch (err) {}
       }
+      throw new HttpException(`다시 로그인 해주세요`, HttpStatus.UNAUTHORIZED);
     }
     console.log('페이로드 따써용');
     const userId = payload.sub;
