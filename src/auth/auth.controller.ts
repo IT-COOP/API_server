@@ -47,6 +47,7 @@ export class AuthController {
     console.log('여기는 와써용');
     console.log('accessToken', accessToken);
     console.log('refreshToken', refreshToken);
+    refreshToken = refreshToken ? refreshToken : '';
     return this.authService.userValidation(
       accessToken.split(' ')[1],
       refreshToken.split(' ')[1],
