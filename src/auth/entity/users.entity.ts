@@ -8,8 +8,9 @@ export class Users {
   @Column('varchar', { name: 'nickname', length: 100, default: '' })
   nickname: string | null;
 
-  @Column('varchar', { name: 'profileImgUrl', nullable: true, length: 100 })
-  profileImgUrl: string | null;
+  // default 값 기본 이미지로 수정 예정
+  @Column('varchar', { name: 'profileImgUrl', length: 100, default: '' })
+  profileImgUrl: string;
 
   @Column('varchar', { name: 'technologyStack', nullable: true, length: 100 })
   technologyStack: string | null;

@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -174,6 +175,7 @@ export class AuthService {
             Accept: 'application/json',
           },
         });
+        console.log(userInfo.data);
         id = userInfo.data.id.toString();
       } else {
         throw new HttpException(
