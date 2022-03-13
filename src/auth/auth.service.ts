@@ -282,7 +282,9 @@ export class AuthService {
     };
   }
 
-  async userValidation(token: string) {
+  async userValidation(rawHeaders: string[]) {
+    const index = req.rawHeaders.indexOf('authorization');
+    const token = req.rawHeaders[index + 1];
     let payload: jwt.JwtPayload;
     try {
       const verified = jwt.verify(token, this.SECRET_KEY);

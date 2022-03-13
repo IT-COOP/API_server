@@ -4,14 +4,13 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Param,
   Post,
   Query,
   Req,
   Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 
 @Controller('login')
 export class AuthController {
@@ -41,8 +40,8 @@ export class AuthController {
   }
 
   @Get('validation')
-  userValidation(@Req() req) {
-    console.log(req);
-    // return this.authService.userValidation(payload.split(' ')[1]);
+  userValidation(@Req() req: Request) {
+    const rawHeaders = req.rawHeaders;
+    return this.authService.userValidation(rawHeaders);
   }
 }
