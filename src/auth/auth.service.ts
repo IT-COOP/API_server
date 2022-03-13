@@ -213,9 +213,13 @@ export class AuthService {
       const accessToken = jwt.sign(payload, this.SECRET_KEY, {
         expiresIn: '1h',
       });
-      const refreshToken = jwt.sign({}, this.SECRET_KEY, {
-        expiresIn: '24h',
-      });
+      const refreshToken = jwt.sign(
+        { sub: existUser.userId },
+        this.SECRET_KEY,
+        {
+          expiresIn: '24h',
+        },
+      );
       existUser.refreshToken = refreshToken;
       await this.userRepository.save(existUser);
       console.log(payload);
@@ -225,7 +229,7 @@ export class AuthService {
     } else if (existUser) {
       payload = { sub: existUser.userId };
       accessToken = jwt.sign(payload, this.SECRET_KEY, {
-        expiresIn: '10m',
+        expiresIn: '10h',
       });
     } else {
       const userId = v1();
@@ -236,7 +240,7 @@ export class AuthService {
       await this.userRepository.save(newUser);
       payload = { sub: userId };
       accessToken = jwt.sign(payload, this.SECRET_KEY, {
-        expiresIn: '10m',
+        expiresIn: '10h',
       });
     }
     console.log(payload);
@@ -266,13 +270,19 @@ export class AuthService {
 
     const payload: payload = { sub: body.userId };
     const accessToken = jwt.sign(payload, this.SECRET_KEY, {
-      expiresIn: '10m',
+      expiresIn: '10h',
     });
 
     for (const element in body) {
       intermediateUser[element] = body[element];
     }
-    const refreshToken = jwt.sign({}, this.SECRET_KEY, { expiresIn: '24h' });
+    const refreshToken = jwt.sign(
+      { sub: intermediateUser.userId },
+      this.SECRET_KEY,
+      {
+        expiresIn: '24h',
+      },
+    );
     intermediateUser.refreshToken = refreshToken;
     await this.userRepository.save(intermediateUser);
 
@@ -282,13 +292,7 @@ export class AuthService {
     };
   }
 
-  async userValidation(rawHeaders: string[]) {
-    const index = rawHeaders.indexOf('authorization');
-    if (index === -1) {
-      throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
-      return;
-    }
-    const token = rawHeaders[index + 1];
+  async userValidation(token: string) {
     let payload: jwt.JwtPayload;
     try {
       const verified = jwt.verify(token, this.SECRET_KEY);
@@ -310,7 +314,7 @@ export class AuthService {
 
     if (existUser) {
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
-        expiresIn: '10m',
+        expiresIn: '10h',
       });
       return {
         success: true,
@@ -321,5 +325,44 @@ export class AuthService {
       };
     }
     throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
+  }
+
+  async refreshAccessToken(refreshToken) {
+    let payload: jwt.JwtPayload;
+    try {
+      const verified = jwt.verify(refreshToken, this.SECRET_KEY);
+      if (typeof verified === 'string') {
+        throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
+      }
+      payload = verified;
+    } catch (err) {
+      throw new HttpException(
+        '다시 로그인 해주시기 바랍니다.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const existUser = this.userRepository.findOne({
+      where: {
+        userId: payload.sub,
+        refreshToken,
+      },
+    });
+
+    if (!existUser) {
+      throw new HttpException(
+        '다시 로그인 해주시기 바랍니다.',
+        HttpStatus.UNAUTHORIZED,
+      );
+      return;
+    }
+    const accessToken = jwt.sign(payload, this.SECRET_KEY, {
+      expiresIn: '10m',
+    });
+    return {
+      success: true,
+      data: {
+        authorization: `Bearer ${accessToken}`,
+      },
+    };
   }
 }

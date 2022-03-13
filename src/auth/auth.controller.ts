@@ -39,9 +39,13 @@ export class AuthController {
     return this.authService.completeFirstLogin(payload.split(' ')[1], body);
   }
 
-  @Get('validation')
-  userValidation(@Req() req: Request) {
-    const rawHeaders = req.rawHeaders;
-    return this.authService.userValidation(rawHeaders);
+  @Post('validation')
+  userValidation(@Body('authorization') accessToken: string) {
+    return this.authService.userValidation(accessToken.split(' ')[1]);
+  }
+
+  @Post('refresh')
+  refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshAccessToken(refreshToken.split(' ')[1]);
   }
 }
