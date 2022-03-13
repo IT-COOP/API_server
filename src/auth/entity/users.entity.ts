@@ -5,7 +5,7 @@ export class Users {
   @Column('varchar', { primary: true, name: 'userId', length: 100 })
   userId: string;
 
-  @Column('varchar', { name: 'nickname', nullable: true, length: 100 })
+  @Column('varchar', { name: 'nickname', length: 100, default: '' })
   nickname: string | null;
 
   @Column('varchar', { name: 'profileImgUrl', nullable: true, length: 100 })

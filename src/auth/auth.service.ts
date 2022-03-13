@@ -207,7 +207,7 @@ export class AuthService {
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
     let payload: jwt.JwtPayload;
-    if (existUser && existUser.isValid) {
+    if (existUser && existUser.nickname) {
       // 다회차 고인물
       payload = { sub: existUser.userId };
       const accessToken = jwt.sign(payload, this.SECRET_KEY, {
@@ -237,16 +237,12 @@ export class AuthService {
       newUser.userId = userId;
       newUser.loginType = site;
       newUser.indigenousKey = id;
-      newUser.isValid = false;
-      newUser.profileImgUrl = '';
-      newUser.nickname = '';
       await this.userRepository.save(newUser);
       payload = { sub: userId };
       accessToken = jwt.sign(payload, this.SECRET_KEY, {
         expiresIn: '10h',
       });
     }
-    console.log(payload);
     return res.redirect(`${redirectToFront}accessToken=${accessToken}`);
   }
 
@@ -328,7 +324,6 @@ export class AuthService {
       return {
         success: true,
         data: {
-          isFirst: false,
           existUser,
           authorization: `Bearer ${accessToken}`,
         },
@@ -341,7 +336,6 @@ export class AuthService {
       return {
         success: true,
         data: {
-          isFirst: true,
           authorization: `Bearer ${accessToken}`,
         },
       };
