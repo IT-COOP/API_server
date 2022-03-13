@@ -32,6 +32,7 @@ export class AuthController {
 
   @Post('validation')
   userValidation(@Body('authorization') accessToken: string) {
+    console.log('여기는 와써용');
     return this.authService.userValidation(accessToken.split(' ')[1]);
   }
 

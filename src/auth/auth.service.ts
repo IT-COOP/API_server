@@ -294,6 +294,7 @@ export class AuthService {
   }
 
   async userValidation(token: string) {
+    console.log('여기도 와써용');
     let payload: jwt.JwtPayload;
     try {
       const verified = jwt.verify(token, this.SECRET_KEY);
@@ -306,6 +307,7 @@ export class AuthService {
       throw new HttpException(`${err}`, HttpStatus.UNAUTHORIZED);
       return;
     }
+    console.log('페이로드 따써용');
     const userId = payload.sub;
     const existUser = await this.userRepository.findOne({
       where: {
@@ -313,8 +315,9 @@ export class AuthService {
       },
       select: ['nickname', 'profileImgUrl'],
     });
-
+    console.log('existUser 게또');
     if (existUser && existUser.isValid) {
+      console.log('이건 안 들어갈거야');
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
         expiresIn: '10h',
       });
@@ -327,6 +330,7 @@ export class AuthService {
         },
       };
     } else if (existUser) {
+      console.log('대신에 여기로 들어가겠지?');
       const accessToken = jwt.sign({ sub: userId }, this.SECRET_KEY, {
         expiresIn: '10h',
       });
@@ -338,6 +342,7 @@ export class AuthService {
         },
       };
     }
+    console.log('이건 유저가 아예 없을 때니까 에러가 나는 거야!');
     throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
   }
 
