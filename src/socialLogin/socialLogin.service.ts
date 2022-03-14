@@ -348,23 +348,14 @@ export class SocialLoginService {
     } catch (err) {
       throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
     }
-    const intermediateUser = await this.userRepository.findOne({
-      where: {
-        userId,
-      },
-    });
 
     const payload: jwt.JwtPayload = { sub: body.userId };
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
-    const refreshToken = jwt.sign(
-      { sub: intermediateUser.userId },
-      MY_SECRET_KEY,
-      {
-        expiresIn: REFRESH_TOKEN_DURATION,
-      },
-    );
+    const refreshToken = jwt.sign({ sub: body.userId }, MY_SECRET_KEY, {
+      expiresIn: REFRESH_TOKEN_DURATION,
+    });
     const mySet: any = {};
     for (const each in body) {
       mySet[each] = body[each];
@@ -378,6 +369,7 @@ export class SocialLoginService {
       .execute();
     console.log(updatedUser);
     console.log('여기 맞지..?');
+
     return {
       userInfo: updatedUser,
       authorization: `Bearer ${accessToken}`,
