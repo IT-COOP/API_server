@@ -32,6 +32,8 @@ export class SocialLoginService {
     private userRepository: Repository<Users>,
   ) {}
 
+  selections = ['profileImgUrl', 'nickname'];
+
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
     const redirectURL = this.configService.get<string>('KAKAO_REDIRECT_URL');
@@ -204,14 +206,11 @@ export class SocialLoginService {
       .createQueryBuilder()
       .where('indigenousKey = :indigenousKey', { indigenousKey })
       .getOne();
-    console.log(208);
     let payload: jwt.JwtPayload;
     let isProfileSet = 'isProfileSet=false';
     if (existUser) {
-      console.log(211);
       payload = { sub: existUser.userId };
     } else {
-      console.log(214);
       const userId = v1();
       const newUser = new Users();
       newUser.userId = userId;
@@ -225,7 +224,6 @@ export class SocialLoginService {
         .execute();
       payload = { sub: userId };
     }
-    console.log(228);
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
@@ -318,7 +316,6 @@ export class SocialLoginService {
     body: CompleteFirstLoginDTO,
   ) {
     if (typeof accessTokenBearer !== 'string') {
-      console.log(323);
       throw new HttpException('Access Token Required', HttpStatus.FORBIDDEN);
     }
     let userId: string;
@@ -327,7 +324,6 @@ export class SocialLoginService {
         accessTokenBearer.split(' ')[1],
         MY_SECRET_KEY,
       );
-      console.log(332);
       if (typeof verified === 'string') {
         // 타입스크립트가 지랄해서 넣음
         throw new HttpException(
@@ -338,7 +334,6 @@ export class SocialLoginService {
       const payload: jwt.JwtPayload = verified;
       userId = payload.sub;
     } catch (err) {
-      console.log(343);
       throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
     }
 
@@ -346,16 +341,13 @@ export class SocialLoginService {
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
-    console.log(351);
     const refreshToken = jwt.sign({ sub: body.userId }, MY_SECRET_KEY, {
       expiresIn: REFRESH_TOKEN_DURATION,
     });
-    console.log(355);
     const mySet: any = {};
     for (const each in body) {
       mySet[each] = body[each];
     }
-    console.log(360);
     mySet.refreshToken = refreshToken;
     await this.userRepository
       .createQueryBuilder('users')
@@ -364,14 +356,11 @@ export class SocialLoginService {
       .where('userId = :userId', { userId })
       .execute();
 
-    const userInfo = await this.userRepository.findOne({
-      where: {
-        userId: mySet.userId,
-      },
-      select: ['nickname', 'activityPoint', 'profileImgUrl'],
-    });
-
-    console.log(userInfo);
+    const userInfo = await this.userRepository
+      .createQueryBuilder('users')
+      .where('userId = :userId', { userId: payload.sub })
+      .select(['users.nickname', 'users.profileImgUrl'])
+      .getOne();
 
     return {
       userInfo: userInfo,
