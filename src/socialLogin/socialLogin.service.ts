@@ -13,7 +13,7 @@ import axios, { AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
-import { getConnection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   LoginType,
   InputJwtError,
@@ -31,8 +31,6 @@ export class SocialLoginService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
-
-  selections = ['profileImgUrl', 'nickname'];
 
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -356,11 +354,12 @@ export class SocialLoginService {
       .where('userId = :userId', { userId })
       .execute();
 
-    const userInfo = await this.userRepository
-      .createQueryBuilder('users')
-      .where('userId = :userId', { userId: payload.sub })
-      .select(['users.nickname', 'users.profileImgUrl'])
-      .getOne();
+    const userInfo = await this.userRepository.findOne({
+      where: {
+        userId: mySet.userId,
+      },
+      select: ['nickname', 'profileImgUrl'],
+    });
 
     return {
       userInfo: userInfo,
