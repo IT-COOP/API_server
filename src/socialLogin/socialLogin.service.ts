@@ -15,7 +15,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
-import crypto from 'crypto';
 
 @Injectable()
 export class SocialLoginService {
@@ -153,6 +152,7 @@ export class SocialLoginService {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        console.log('kakao', typeof userInfo.data.id, userInfo.data.id);
         id = String(userInfo.data.id);
         console.log('정보 받아썽 카카오');
         //
@@ -168,6 +168,7 @@ export class SocialLoginService {
             id_token: `${idToken}`,
           },
         });
+        console.log('google', typeof userInfo.data.sub, userInfo.data.sub);
         id = String(userInfo.data.sub); // << 유저의 고유값
         console.log('정보 받아썽 구글');
         //
@@ -182,6 +183,7 @@ export class SocialLoginService {
             Accept: 'application/json',
           },
         });
+        console.log('깃헙', typeof userInfo.data.id, userInfo.data.id);
         id = String(userInfo.data.id);
         console.log('정보 받아썽 깃헙');
       } else {
@@ -192,12 +194,12 @@ export class SocialLoginService {
         );
       }
       console.log('해싱에서 뻑이 가나?');
-      const hashedID = crypto.createHash('sha256').update(id).digest('base64');
-      console.log('hashed ID', hashedID);
+      console.log(typeof id);
+
       existUser = await this.userRepository.findOne({
         where: {
           loginType: site,
-          indigenousKey: hashedID,
+          indigenousKey: id,
         },
       });
     } catch (err) {
