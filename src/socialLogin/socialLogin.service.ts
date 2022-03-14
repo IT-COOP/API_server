@@ -367,7 +367,7 @@ export class SocialLoginService {
     const userInfo = await this.userRepository
       .createQueryBuilder('users')
       .where('userId = :userId', { userId })
-      .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
+      .select(['userId', 'nickname', 'profileImgUrl'])
       .getOne();
 
     console.log(userInfo);
