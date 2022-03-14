@@ -374,7 +374,7 @@ export class SocialLoginService {
       .createQueryBuilder('users')
       .update(Users)
       .set(mySet)
-      .where('userId = : userId', { userId })
+      .where('userId = :userId', { userId })
       .execute();
 
     return {
