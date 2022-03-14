@@ -365,10 +365,10 @@ export class SocialLoginService {
       .execute();
 
     const userInfo = await this.userRepository
-      .createQueryBuilder('user')
-      .select('userId')
-      .addSelect('nickname')
-      .addSelect('profileImgUrl')
+      .createQueryBuilder()
+      .select('users.userId')
+      .addSelect('users.nickname')
+      .addSelect('users.profileImgUrl')
       .from(Users, 'users')
       .where('userId = :userId', { userId: mySet.userId })
       .getOne();
