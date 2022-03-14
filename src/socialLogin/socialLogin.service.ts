@@ -373,7 +373,7 @@ export class SocialLoginService {
     await this.userRepository.save(intermediateUser);
 
     return {
-      userInfo = intermediateUser,
+      userInfo: intermediateUser,
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
