@@ -376,7 +376,8 @@ export class SocialLoginService {
       .set(mySet)
       .where('userId = :userId', { userId })
       .execute();
-
+    console.log(updatedUser);
+    console.log('여기 맞지..?');
     return {
       userInfo: updatedUser,
       authorization: `Bearer ${accessToken}`,
