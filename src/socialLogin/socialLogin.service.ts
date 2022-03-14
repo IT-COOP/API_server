@@ -365,7 +365,7 @@ export class SocialLoginService {
         expiresIn: REFRESH_TOKEN_DURATION,
       },
     );
-    await this.userRepository
+    const updatedUser = await this.userRepository
       .createQueryBuilder('users')
       .update(Users)
       .set(body)
@@ -374,7 +374,7 @@ export class SocialLoginService {
       .execute();
 
     return {
-      userInfo: intermediateUser,
+      userInfo: updatedUser,
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
