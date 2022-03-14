@@ -366,7 +366,8 @@ export class SocialLoginService {
 
     const userInfo = await this.userRepository
       .createQueryBuilder('users')
-      .getMany();
+      .where('userId = :userId', { userId: mySet.userId })
+      .getOne();
 
     console.log(userInfo);
 
