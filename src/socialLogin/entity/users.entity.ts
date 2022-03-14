@@ -6,7 +6,7 @@ export class Users {
   userId: string;
 
   @Column('varchar', { name: 'nickname', length: 30, default: '' })
-  nickname: string | null;
+  nickname: string;
 
   // default 값 기본 이미지로 수정 예정
   @Column('varchar', { name: 'profileImgUrl', default: '', length: 1000 })
@@ -22,6 +22,8 @@ export class Users {
   selfIntroduction: string;
 
   @Column('varchar', { name: 'portfolioUrl', default: '' })
+  portfolioUrl: string;
+
   @Column('int', { name: 'loginType', nullable: false })
   loginType: number;
 
