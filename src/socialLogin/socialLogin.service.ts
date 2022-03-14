@@ -370,6 +370,8 @@ export class SocialLoginService {
       .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
       .getOne();
 
+    console.log(userInfo);
+
     return {
       userInfo,
       authorization: `Bearer ${accessToken}`,
