@@ -368,13 +368,12 @@ export class SocialLoginService {
       where: {
         userId,
       },
-      select: ['userId', 'nickname', 'profileImgUrl'],
     });
 
     console.log(userInfo);
 
     return {
-      userInfo,
+      userInfo: userInfo,
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
