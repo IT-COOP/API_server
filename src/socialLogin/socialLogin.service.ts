@@ -13,7 +13,7 @@ import axios, { AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getConnection, Repository } from 'typeorm';
 import {
   LoginType,
   InputJwtError,
@@ -364,14 +364,12 @@ export class SocialLoginService {
       .where('userId = :userId', { userId })
       .execute();
 
-    const userInfo = await this.userRepository
-      .createQueryBuilder()
-      .select('users.userId')
-      .addSelect('users.nickname')
-      .addSelect('users.profileImgUrl')
-      .from(Users, 'users')
-      .where('userId = :userId', { userId: mySet.userId })
-      .getOne();
+    const userInfo = await this.userRepository.findOne({
+      where: {
+        userId: mySet.userId,
+      },
+      select: ['nickname', 'activityPoint', 'profileImgUrl'],
+    });
 
     console.log(userInfo);
 
