@@ -364,11 +364,12 @@ export class SocialLoginService {
       .where('userId = :userId', { userId })
       .execute();
 
-    const userInfo = await this.userRepository
-      .createQueryBuilder('users')
-      .where('userId = :userId', { userId })
-      .select(['userId', 'nickname', 'profileImgUrl'])
-      .getOne();
+    const userInfo = await this.userRepository.findOne({
+      where: {
+        userId,
+      },
+      select: ['userId', 'nickname', 'profileImgUrl'],
+    });
 
     console.log(userInfo);
 
