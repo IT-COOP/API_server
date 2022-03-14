@@ -33,6 +33,7 @@
     "axios": "^0.26.1",
     "class-validator": "^0.13.2",
     "jsonwebtoken": "^8.5.1",
+    "md5": "^2.3.0",
     "mysql2": "^2.3.3",
     "passport": "^0.5.2",
     "passport-local": "^1.0.0",

@@ -50,6 +50,7 @@ export class SocialLoginController {
     @Headers('authorization') accessTokenBearer: string,
     @Body() body: CompleteFirstLoginDTO,
   ) {
+    console.log(accessTokenBearer);
     return this.socialLoginService.completeFirstLogin(accessTokenBearer, body);
   }
 }
