@@ -28,7 +28,7 @@ export class Users {
   loginType: number | null;
 
   // Unique로 이름 변경
-  @Column('varchar', { name: 'indigenousKey', nullable: false })
+  @Column('varchar', { name: 'indigenousKey', nullable: false, unique: true })
   indigenousKey: string;
 
   @Column('varchar', { name: 'refreshToken', nullable: true })

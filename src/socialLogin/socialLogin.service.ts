@@ -358,10 +358,6 @@ export class SocialLoginService {
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
-
-    for (const element in body) {
-      intermediateUser[element] = body[element];
-    }
     const refreshToken = jwt.sign(
       { sub: intermediateUser.userId },
       MY_SECRET_KEY,
@@ -369,8 +365,13 @@ export class SocialLoginService {
         expiresIn: REFRESH_TOKEN_DURATION,
       },
     );
-    intermediateUser.refreshToken = refreshToken;
-    await this.userRepository.save(intermediateUser);
+    await this.userRepository
+      .createQueryBuilder('users')
+      .update(Users)
+      .set(body)
+      .set({ refreshToken })
+      .where('userId = : userId', { userId })
+      .execute();
 
     return {
       userInfo: intermediateUser,
