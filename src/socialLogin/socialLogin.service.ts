@@ -21,7 +21,6 @@ import {
   RefreshTokenErrorMessage,
 } from './enum/enums';
 import { v1 } from 'uuid';
-import md5 from 'md5';
 
 @Injectable()
 export class SocialLoginService {
@@ -192,7 +191,6 @@ export class SocialLoginService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    indigenousKey = md5(indigenousKey);
     return this.internalTokenCreation(indigenousKey, loginType, res);
   }
 
