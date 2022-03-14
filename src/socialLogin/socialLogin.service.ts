@@ -141,6 +141,7 @@ export class SocialLoginService {
     res: Response,
     idToken?: string,
   ) {
+    console.log('토큰 내놔!');
     let id: string;
     let existUser: Users | undefined;
     try {
@@ -186,6 +187,7 @@ export class SocialLoginService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      console.log('여기서 뻑이 가나?');
       console.log(id);
       id = md5(id);
       console.log('hashed ID', id);
@@ -196,6 +198,7 @@ export class SocialLoginService {
         },
       });
     } catch (err) {
+      console.log('너에게 닿기를');
       throw new HttpException(
         `소셜 로그인 요청 에러, error: ${err}`,
         HttpStatus.UNAUTHORIZED,
@@ -211,6 +214,7 @@ export class SocialLoginService {
     site: number,
     res: Response,
   ) {
+    console.log('토큰 맹글기');
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
     let payload: jwt.JwtPayload;
