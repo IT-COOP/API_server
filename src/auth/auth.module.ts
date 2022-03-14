@@ -1,14 +1,11 @@
-import { Users } from './entity/users.entity';
+import { ConfigModule } from '@nestjs/config';
+import { Users } from '../socialLogin/entity/users.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 
 @Module({
-  providers: [AuthService, ConfigService],
-  controllers: [AuthController],
-  imports: [HttpModule, ConfigModule, TypeOrmModule.forFeature([Users])],
+  providers: [AuthService],
+  imports: [ConfigModule, TypeOrmModule.forFeature([Users])],
 })
 export class AuthModule {}
