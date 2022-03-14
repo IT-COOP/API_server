@@ -365,7 +365,7 @@ export class SocialLoginService {
       .execute();
 
     const userInfo = await this.userRepository
-      .createQueryBuilder('users')
+      .createQueryBuilder('user')
       .select('userId')
       .addSelect('nickname')
       .addSelect('profileImgUrl')
