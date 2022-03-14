@@ -46,7 +46,6 @@ export class SocialLoginController {
     @Headers('authorization') accessTokenBearer: string,
     @Headers('refreshToken') refreshTokenBearer: string,
   ) {
-    console.log('여기는 와써용');
     console.log('accessToken', accessTokenBearer);
     console.log('refreshToken', refreshTokenBearer);
     refreshTokenBearer = refreshTokenBearer ? refreshTokenBearer : '';

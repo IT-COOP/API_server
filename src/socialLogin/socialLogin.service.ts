@@ -251,16 +251,22 @@ export class SocialLoginService {
   async userValidation(accessToken: string, refreshToken: string) {
     let payload: jwt.JwtPayload;
     try {
+      console.log(1);
       const verified = jwt.verify(accessToken, MY_SECRET_KEY);
       if (typeof verified === 'string') {
+        console.log(2, verified);
         throw new Error();
         return;
       }
+      console.log(3);
       payload = verified;
     } catch {
       // accessToken은 죽었고, refreshToken도 있다.
+      console.log(4);
       if (refreshToken) {
+        console.log(5, refreshToken);
         try {
+          console.log(6);
           // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
           const userId = jwt.decode(accessToken).sub;
           const existUser = await this.userRepository.findOne({
@@ -270,11 +276,12 @@ export class SocialLoginService {
               refreshToken,
             },
           });
+          console.log(7, existUser);
           if (existUser) {
             const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
               expiresIn: ACCESS_TOKEN_DURATION,
             });
-
+            console.log(8, novelAccessToken);
             return {
               success: true,
               data: {
@@ -285,9 +292,11 @@ export class SocialLoginService {
           }
         } catch (err) {}
       }
+      console.log(9);
       // accessToken이 죽었고, refreshToken도 없다.
       throw new HttpException(`다시 로그인 해주세요`, HttpStatus.UNAUTHORIZED);
     }
+    console.log(10);
     const userId = payload.sub;
     const existUser = await this.userRepository.findOne({
       where: {
@@ -295,10 +304,12 @@ export class SocialLoginService {
       },
       select: ['nickname', 'profileImgUrl'],
     });
+    console.log(11, existUser);
     if (existUser && existUser.nickname) {
       const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
         expiresIn: ACCESS_TOKEN_DURATION,
       });
+      console.log(12);
       return {
         success: true,
         data: {
@@ -307,6 +318,7 @@ export class SocialLoginService {
         },
       };
     } else if (existUser) {
+      console.log(13);
       const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
         expiresIn: ACCESS_TOKEN_DURATION,
       });
@@ -318,6 +330,7 @@ export class SocialLoginService {
         },
       };
     }
+    console.log(14);
     throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
   }
 
