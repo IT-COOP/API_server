@@ -205,7 +205,7 @@ export class SocialLoginService {
       .where('indigenousKey = :indigenousKey', { indigenousKey })
       .getOne();
     let payload: jwt.JwtPayload;
-
+    let isProfileSet = 'isProfileSet=false';
     if (existUser) {
       payload = { sub: existUser.userId };
     } else {
@@ -225,9 +225,9 @@ export class SocialLoginService {
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
-    const isProfileSet = existUser.nickname
-      ? 'isProfileSet=true'
-      : 'isProfileSet=false';
+    if (existUser && existUser.nickname) {
+      isProfileSet = 'isProfileSet=true';
+    }
     return res.redirect(
       `${redirectToFront}accessToken=${accessToken}&${isProfileSet}`,
     );
