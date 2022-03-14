@@ -15,7 +15,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
-import md5 from 'md5';
+import crypto from 'crypto';
 
 @Injectable()
 export class SocialLoginService {
@@ -141,7 +141,7 @@ export class SocialLoginService {
     res: Response,
     idToken?: string,
   ) {
-    console.log('토큰 내놔!');
+    console.log('정보 내놔!');
     let id: string;
     let existUser: Users | undefined;
     try {
@@ -154,6 +154,7 @@ export class SocialLoginService {
           },
         });
         id = String(userInfo.data.id);
+        console.log('정보 받아썽 카카오');
         //
         //
       } else if (site === LoginType['google']) {
@@ -168,6 +169,7 @@ export class SocialLoginService {
           },
         });
         id = String(userInfo.data.sub); // << 유저의 고유값
+        console.log('정보 받아썽 구글');
         //
         //
       } else if (site === LoginType['github']) {
@@ -181,20 +183,21 @@ export class SocialLoginService {
           },
         });
         id = String(userInfo.data.id);
+        console.log('정보 받아썽 깃헙');
       } else {
+        console.log('너는 아니지?');
         throw new HttpException(
           'error: Bad Request, errorDescription: 잘못된 요청입니다.',
           HttpStatus.BAD_REQUEST,
         );
       }
-      console.log('여기서 뻑이 가나?');
-      console.log(id);
-      id = md5(id);
-      console.log('hashed ID', id);
+      console.log('해싱에서 뻑이 가나?');
+      const hashedID = crypto.createHash('sha256').update(id).digest('base64');
+      console.log('hashed ID', hashedID);
       existUser = await this.userRepository.findOne({
         where: {
           loginType: site,
-          indigenousKey: id,
+          indigenousKey: hashedID,
         },
       });
     } catch (err) {
