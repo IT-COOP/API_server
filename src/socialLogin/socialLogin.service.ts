@@ -141,7 +141,7 @@ export class SocialLoginService {
     idToken?: string,
   ) {
     console.log('정보 내놔!');
-    let id: string;
+    let id: number;
     let existUser: Users | undefined;
     try {
       if (site === LoginType['kakao']) {
@@ -153,7 +153,7 @@ export class SocialLoginService {
           },
         });
         console.log('kakao', typeof userInfo.data.id, userInfo.data.id);
-        id = String(userInfo.data.id);
+        id = userInfo.data.id;
         console.log('정보 받아썽 카카오');
         //
         //
@@ -169,7 +169,7 @@ export class SocialLoginService {
           },
         });
         console.log('google', typeof userInfo.data.sub, userInfo.data.sub);
-        id = String(userInfo.data.sub); // << 유저의 고유값
+        id = Number(userInfo.data.sub); // << 유저의 고유값
         console.log('정보 받아썽 구글');
         //
         //
@@ -184,7 +184,7 @@ export class SocialLoginService {
           },
         });
         console.log('깃헙', typeof userInfo.data.id, userInfo.data.id);
-        id = String(userInfo.data.id);
+        id = userInfo.data.id;
         console.log('정보 받아썽 깃헙');
       } else {
         console.log('너는 아니지?');
@@ -215,7 +215,7 @@ export class SocialLoginService {
 
   async internalTokenCreation(
     existUser: Users | undefined,
-    id: string,
+    id: number,
     site: number,
     res: Response,
   ) {
