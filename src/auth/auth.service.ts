@@ -43,7 +43,10 @@ export class AuthService {
   }
 
   jwtVerification(token: string): JwtVerifyInterFace {
-    let ret: JwtVerifyInterFace;
+    const ret: JwtVerifyInterFace = {
+      message: null,
+      userId: null,
+    };
     jwt.verify(token, MY_SECRET_KEY, (err, decoded: jwt.JwtPayload) => {
       if (err) {
         ret.message = err.message;

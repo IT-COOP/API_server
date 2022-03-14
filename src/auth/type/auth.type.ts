@@ -8,6 +8,6 @@ export interface CheckUserIdInterface {
 }
 
 export interface JwtVerifyInterFace {
-  userId: string | undefined;
-  message: string | undefined;
+  userId: string | null;
+  message: string | null;
 }
