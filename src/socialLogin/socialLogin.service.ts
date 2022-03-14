@@ -313,11 +313,21 @@ export class SocialLoginService {
     };
   }
 
-  async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
+  async completeFirstLogin(
+    accessTokenBearer: string,
+    body: CompleteFirstLoginDTO,
+  ) {
+    if (typeof accessTokenBearer !== 'string') {
+      throw new HttpException('Access Token Required', HttpStatus.FORBIDDEN);
+    }
     let userId: string;
     try {
-      const verified = jwt.verify(token, MY_SECRET_KEY);
+      const verified = jwt.verify(
+        accessTokenBearer.split(' ')[1],
+        MY_SECRET_KEY,
+      );
       if (typeof verified === 'string') {
+        // 타입스크립트가 지랄해서 넣음
         throw new HttpException(
           'Unprocessable Entity',
           HttpStatus.UNPROCESSABLE_ENTITY,
