@@ -5,6 +5,8 @@ import {
   Controller,
   Get,
   Headers,
+  HttpException,
+  HttpStatus,
   Post,
   Query,
   Res,
@@ -37,6 +39,7 @@ export class SocialLoginController {
     @Headers('authorization') payload: string,
     @Body() body: CompleteFirstLoginDTO,
   ) {
+    console.log(body);
     return this.socialLoginService.completeFirstLogin(
       payload.split(' ')[1],
       body,

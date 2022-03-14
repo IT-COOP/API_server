@@ -223,21 +223,7 @@ export class SocialLoginService {
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
     let accessToken: string;
     let payload: jwt.JwtPayload;
-    if (existUser && existUser.nickname) {
-      // 다회차 고인물
-      payload = { sub: existUser.userId };
-      const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
-      const refreshToken = jwt.sign({ sub: existUser.userId }, MY_SECRET_KEY, {
-        expiresIn: REFRESH_TOKEN_DURATION,
-      });
-      existUser.refreshToken = refreshToken;
-      await this.userRepository.save(existUser);
-      return res.redirect(
-        `${redirectToFront}accessToken=${accessToken}&refreshToken=${refreshToken}`,
-      );
-    } else if (existUser) {
+    if (existUser) {
       payload = { sub: existUser.userId };
       accessToken = jwt.sign(payload, MY_SECRET_KEY, {
         expiresIn: ACCESS_TOKEN_DURATION,
@@ -318,12 +304,16 @@ export class SocialLoginService {
       const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
         expiresIn: ACCESS_TOKEN_DURATION,
       });
+      const refreshToken = jwt.sign({ usb: userId }, MY_SECRET_KEY, {
+        expiresIn: REFRESH_TOKEN_DURATION,
+      });
       console.log(12);
       return {
         success: true,
         data: {
           userInfo: existUser,
           authorization: `Bearer ${accessToken}`,
+          refreshToken: `Bearer ${refreshToken}`,
         },
       };
     } else if (existUser) {

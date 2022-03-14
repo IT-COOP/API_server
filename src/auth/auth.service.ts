@@ -15,7 +15,30 @@ export class AuthService {
     private userRepository: Repository<Users>,
   ) {}
 
-  jwtVerification(token): JwtVerifyInterFace {
+  async findUserByUserId(userId: string): Promise<Users | undefined> {
+    return await this.userRepository.findOne({
+      where: {
+        userId,
+      },
+      select: ['nickname', 'profileImgUrl'],
+    });
+  }
+
+  async findUserByUserIdAndRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<Users | undefined> {
+    const targetUser = await this.userRepository.findOne({
+      where: {
+        userId,
+        refreshToken,
+      },
+      select: ['nickname', 'profileImgUrl'],
+    });
+    return targetUser;
+  }
+
+  jwtVerification(token: string): JwtVerifyInterFace {
     let ret: JwtVerifyInterFace;
     jwt.verify(token, MY_SECRET_KEY, (err, decoded: jwt.JwtPayload) => {
       if (err) {
@@ -54,18 +77,5 @@ export class AuthService {
       validation.isProfileSet = true;
     }
     return validation;
-  }
-
-  async checkUserByUserIdAndRefreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<Users | undefined> {
-    const targetUser = await this.userRepository.findOne({
-      where: {
-        userId,
-        refreshToken,
-      },
-    });
-    return targetUser;
   }
 }

@@ -9,7 +9,7 @@ export class Users {
   nickname: string | null;
 
   // default 값 기본 이미지로 수정 예정
-  @Column('varchar', { name: 'profileImgUrl', length: 100, default: '' })
+  @Column('varchar', { name: 'profileImgUrl', length: 255, default: '' })
   profileImgUrl: string;
 
   @Column('varchar', { name: 'technologyStack', nullable: true, length: 100 })
