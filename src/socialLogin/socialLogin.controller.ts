@@ -16,17 +16,19 @@ export class SocialLoginController {
   constructor(private readonly socialLoginService: SocialLoginService) {}
   @Get('kakao')
   kakaoLoginGetToken(@Query('code') code: string, @Res() res: Response) {
+    console.log('kakao', code);
     return this.socialLoginService.getKakaoToken(code, res);
   }
 
   @Get('google')
   googleLogin(@Query('code') code: string, @Res() res: Response) {
+    console.log('google', code);
     return this.socialLoginService.getGoogleToken(code, res);
   }
 
   @Get('github')
   githubLogin(@Query('code') code: string, @Res() res: Response) {
-    console.log(code);
+    console.log('github', code);
     return this.socialLoginService.getGithubToken(code, res);
   }
 
