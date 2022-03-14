@@ -371,7 +371,7 @@ export class SocialLoginService {
     console.log('여기 맞지..?');
 
     return {
-      userInfo: updatedUser,
+      userInfo: body,
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
