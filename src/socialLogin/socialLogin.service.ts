@@ -152,7 +152,7 @@ export class SocialLoginService {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        id = userInfo.data.id.toString();
+        id = String(userInfo.data.id);
         //
         //
       } else if (site === LoginType['google']) {
@@ -166,7 +166,7 @@ export class SocialLoginService {
             id_token: `${idToken}`,
           },
         });
-        id = userInfo.data.sub; // << 유저의 고유값
+        id = String(userInfo.data.sub); // << 유저의 고유값
         //
         //
       } else if (site === LoginType['github']) {
@@ -179,7 +179,7 @@ export class SocialLoginService {
             Accept: 'application/json',
           },
         });
-        id = userInfo.data.id.toString();
+        id = String(userInfo.data.id);
       } else {
         throw new HttpException(
           'error: Bad Request, errorDescription: 잘못된 요청입니다.',
