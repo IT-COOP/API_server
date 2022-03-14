@@ -30,9 +30,6 @@ export class CompleteFirstLoginDTO {
 
   @IsString()
   portfolioUrl: string;
-
-  @IsBoolean()
-  isValid: boolean;
 }
 
 // export class Users {

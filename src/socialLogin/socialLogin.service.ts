@@ -1,3 +1,4 @@
+import { AuthService } from './../auth/auth.service';
 import {
   ACCESS_TOKEN_DURATION,
   MY_SECRET_KEY,
@@ -8,12 +9,17 @@ import { Users } from './entity/users.entity';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LoginType } from './enum/enums';
+import {
+  LoginType,
+  InputJwtError,
+  AccessTokenErrorMessage,
+  RefreshTokenErrorMessage,
+} from './enum/enums';
 import { v1 } from 'uuid';
 
 @Injectable()
@@ -21,6 +27,7 @@ export class SocialLoginService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly authService: AuthService,
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
@@ -53,7 +60,6 @@ export class SocialLoginService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-
     return this.getUserInfoByToken(accessToken, LoginType['kakao'], res);
   }
 
@@ -64,7 +70,7 @@ export class SocialLoginService {
     );
     const redirectURL = this.configService.get<string>('GOOGLE_REDIRECT_URL');
     const URL = 'https://oauth2.googleapis.com/token';
-    let accessToken = '';
+    let accessToken: string;
     let idToken: string;
 
     try {
@@ -90,13 +96,7 @@ export class SocialLoginService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-
-    return this.getUserInfoByToken(
-      accessToken,
-      LoginType['google'],
-      res,
-      idToken,
-    );
+    return this.getUserInfoByToken(accessToken, LoginType.google, res, idToken);
   }
 
   async getGithubToken(code: string, res: Response) {
@@ -128,209 +128,185 @@ export class SocialLoginService {
         `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
         HttpStatus.UNAUTHORIZED,
       );
-      return;
     }
-
     return this.getUserInfoByToken(accessToken, LoginType['github'], res);
   }
 
   async getUserInfoByToken(
     accessToken: string,
-    site: number,
+    loginType: number,
     res: Response,
     idToken?: string,
   ) {
-    console.log('정보 내놔!');
-    let id: string;
-    let existUser: Users | undefined;
-    try {
-      if (site === LoginType['kakao']) {
-        const userInfo = await axios({
-          method: 'GET',
-          url: `https://kapi.kakao.com/v1/user/access_token_info`,
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        console.log('kakao', typeof userInfo.data.id, userInfo.data.id);
-        id = String(userInfo.data.id);
-        console.log('정보 받아썽 카카오');
-        //
-        //
-      } else if (site === LoginType['google']) {
-        const userInfo = await axios({
-          method: 'GET',
-          url: `https://oauth2.googleapis.com/tokeninfo`,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-          },
-          params: {
-            id_token: `${idToken}`,
-          },
-        });
-        console.log('google', typeof userInfo.data.sub, userInfo.data.sub);
-        id = String(userInfo.data.sub); // << 유저의 고유값
-        console.log('정보 받아썽 구글');
-        //
-        //
-      } else if (site === LoginType['github']) {
-        const userInfo = await axios({
-          method: 'GET',
-          url: 'https://api.github.com/user',
-          headers: {
-            Authorization: `token ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-            Accept: 'application/json',
-          },
-        });
-        console.log('깃헙', typeof userInfo.data.id, userInfo.data.id);
-        id = String(userInfo.data.id);
-        console.log('정보 받아썽 깃헙');
-      } else {
-        console.log('너는 아니지?');
-        throw new HttpException(
-          'error: Bad Request, errorDescription: 잘못된 요청입니다.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      console.log('해싱에서 뻑이 가나?');
-      console.log(typeof id);
+    let indigenousKey: string;
+    let userInfo: AxiosResponse<any, any>;
 
-      existUser = await this.userRepository.findOne({
-        where: {
-          loginType: site,
-          indigenousKey: id,
-        },
-      });
+    try {
+      switch (loginType) {
+        case LoginType.kakao:
+          userInfo = await axios({
+            method: 'GET',
+            url: `https://kapi.kakao.com/v1/user/access_token_info`,
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          indigenousKey = String(userInfo.data.id);
+
+          break;
+        case LoginType.google:
+          userInfo = await axios({
+            method: 'GET',
+            url: `https://oauth2.googleapis.com/tokeninfo`,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+            },
+            params: {
+              id_token: `${idToken}`,
+            },
+          });
+          indigenousKey = String(userInfo.data.sub);
+          break;
+        case LoginType.github:
+          userInfo = await axios({
+            method: 'GET',
+            url: 'https://api.github.com/user',
+            headers: {
+              Authorization: `token ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+              Accept: 'application/json',
+            },
+          });
+          indigenousKey = String(userInfo.data.id);
+          break;
+        default:
+          throw new HttpException(
+            'error: Bad Request, errorDescription: Requested Social Login site Not Yet Ready.',
+            HttpStatus.BAD_REQUEST,
+          );
+      }
     } catch (err) {
-      console.log('너에게 닿기를');
       throw new HttpException(
         `소셜 로그인 요청 에러, error: ${err}`,
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
-      return;
     }
-    return this.internalTokenCreation(existUser, id, site, res);
+    return this.internalTokenCreation(indigenousKey, loginType, res);
   }
 
   async internalTokenCreation(
-    existUser: Users | undefined,
-    id: string,
-    site: number,
+    indigenousKey: string,
+    loginType: number,
     res: Response,
   ) {
-    console.log('토큰 맹글기');
     const redirectToFront = this.configService.get<string>('FRONT_SERVER');
-    let accessToken: string;
+    const existUser = await this.userRepository
+      .createQueryBuilder()
+      .where('indigenousKey = :indigenousKey', { indigenousKey })
+      .getOne();
     let payload: jwt.JwtPayload;
+
     if (existUser) {
       payload = { sub: existUser.userId };
-      accessToken = jwt.sign(payload, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
     } else {
       const userId = v1();
-      const newUser = this.userRepository.create();
+      const newUser = new Users();
       newUser.userId = userId;
-      newUser.loginType = site;
-      newUser.indigenousKey = id;
-      await this.userRepository.save(newUser);
+      newUser.loginType = loginType;
+      newUser.indigenousKey = indigenousKey;
+      await this.userRepository
+        .createQueryBuilder()
+        .insert()
+        .into(Users)
+        .values(newUser)
+        .execute();
       payload = { sub: userId };
-      accessToken = jwt.sign(payload, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
     }
-    return res.redirect(`${redirectToFront}accessToken=${accessToken}`);
+    const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
+      expiresIn: ACCESS_TOKEN_DURATION,
+    });
+    const isProfileSet = existUser.nickname
+      ? 'isProfileSet=true'
+      : 'isProfileSet=false';
+    return res.redirect(
+      `${redirectToFront}accessToken=${accessToken}&${isProfileSet}`,
+    );
   }
 
-  async userValidation(accessToken: string, refreshToken: string) {
+  async userValidation(accessTokenBearer: string, refreshTokenBearer: string) {
+    // access Token 혹은 refresh Token이 넘어온다.
     let payload: jwt.JwtPayload;
-    try {
-      console.log(1);
-      const verified = jwt.verify(accessToken, MY_SECRET_KEY);
-      if (typeof verified === 'string') {
-        console.log(2, verified);
-        throw new Error();
-        return;
+
+    // case 1. accessToken이 넘어왔다.
+    if (accessTokenBearer) {
+      const accessToken = accessTokenBearer.split(' ')[1];
+      const decrypted = this.authService.jwtVerification(accessToken);
+      switch (decrypted.message) {
+        case InputJwtError.tokenExpired:
+          throw new HttpException(
+            AccessTokenErrorMessage.tokenExpired,
+            HttpStatus.UNAUTHORIZED,
+          );
+        case InputJwtError.tokenMalformed:
+          throw new HttpException(
+            AccessTokenErrorMessage.tokenMalformed,
+            HttpStatus.FORBIDDEN,
+          );
+        default:
+          payload = { sub: decrypted.userId };
       }
-      console.log(3);
-      payload = verified;
-    } catch {
-      // accessToken은 죽었고, refreshToken도 있다.
-      console.log(4);
-      if (refreshToken) {
-        console.log(5, refreshToken);
-        try {
-          console.log(6);
-          // refresh 토큰을 기반으로 DB에서 찾고, accessToken을 새로 발급해줌.
-          const userId = jwt.decode(accessToken).sub;
-          const existUser = await this.userRepository.findOne({
-            select: ['nickname', 'profileImgUrl'],
-            where: {
-              userId,
-              refreshToken,
-            },
-          });
-          console.log(7, existUser);
-          if (existUser) {
-            const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-              expiresIn: ACCESS_TOKEN_DURATION,
-            });
-            console.log(8, novelAccessToken);
-            return {
-              success: true,
-              data: {
-                userInfo: existUser,
-                authorization: `Bearer ${novelAccessToken}`,
-              },
-            };
-          }
-        } catch (err) {}
+    } else if (refreshTokenBearer) {
+      const refreshToken = refreshTokenBearer.split(' ')[1];
+      const decrypted = this.authService.jwtVerification(refreshToken);
+      switch (decrypted.message) {
+        case InputJwtError.tokenExpired:
+          throw new HttpException(
+            RefreshTokenErrorMessage.tokenExpired,
+            HttpStatus.UNAUTHORIZED,
+          );
+        case InputJwtError.tokenMalformed:
+          throw new HttpException(
+            RefreshTokenErrorMessage.tokenMalformed,
+            HttpStatus.FORBIDDEN,
+          );
+        default:
+          payload = { sub: decrypted.userId };
       }
-      console.log(9);
-      // accessToken이 죽었고, refreshToken도 없다.
-      throw new HttpException(`다시 로그인 해주세요`, HttpStatus.UNAUTHORIZED);
     }
-    console.log(10);
-    const userId = payload.sub;
-    const existUser = await this.userRepository.findOne({
-      where: {
-        userId,
-      },
-      select: ['nickname', 'profileImgUrl'],
-    });
-    console.log(11, existUser);
-    if (existUser && existUser.nickname) {
-      const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
-      const refreshToken = jwt.sign({ usb: userId }, MY_SECRET_KEY, {
-        expiresIn: REFRESH_TOKEN_DURATION,
-      });
-      console.log(12);
+    // payload는 만들었어
+    // 그럼 이제는 이 토큰에서 받은 userId를 토대로 user를 찾고, 정보가 있으면 함께 내려주면 된다.
+    const targetUser = await this.userRepository
+      .createQueryBuilder('users')
+      .where('userId = : userId', { userId: payload.sub })
+      .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
+      .getOne();
+
+    const accessToken = this.authService.createAccessTokenWithUserId(
+      payload.sub,
+    );
+    if (targetUser.nickname) {
+      // 닉네임 이미 채움
+      const refreshToken = this.authService.createRefreshTokenWithUserId(
+        payload.sub,
+      );
       return {
         success: true,
         data: {
-          userInfo: existUser,
+          userInfo: targetUser,
           authorization: `Bearer ${accessToken}`,
           refreshToken: `Bearer ${refreshToken}`,
         },
       };
-    } else if (existUser) {
-      console.log(13);
-      const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
-      return {
-        success: true,
-        data: {
-          userInfo: existUser,
-          authorization: `Bearer ${accessToken}`,
-        },
-      };
     }
-    console.log(14);
-    throw new HttpException('잘못된 요청입니다.', HttpStatus.UNAUTHORIZED);
+    // 아예 처음 오는 사람은 멀쩡한 엑세스 토큰이 있을 수가 없음!
+    // 닉네임 안 채움
+    return {
+      success: true,
+      data: {
+        userInfo: targetUser,
+        authorization: `Bearer ${accessToken}`,
+      },
+    };
   }
 
   async completeFirstLogin(token, body: CompleteFirstLoginDTO) {
@@ -361,17 +337,21 @@ export class SocialLoginService {
       mySet[each] = body[each];
     }
     mySet.refreshToken = refreshToken;
-    const updatedUser = await this.userRepository
+    await this.userRepository
       .createQueryBuilder('users')
       .update(Users)
       .set(mySet)
       .where('userId = :userId', { userId })
       .execute();
-    console.log(updatedUser);
-    console.log('여기 맞지..?');
+
+    const userInfo = await this.userRepository
+      .createQueryBuilder('users')
+      .where('userId = :userId', { userId })
+      .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
+      .getOne();
 
     return {
-      userInfo: body,
+      userInfo,
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };

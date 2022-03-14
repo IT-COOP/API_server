@@ -34,29 +34,22 @@ export class SocialLoginController {
     return this.socialLoginService.getGithubToken(code, res);
   }
 
-  @Post('completion')
-  firstLogin(
-    @Headers('authorization') payload: string,
-    @Body() body: CompleteFirstLoginDTO,
-  ) {
-    console.log(body);
-    return this.socialLoginService.completeFirstLogin(
-      payload.split(' ')[1],
-      body,
-    );
-  }
-
   @Get('validation')
   userValidation(
     @Headers('authorization') accessTokenBearer: string,
     @Headers('refreshToken') refreshTokenBearer: string,
   ) {
-    console.log('accessToken', accessTokenBearer);
-    console.log('refreshToken', refreshTokenBearer);
-    refreshTokenBearer = refreshTokenBearer ? refreshTokenBearer : '';
     return this.socialLoginService.userValidation(
-      accessTokenBearer.split(' ')[1],
-      refreshTokenBearer.split(' ')[1],
+      accessTokenBearer,
+      refreshTokenBearer,
     );
+  }
+
+  @Post('completion')
+  firstLogin(
+    @Headers('authorization') accessTokenBearer: string,
+    @Body() body: CompleteFirstLoginDTO,
+  ) {
+    return this.socialLoginService.completeFirstLogin(accessTokenBearer, body);
   }
 }

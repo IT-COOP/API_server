@@ -4,7 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { MY_SECRET_KEY, ACCESS_TOKEN_DURATION } from './jwt/jwt.secret';
+import {
+  MY_SECRET_KEY,
+  ACCESS_TOKEN_DURATION,
+  REFRESH_TOKEN_DURATION,
+} from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -55,11 +59,18 @@ export class AuthService {
     return ret;
   }
 
-  createJwtWithUserId(userId: string): string {
+  createAccessTokenWithUserId(userId: string): string {
     const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
     return accessToken;
+  }
+
+  createRefreshTokenWithUserId(userId: string): string {
+    const refreshToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
+      expiresIn: REFRESH_TOKEN_DURATION,
+    });
+    return refreshToken;
   }
 
   async checkUserStatusByUserId(userId: string): Promise<CheckUserIdInterface> {
