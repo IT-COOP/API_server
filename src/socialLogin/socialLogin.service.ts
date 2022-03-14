@@ -204,11 +204,14 @@ export class SocialLoginService {
       .createQueryBuilder()
       .where('indigenousKey = :indigenousKey', { indigenousKey })
       .getOne();
+    console.log(208);
     let payload: jwt.JwtPayload;
     let isProfileSet = 'isProfileSet=false';
     if (existUser) {
+      console.log(211);
       payload = { sub: existUser.userId };
     } else {
+      console.log(214);
       const userId = v1();
       const newUser = new Users();
       newUser.userId = userId;
@@ -222,6 +225,7 @@ export class SocialLoginService {
         .execute();
       payload = { sub: userId };
     }
+    console.log(228);
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
