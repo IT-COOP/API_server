@@ -60,7 +60,7 @@ export class SocialLoginService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    return this.getUserInfoByToken(accessToken, LoginType['kakao'], res);
+    return this.getUserInfoByToken(accessToken, LoginType.kakao, res);
   }
 
   async getGoogleToken(code: string, res: Response): Promise<any> {
@@ -129,7 +129,7 @@ export class SocialLoginService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    return this.getUserInfoByToken(accessToken, LoginType['github'], res);
+    return this.getUserInfoByToken(accessToken, LoginType.github, res);
   }
 
   async getUserInfoByToken(
@@ -277,7 +277,7 @@ export class SocialLoginService {
     // 그럼 이제는 이 토큰에서 받은 userId를 토대로 user를 찾고, 정보가 있으면 함께 내려주면 된다.
     const targetUser = await this.userRepository
       .createQueryBuilder('users')
-      .where('userId = : userId', { userId: payload.sub })
+      .where('userId = :userId', { userId: payload.sub })
       .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
       .getOne();
 
