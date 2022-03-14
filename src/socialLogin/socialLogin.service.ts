@@ -365,11 +365,15 @@ export class SocialLoginService {
         expiresIn: REFRESH_TOKEN_DURATION,
       },
     );
+    const mySet: any = {};
+    for (const each in body) {
+      mySet[each] = body[each];
+    }
+    mySet.refreshToken = refreshToken;
     const updatedUser = await this.userRepository
       .createQueryBuilder('users')
       .update(Users)
-      .set(body)
-      .set({ refreshToken })
+      .set(mySet)
       .where('userId = : userId', { userId })
       .execute();
 
