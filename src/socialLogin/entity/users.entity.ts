@@ -28,8 +28,8 @@ export class Users {
   loginType: number | null;
 
   // Unique로 이름 변경
-  @Column('bigint', { name: 'indigenousKey', nullable: false })
-  indigenousKey: number;
+  @Column('varchar', { name: 'indigenousKey', nullable: false })
+  indigenousKey: string;
 
   @Column('varchar', { name: 'refreshToken', nullable: true })
   refreshToken: string | null;
