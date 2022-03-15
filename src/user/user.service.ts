@@ -66,34 +66,50 @@ export class UserService {
   }
 
   async getLovePosts(userId: string) {
-    const lovePosts = await this.userRepository
-      .createQueryBuilder('user')
-      .select(['informationPosts.title', 'informationPosts.createdAt'])
-      .leftJoin('user.informationLoves', 'informationLoves')
-      .leftJoin('informationLoves.imformationPosts', 'informationPosts')
-      .where('user.userId=:userId', { userId })
-      .andWhere(
-        'informationPosts.informationPostId=informationLoves.informationPostId',
-      )
-      .getMany();
+    const getUser = await this.userRepository.createQueryBuilder('user');
+    const lovePosts = getUser.leftJoinAndSelect(
+      'user.informationLoves',
+      'informationLoves',
+    );
 
-    return lovePosts;
+    const totalLovePosts = [];
+
+    const informationPostIdOfLoves = getUser
+      .select(['informationLoves.informationPostId'])
+      .leftJoinAndSelect(
+        'informationLoves.informationPosts',
+        'informationPosts',
+      )
+      .where('user.userId=:userId', { userId })
+      .getRawMany();
+
+    for (const id in informationPostIdOfLoves) {
+      totalLovePosts.push(
+        lovePosts
+          .select(['informationPosts.title', 'informationPosts.createdAt'])
+          .where('informationPosts.informationPostId=:informationPostId', {
+            inforationPostId: id,
+          }),
+      );
+    }
+    return totalLovePosts;
   }
 
   async getKeepPosts(userId: string) {
     // 먼저 recruitKeeps 테이블의 recruitPostId를 뽑아낸다. 그리고 그 값들을 반복문을 통해 where문 조건값에 넣는다.
-    const getuser = await this.userRepository.createQueryBuilder('user');
-    const keepPosts = getuser.leftJoinAndSelect(
-      'recruitKeeps.recruitPosts',
+    const getUser = await this.userRepository.createQueryBuilder('user');
+    const keepPosts = getUser.leftJoinAndSelect(
+      'user.recruitKeeps',
       'recruitKeeps',
     );
     const totalKeepPosts = [];
 
-    const recruitPostIdOfKeeps = getuser
+    const recruitPostIdOfKeeps = getUser
       .select(['recruitKeep.recruitPostId'])
-      .leftJoinAndSelect('user.recruitKeeps', 'recruitKeeps')
+      .leftJoinAndSelect('recruitKeeps.recruitPosts', 'recruitPosts')
       .where('user.userId=:userId', { userId })
       .getRawMany();
+
     for (const id in recruitPostIdOfKeeps) {
       totalKeepPosts.push(
         keepPosts
