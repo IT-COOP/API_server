@@ -4,7 +4,7 @@ import {
   AccessTokenErrorMessage,
 } from './../socialLogin/enum/enums';
 import { CheckUserIdInterface, JwtVerifyInterFace } from './type/auth.type';
-import { Users } from './../socialLogin/entity/users.entity';
+import { Users } from '../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, HttpStatus, HttpException } from '@nestjs/common';

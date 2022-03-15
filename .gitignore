@@ -1,7 +1,8 @@
 # compiled output
 /dist
 /node_modules
-
+.history
+.vscode
 # Logs
 logs
 *.log

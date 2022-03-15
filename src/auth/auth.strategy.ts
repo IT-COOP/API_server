@@ -5,7 +5,7 @@ import {
   RefreshTokenErrorMessage,
 } from './../socialLogin/enum/enums';
 import { AuthService } from './auth.service';
-import { Users } from '../socialLogin/entity/users.entity';
+import { Users } from '../socialLogin/entity/Users';
 import {
   Headers,
   Injectable,

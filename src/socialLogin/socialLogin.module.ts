@@ -1,5 +1,5 @@
 import { AuthModule } from './../auth/auth.module';
-import { Users } from './entity/users.entity';
+import { Users } from '../socialLogin/entity/Users';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';

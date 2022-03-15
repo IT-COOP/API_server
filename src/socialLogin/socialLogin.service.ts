@@ -5,7 +5,7 @@ import {
   REFRESH_TOKEN_DURATION,
 } from '../auth/jwt/jwt.secret';
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
-import { Users } from './entity/users.entity';
+import { Users } from '../socialLogin/entity/Users';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
