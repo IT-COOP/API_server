@@ -324,7 +324,13 @@ export class SocialLoginService {
     const existUser = await this.userRepository
       .createQueryBuilder()
       .select('users')
-      .where('userId = :userId', { userId });
+      .where('userId = :userId', { userId })
+      .orWhere('nickname = :nickname', { nickname: mySet.nickname })
+      .getOne();
+
+    if (existUser) {
+      ('중복');
+    }
 
     const result = await this.userRepository
       .createQueryBuilder()
@@ -336,8 +342,9 @@ export class SocialLoginService {
       .execute();
 
     console.log(result);
-    if (result) {
-      ('왜 안됨!');
+    if (existUser || (result && result.affected === 0)) {
+      // 중복 있고, 토큰이 먼가 잘못됨.
+      throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
     }
 
     const userInfo = await this.userRepository.findOne({
