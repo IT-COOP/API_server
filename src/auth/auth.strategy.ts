@@ -37,60 +37,33 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'JwtGuard') {
       );
     }
     if (accessTokenBearer) {
-      const jwtDecrypt = this.authService.jwtVerification(
+      const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
-      if (jwtDecrypt.message) {
-        switch (jwtDecrypt.message) {
-          case InputJwtError.tokenExpired:
-            throw new HttpException(
-              AccessTokenErrorMessage.tokenExpired,
-              HttpStatus.UNAUTHORIZED,
-            );
-            break;
-          case InputJwtError.tokenMalformed:
-            throw new HttpException(
-              AccessTokenErrorMessage.tokenMalformed,
-              HttpStatus.FORBIDDEN,
-            );
-            break;
-        }
-      }
-      userId = jwtDecrypt.userId;
+      userId = this.authService.getUserIdFromDecryptedAccessToken(decrypted);
       existUser = await this.authService.findUserByUserId(userId);
     } else if (refreshTokenBearer) {
-      const jwtDecrypt = this.authService.jwtVerification(
+      const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
-      if (jwtDecrypt.message) {
-        switch (jwtDecrypt.message) {
-          case InputJwtError.tokenExpired:
-            throw new HttpException(
-              RefreshTokenErrorMessage.tokenExpired,
-              HttpStatus.UNAUTHORIZED,
-            );
-            break;
-          case InputJwtError.tokenMalformed:
-            throw new HttpException(
-              RefreshTokenErrorMessage.tokenMalformed,
-              HttpStatus.FORBIDDEN,
-            );
-            break;
-        }
-      }
+      userId = this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
       existUser = await this.authService.findUserByUserIdAndRefreshToken(
         userId,
         refreshTokenBearer.split(' ')[1],
       );
-      userId = jwtDecrypt.userId;
     }
-    const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-      expiresIn: ACCESS_TOKEN_DURATION,
-    });
-    req.userInfo = existUser;
-    req.user = userId;
-    return {
-      authorization: `Bearer ${novelAccessToken}`,
-    };
+    if (existUser && existUser.nickname) {
+      const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
+        expiresIn: ACCESS_TOKEN_DURATION,
+      });
+      req.userInfo = existUser;
+      req.user = userId;
+      return {
+        userInfo: existUser,
+        authorization: `Bearer ${novelAccessToken}`,
+      };
+    } else if (!existUser.nickname) {
+      throw new HttpException('There Is No Such User', HttpStatus.FORBIDDEN);
+    }
   }
 }

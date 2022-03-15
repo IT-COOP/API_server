@@ -241,37 +241,15 @@ export class SocialLoginService {
     if (accessTokenBearer) {
       const accessToken = accessTokenBearer.split(' ')[1];
       const decrypted = this.authService.jwtVerification(accessToken);
-      switch (decrypted.message) {
-        case InputJwtError.tokenExpired:
-          throw new HttpException(
-            AccessTokenErrorMessage.tokenExpired,
-            HttpStatus.UNAUTHORIZED,
-          );
-        case InputJwtError.tokenMalformed:
-          throw new HttpException(
-            AccessTokenErrorMessage.tokenMalformed,
-            HttpStatus.FORBIDDEN,
-          );
-        default:
-          payload = { sub: decrypted.userId };
-      }
+      payload = {
+        sub: this.authService.getUserIdFromDecryptedAccessToken(decrypted),
+      };
     } else if (refreshTokenBearer) {
       const refreshToken = refreshTokenBearer.split(' ')[1];
       const decrypted = this.authService.jwtVerification(refreshToken);
-      switch (decrypted.message) {
-        case InputJwtError.tokenExpired:
-          throw new HttpException(
-            RefreshTokenErrorMessage.tokenExpired,
-            HttpStatus.UNAUTHORIZED,
-          );
-        case InputJwtError.tokenMalformed:
-          throw new HttpException(
-            RefreshTokenErrorMessage.tokenMalformed,
-            HttpStatus.FORBIDDEN,
-          );
-        default:
-          payload = { sub: decrypted.userId };
-      }
+      payload = {
+        sub: this.authService.getUserIdFromDecryptedRefreshToken(decrypted),
+      };
     }
     // payload는 만들었어
     // 그럼 이제는 이 토큰에서 받은 userId를 토대로 user를 찾고, 정보가 있으면 함께 내려주면 된다.
@@ -347,12 +325,24 @@ export class SocialLoginService {
       mySet[each] = body[each];
     }
     mySet.refreshToken = refreshToken;
-    await this.userRepository
-      .createQueryBuilder('users')
+
+    const existUser = await this.userRepository
+      .createQueryBuilder()
+      .select('users')
+      .where('userId = :userId', { userId });
+
+    const result = await this.userRepository
+      .createQueryBuilder()
+      .select('users')
       .update(Users)
       .set(mySet)
       .where('userId = :userId', { userId })
+      .andWhere('nickname = :nickname', { nickname: '' })
       .execute();
+
+    if (result) {
+      ('왜 안됨!');
+    }
 
     const userInfo = await this.userRepository.findOne({
       where: {

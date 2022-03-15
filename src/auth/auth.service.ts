@@ -1,8 +1,13 @@
+import {
+  InputJwtError,
+  RefreshTokenErrorMessage,
+  AccessTokenErrorMessage,
+} from './../socialLogin/enum/enums';
 import { CheckUserIdInterface, JwtVerifyInterFace } from './type/auth.type';
 import { Users } from './../socialLogin/entity/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import {
   MY_SECRET_KEY,
@@ -20,26 +25,23 @@ export class AuthService {
   ) {}
 
   async findUserByUserId(userId: string): Promise<Users | undefined> {
-    return await this.userRepository.findOne({
-      where: {
-        userId,
-      },
-      select: ['nickname', 'profileImgUrl'],
-    });
+    return await this.userRepository
+      .createQueryBuilder()
+      .select('users')
+      .where('userId = :userId', { userId })
+      .getOne();
   }
 
   async findUserByUserIdAndRefreshToken(
     userId: string,
     refreshToken: string,
   ): Promise<Users | undefined> {
-    const targetUser = await this.userRepository.findOne({
-      where: {
-        userId,
-        refreshToken,
-      },
-      select: ['nickname', 'profileImgUrl'],
-    });
-    return targetUser;
+    return await this.userRepository
+      .createQueryBuilder()
+      .select('users')
+      .where('userId = :userId', { userId })
+      .andWhere('refreshToken = :refreshToken', { refreshToken })
+      .getOne();
   }
 
   jwtVerification(token: string): JwtVerifyInterFace {
@@ -91,5 +93,39 @@ export class AuthService {
       validation.isProfileSet = true;
     }
     return validation;
+  }
+
+  getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyInterFace) {
+    switch (decrypted.message) {
+      case InputJwtError.tokenExpired:
+        throw new HttpException(
+          AccessTokenErrorMessage.tokenExpired,
+          HttpStatus.UNAUTHORIZED,
+        );
+      case InputJwtError.tokenMalformed:
+        throw new HttpException(
+          AccessTokenErrorMessage.tokenMalformed,
+          HttpStatus.FORBIDDEN,
+        );
+      default:
+        return decrypted.userId;
+    }
+  }
+
+  getUserIdFromDecryptedRefreshToken(decrypted: JwtVerifyInterFace) {
+    switch (decrypted.message) {
+      case InputJwtError.tokenExpired:
+        throw new HttpException(
+          RefreshTokenErrorMessage.tokenExpired,
+          HttpStatus.UNAUTHORIZED,
+        );
+      case InputJwtError.tokenMalformed:
+        throw new HttpException(
+          RefreshTokenErrorMessage.tokenMalformed,
+          HttpStatus.FORBIDDEN,
+        );
+      default:
+        return decrypted.userId;
+    }
   }
 }
