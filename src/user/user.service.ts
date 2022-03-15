@@ -37,7 +37,7 @@ export class UserService {
         file.originalname,
       )}`.replace(/ /g, '');
       if (key) {
-        const newUserProfile = await this.userRepository
+        await this.userRepository
           .createQueryBuilder('user')
           .update(Users)
           .set({
@@ -65,19 +65,47 @@ export class UserService {
     }
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async getLovePosts(userId: string) {
+    const lovePosts = await this.userRepository
+      .createQueryBuilder('user')
+      .select(['informationPosts.title', 'informationPosts.createdAt'])
+      .leftJoin('user.informationLoves', 'informationLoves')
+      .leftJoin('informationLoves.imformationPosts', 'informationPosts')
+      .where('user.userId=:userId', { userId })
+      .andWhere(
+        'informationPosts.informationPostId=informationLoves.informationPostId',
+      )
+      .getMany();
+
+    return lovePosts;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async getKeepPosts(userId: string) {
+    // 먼저 recruitKeeps 테이블의 recruitPostId를 뽑아낸다. 그리고 그 값들을 반복문을 통해 where문 조건값에 넣는다.
+    const getuser = await this.userRepository.createQueryBuilder('user');
+    const keepPosts = getuser.leftJoinAndSelect(
+      'recruitKeeps.recruitPosts',
+      'recruitKeeps',
+    );
+    const totalKeepPosts = [];
+
+    const recruitPostIdOfKeeps = getuser
+      .select(['recruitKeep.recruitPostId'])
+      .leftJoinAndSelect('user.recruitKeeps', 'recruitKeeps')
+      .where('user.userId=:userId', { userId })
+      .getRawMany();
+    for (const id in recruitPostIdOfKeeps) {
+      totalKeepPosts.push(
+        keepPosts
+          .select(['recruitPosts.title', 'recruitPosts.createdAt'])
+          .where('recruitPosts.recruitPostId=:recruitPostId', {
+            recruitPostId: id,
+          }),
+      );
+    }
+
+    return totalKeepPosts;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+  async getMyProfile(userId: string) {}
 }
