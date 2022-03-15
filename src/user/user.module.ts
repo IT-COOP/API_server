@@ -4,9 +4,15 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { Notification } from './entities/Notification';
 import { UserReputation } from './entities/UserReputation';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification, UserReputation])],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forFeature([Notification, UserReputation]),
+  ],
   controllers: [UserController],
   providers: [UserService],
 })
