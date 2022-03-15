@@ -14,12 +14,7 @@ import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  LoginType,
-  InputJwtError,
-  AccessTokenErrorMessage,
-  RefreshTokenErrorMessage,
-} from './enum/enums';
+import { LoginType } from './enum/enums';
 import { v1 } from 'uuid';
 
 @Injectable()
@@ -340,6 +335,7 @@ export class SocialLoginService {
       .andWhere('nickname = :nickname', { nickname: '' })
       .execute();
 
+    console.log(result);
     if (result) {
       ('왜 안됨!');
     }
