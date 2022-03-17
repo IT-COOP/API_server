@@ -7,7 +7,12 @@ import { CheckUserIdInterface, JwtVerifyInterFace } from './type/auth.type';
 import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  HttpException,
+  ExecutionContext,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import {
   MY_SECRET_KEY,
@@ -16,6 +21,7 @@ import {
   requiredColumns,
 } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -128,5 +134,29 @@ export class AuthService {
       default:
         return decrypted.userId;
     }
+  }
+
+  getTokensFromContext(context: ExecutionContext): {
+    req: Request;
+    accessTokenBearer: string;
+    refreshTokenBearer: string;
+  } {
+    const req = context.getArgByIndex(0);
+    const headers: string[] = req.rawHeaders;
+    const indexOfAccessTokenBearer = headers.indexOf('authorize');
+    const indexOfRefreshTokenBearer = headers.indexOf('refreshToken');
+    const accessTokenBearer =
+      indexOfAccessTokenBearer !== -1
+        ? headers[indexOfAccessTokenBearer + 1]
+        : '';
+    const refreshTokenBearer =
+      indexOfRefreshTokenBearer !== -1
+        ? headers[indexOfRefreshTokenBearer + 1]
+        : '';
+    return {
+      req,
+      accessTokenBearer,
+      refreshTokenBearer,
+    };
   }
 }

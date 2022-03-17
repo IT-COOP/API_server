@@ -1,10 +1,12 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { SocialLoginService } from './socialLogin.service';
 import {
+  All,
   Body,
   Controller,
   Get,
   Headers,
+  Param,
   Post,
   Query,
   Req,
@@ -53,5 +55,10 @@ export class SocialLoginController {
   ) {
     console.log(accessTokenBearer);
     return this.socialLoginService.completeFirstLogin(accessTokenBearer, body);
+  }
+
+  @All('duplicateCheck/nickname/:nickname')
+  duplicationCheckByNickname(@Param('nickname') nickname: string) {
+    return this.socialLoginService.duplicationCheckByNickname(nickname);
   }
 }

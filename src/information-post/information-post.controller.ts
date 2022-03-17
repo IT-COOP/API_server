@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { InformationPostService } from './information-post.service';
 import { CreateInformationPostDto } from './dto/create-information-post.dto';
 import { UpdateInformationPostDto } from './dto/update-information-post.dto';
 
 @Controller('information-post')
 export class InformationPostController {
-  constructor(private readonly informationPostService: InformationPostService) {}
+  constructor(
+    private readonly informationPostService: InformationPostService,
+  ) {}
 
   @Post()
   create(@Body() createInformationPostDto: CreateInformationPostDto) {
@@ -23,7 +33,10 @@ export class InformationPostController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInformationPostDto: UpdateInformationPostDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateInformationPostDto: UpdateInformationPostDto,
+  ) {
     return this.informationPostService.update(+id, updateInformationPostDto);
   }
 

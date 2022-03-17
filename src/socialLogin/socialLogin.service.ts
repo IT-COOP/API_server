@@ -317,9 +317,8 @@ export class SocialLoginService {
 
     const existUser = await this.userRepository
       .createQueryBuilder()
-      .select(requiredColumns)
-      .where('userId = :userId', { userId })
-      .orWhere('nickname = :nickname', { nickname: mySet.nickname })
+      .select(['userId', 'profileImgUrl', 'activityPoint', 'nickname'])
+      .where('nickname = :nickname', { nickname: mySet.nickname })
       .getOne();
 
     if (existUser) {
@@ -353,5 +352,14 @@ export class SocialLoginService {
       authorization: `Bearer ${accessToken}`,
       refreshToken: `Bearer ${refreshToken}`,
     };
+  }
+
+  async duplicationCheckByNickname(nickname: string) {
+    const result = this.userRepository
+      .createQueryBuilder()
+      .select('nickname')
+      .where('nickname = :nickname', { nickname })
+      .getOne();
+    return !result;
   }
 }
