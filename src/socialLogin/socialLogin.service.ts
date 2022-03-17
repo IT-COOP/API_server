@@ -189,7 +189,7 @@ export class SocialLoginService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    const indigenousKey = container.digest('hex');
+    const indigenousKey = String(container.digest('hex'));
     return this.internalTokenCreation(indigenousKey, loginType, res);
   }
 
@@ -285,6 +285,7 @@ export class SocialLoginService {
     accessTokenBearer: string,
     body: CompleteFirstLoginDTO,
   ) {
+    const userQuery = this.userRepository.createQueryBuilder('user');
     if (typeof accessTokenBearer !== 'string') {
       throw new HttpException('Access Token Required', HttpStatus.FORBIDDEN);
     }
@@ -319,10 +320,9 @@ export class SocialLoginService {
     }
     mySet.refreshToken = refreshToken;
 
-    const existUser = await this.userRepository
-      .createQueryBuilder()
-      .select(['userId', 'profileImgUrl', 'activityPoint', 'nickname'])
-      .where('nickname = :nickname', { nickname: mySet.nickname })
+    const existUser = await userQuery
+      .select(requiredColumns)
+      .where('users.nickname = :nickname', { nickname: mySet.nickname })
       .getOne();
 
     if (existUser) {
@@ -345,10 +345,9 @@ export class SocialLoginService {
       throw new HttpException('Not Valid Request', HttpStatus.BAD_REQUEST);
     }
 
-    const userInfo = await this.userRepository
-      .createQueryBuilder()
+    const userInfo = await userQuery
       .select(requiredColumns)
-      .where('userId = :userId', { userId: mySet.userId })
+      .where('users.userId = :userId', { userId: mySet.userId })
       .getOne();
 
     return {
@@ -385,8 +384,8 @@ export class SocialLoginService {
 
   async duplicationCheckByNickname(nickname: string) {
     const result = await this.userRepository
-      .createQueryBuilder()
-      .select('nickname')
+      .createQueryBuilder('users')
+      .select('users.nickname')
       .where('nickname = :nickname', { nickname })
       .getOne();
     return !result;

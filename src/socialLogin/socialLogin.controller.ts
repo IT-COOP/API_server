@@ -13,6 +13,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Stacks, Tasks } from 'src/common/enums';
 
 @Controller('login')
 export class SocialLoginController {
@@ -62,11 +63,21 @@ export class SocialLoginController {
 
   @Post('refresh')
   refreshAccessToken(@Body('refreshToken') refreshTokenBearer: string) {
-    return this.refreshAccessToken(refreshTokenBearer);
+    return this.socialLoginService.refreshAccessToken(refreshTokenBearer);
   }
 
   @Get('duplicateCheck/nickname/:nickname')
   duplicationCheckByNickname(@Param('nickname') nickname: string) {
     return this.socialLoginService.duplicationCheckByNickname(nickname);
+  }
+
+  @Get('stacks')
+  stacksEnum() {
+    return Stacks;
+  }
+
+  @Get('tasks')
+  tasksEnum() {
+    return Tasks;
   }
 }

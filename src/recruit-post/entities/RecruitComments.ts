@@ -20,14 +20,14 @@ export class RecruitComments {
   })
   recruitCommentId: number;
 
-  @Column('int', { name: 'commentDepth', nullable: true })
+  @Column('int', { name: 'commentDepth', nullable: true, unsigned: true })
   commentDepth: number | null;
 
-  @Column('int', { name: 'commentGroup', nullable: true })
+  @Column('int', { name: 'commentGroup', nullable: true, unsigned: true })
   commentGroup: number | null;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'userId', nullable: true, length: 50 })
+  userId: string | null;
 
   @Column('int', { name: 'recruitPostId', unsigned: true })
   recruitPostId: number;
@@ -53,20 +53,20 @@ export class RecruitComments {
   })
   updatedAt: Date | null;
 
+  @ManyToOne(() => Users, (users) => users.recruitComments, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
+  user: Users;
+
   @ManyToOne(
     () => RecruitPosts,
     (recruitPosts) => recruitPosts.recruitComments,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },
   ])
   recruitPost: RecruitPosts;
-
-  @ManyToOne(() => Users, (users) => users.recruitComments, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
-  user: Users;
 }

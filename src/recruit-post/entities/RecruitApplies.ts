@@ -23,10 +23,10 @@ export class RecruitApplies {
   @Column('int', { name: 'recruitPostId', unsigned: true })
   recruitPostId: number;
 
-  @Column('varchar', { name: 'applicant', length: 50 })
-  applicant: string;
+  @Column('varchar', { name: 'applicant', nullable: true, length: 50 })
+  applicant: string | null;
 
-  @Column('int', { name: 'task', nullable: true })
+  @Column('int', { name: 'task', nullable: true, unsigned: true })
   task: number | null;
 
   @Column('varchar', { name: 'applyMessage', nullable: true, length: 100 })
@@ -49,20 +49,20 @@ export class RecruitApplies {
   })
   updatedAt: Date | null;
 
+  @ManyToOne(() => Users, (users) => users.recruitApplies, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'applicant', referencedColumnName: 'userId' }])
+  applicant2: Users;
+
   @ManyToOne(
     () => RecruitPosts,
     (recruitPosts) => recruitPosts.recruitApplies,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },
   ])
   recruitPost: RecruitPosts;
-
-  @ManyToOne(() => Users, (users) => users.recruitApplies, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  @JoinColumn([{ name: 'applicant', referencedColumnName: 'userId' }])
-  applicant2: Users;
 }

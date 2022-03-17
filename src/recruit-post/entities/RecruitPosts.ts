@@ -16,7 +16,7 @@ import { RecruitStacks } from './RecruitStacks';
 import { RecruitTasks } from './RecruitTasks';
 import { UserReputation } from '../../user/entities/UserReputation';
 
-@Index('userId', ['userId'], {})
+@Index('userId', ['author'], {})
 @Entity('recruitPosts', { schema: 'test' })
 export class RecruitPosts {
   @PrimaryGeneratedColumn({
@@ -29,8 +29,8 @@ export class RecruitPosts {
   @Column('varchar', { name: 'title', nullable: true, length: 100 })
   title: string | null;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'author', nullable: true, length: 50 })
+  author: string | null;
 
   @Column('text', { name: 'recruitContent', nullable: true })
   recruitContent: string | null;
@@ -101,11 +101,11 @@ export class RecruitPosts {
   recruitPostImages: RecruitPostImages[];
 
   @ManyToOne(() => Users, (users) => users.recruitPosts, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   })
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
-  user: Users;
+  @JoinColumn([{ name: 'author', referencedColumnName: 'userId' }])
+  author2: Users;
 
   @OneToMany(() => RecruitStacks, (recruitStacks) => recruitStacks.recruitPost)
   recruitStacks: RecruitStacks[];

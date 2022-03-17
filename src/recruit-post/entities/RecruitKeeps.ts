@@ -20,8 +20,8 @@ export class RecruitKeeps {
   })
   recruitKeepId: number;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'userId', nullable: true, length: 50 })
+  userId: string | null;
 
   @Column('int', { name: 'recruitPostId', unsigned: true })
   recruitPostId: number;
@@ -33,19 +33,19 @@ export class RecruitKeeps {
   })
   createdAt: Date | null;
 
+  @ManyToOne(() => Users, (users) => users.recruitKeeps, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
+  user: Users;
+
   @ManyToOne(() => RecruitPosts, (recruitPosts) => recruitPosts.recruitKeeps, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },
   ])
   recruitPost: RecruitPosts;
-
-  @ManyToOne(() => Users, (users) => users.recruitKeeps, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
-  user: Users;
 }

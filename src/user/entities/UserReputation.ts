@@ -21,17 +21,21 @@ export class UserReputation {
   })
   userReputationId: number;
 
-  @Column('varchar', { name: 'userReputationSender', length: 50 })
-  userReputationSender: string;
+  @Column('varchar', {
+    name: 'userReputationSender',
+    nullable: true,
+    length: 50,
+  })
+  userReputationSender: string | null;
 
   @Column('varchar', { name: 'userReputationReceiver', length: 50 })
   userReputationReceiver: string;
 
-  @Column('tinyint', { name: 'userReputationPoint', nullable: true, width: 1 })
-  userReputationPoint: boolean | null;
+  @Column('tinyint', { name: 'userReputationPoint', width: 1 })
+  userReputationPoint: boolean;
 
-  @Column('int', { name: 'recruitPostId', unsigned: true })
-  recruitPostId: number;
+  @Column('int', { name: 'recruitPostId', nullable: true, unsigned: true })
+  recruitPostId: number | null;
 
   @Column('timestamp', {
     name: 'createdAt',
@@ -48,30 +52,30 @@ export class UserReputation {
   updatedAt: Date | null;
 
   @ManyToOne(() => Users, (users) => users.userReputations, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn([
     { name: 'userReputationSender', referencedColumnName: 'userId' },
   ])
   userReputationSender2: Users;
 
-  @ManyToOne(() => Users, (users) => users.userReputations2, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  @JoinColumn([
-    { name: 'userReputationReceiver', referencedColumnName: 'userId' },
-  ])
-  userReputationReceiver2: Users;
-
   @ManyToOne(
     () => RecruitPosts,
     (recruitPosts) => recruitPosts.userReputations,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'SET NULL', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },
   ])
   recruitPost: RecruitPosts;
+
+  @ManyToOne(() => Users, (users) => users.userReputations2, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([
+    { name: 'userReputationReceiver', referencedColumnName: 'userId' },
+  ])
+  userReputationReceiver2: Users;
 }

@@ -20,14 +20,14 @@ export class InformationComments {
   })
   informationCommentId: number;
 
-  @Column('int', { name: 'commentDepth', nullable: true })
+  @Column('int', { name: 'commentDepth', nullable: true, unsigned: true })
   commentDepth: number | null;
 
-  @Column('int', { name: 'commentGroup', nullable: true })
+  @Column('int', { name: 'commentGroup', nullable: true, unsigned: true })
   commentGroup: number | null;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'userId', nullable: true, length: 50 })
+  userId: string | null;
 
   @Column('int', { name: 'informationPostId', unsigned: true })
   informationPostId: number;
@@ -56,7 +56,7 @@ export class InformationComments {
   @ManyToOne(
     () => InformationPosts,
     (informationPosts) => informationPosts.informationComments,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'CASCADE', onUpdate: 'RESTRICT' },
   )
   @JoinColumn([
     { name: 'informationPostId', referencedColumnName: 'informationPostId' },
@@ -64,8 +64,8 @@ export class InformationComments {
   informationPost: InformationPosts;
 
   @ManyToOne(() => Users, (users) => users.informationComments, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
   user: Users;

@@ -9,19 +9,12 @@ import { RecruitComments } from '../../recruit-post/entities/RecruitComments';
 import { RecruitKeeps } from '../../recruit-post/entities/RecruitKeeps';
 import { RecruitPosts } from '../../recruit-post/entities/RecruitPosts';
 import { UserReputation } from '../../user/entities/UserReputation';
-
-@Index('nickname', ['nickname'], { unique: true })
 @Entity('users', { schema: 'test' })
 export class Users {
   @Column('varchar', { primary: true, name: 'userId', length: 50 })
   userId: string;
 
-  @Column('varchar', {
-    name: 'nickname',
-    nullable: true,
-    unique: true,
-    length: 30,
-  })
+  @Column('varchar', { name: 'nickname', nullable: true, length: 30 })
   nickname: string | null;
 
   @Column('varchar', { name: 'profileImgUrl', nullable: true, length: 255 })
@@ -33,6 +26,7 @@ export class Users {
   @Column('int', {
     name: 'activityPoint',
     nullable: true,
+    unsigned: true,
     default: () => "'0'",
   })
   activityPoint: number | null;
@@ -43,7 +37,7 @@ export class Users {
   @Column('varchar', { name: 'portfolioUrl', nullable: true, length: 255 })
   portfolioUrl: string | null;
 
-  @Column('int', { name: 'loginType' })
+  @Column('int', { name: 'loginType', unsigned: true })
   loginType: number;
 
   @Column('varchar', { name: 'indigenousKey', length: 255 })
@@ -94,7 +88,7 @@ export class Users {
 
   @OneToMany(
     () => InformationPosts,
-    (informationPosts) => informationPosts.user,
+    (informationPosts) => informationPosts.author2,
   )
   informationPosts: InformationPosts[];
 
@@ -122,7 +116,7 @@ export class Users {
   @OneToMany(() => RecruitKeeps, (recruitKeeps) => recruitKeeps.user)
   recruitKeeps: RecruitKeeps[];
 
-  @OneToMany(() => RecruitPosts, (recruitPosts) => recruitPosts.user)
+  @OneToMany(() => RecruitPosts, (recruitPosts) => recruitPosts.author2)
   recruitPosts: RecruitPosts[];
 
   @OneToMany(

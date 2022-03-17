@@ -13,7 +13,7 @@ import { InformationLoves } from './InformationLoves';
 import { InformationPostImages } from './InformationPostImages';
 import { Users } from '../../socialLogin/entity/Users';
 
-@Index('userId', ['userId'], {})
+@Index('userId', ['author'], {})
 @Entity('informationPosts', { schema: 'test' })
 export class InformationPosts {
   @PrimaryGeneratedColumn({
@@ -26,16 +26,28 @@ export class InformationPosts {
   @Column('varchar', { name: 'title', nullable: true, length: 100 })
   title: string | null;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'author', nullable: true, length: 50 })
+  author: string | null;
 
-  @Column('text', { name: 'informationContent', nullable: true })
+  @Column('varchar', {
+    name: 'informationContent',
+    nullable: true,
+    length: 255,
+  })
   informationContent: string | null;
 
-  @Column('int', { name: 'informationKeepCount', nullable: true })
+  @Column('int', {
+    name: 'informationKeepCount',
+    nullable: true,
+    unsigned: true,
+  })
   informationKeepCount: number | null;
 
-  @Column('int', { name: 'informationLoveCount', nullable: true })
+  @Column('int', {
+    name: 'informationLoveCount',
+    nullable: true,
+    unsigned: true,
+  })
   informationLoveCount: number | null;
 
   @Column('int', {
@@ -87,9 +99,9 @@ export class InformationPosts {
   informationPostImages: InformationPostImages[];
 
   @ManyToOne(() => Users, (users) => users.informationPosts, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'CASCADE',
+    onUpdate: 'RESTRICT',
   })
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
-  user: Users;
+  @JoinColumn([{ name: 'author', referencedColumnName: 'userId' }])
+  author2: Users;
 }

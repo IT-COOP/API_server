@@ -24,24 +24,10 @@ export class RecruitPostImages {
   @Column('varchar', { name: 'imgUrl', nullable: true, length: 255 })
   imgUrl: string | null;
 
-  @Column('timestamp', {
-    name: 'createdAt',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createdAt: Date | null;
-
-  @Column('timestamp', {
-    name: 'updatedAt',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date | null;
-
   @ManyToOne(
     () => RecruitPosts,
     (recruitPosts) => recruitPosts.recruitPostImages,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },

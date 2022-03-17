@@ -5,46 +5,46 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import { InformationPosts } from "./InformationPosts";
+} from 'typeorm';
+import { InformationPosts } from './InformationPosts';
 
-@Index("informationPostId", ["informationPostId"], {})
-@Entity("informationPostImages", { schema: "test" })
+@Index('informationPostId', ['informationPostId'], {})
+@Entity('informationPostImages', { schema: 'test' })
 export class InformationPostImages {
   @PrimaryGeneratedColumn({
-    type: "int",
-    name: "informationPostImageId",
+    type: 'int',
+    name: 'informationPostImageId',
     unsigned: true,
   })
   informationPostImageId: number;
 
-  @Column("int", { name: "informationPostId", unsigned: true })
+  @Column('int', { name: 'informationPostId', unsigned: true })
   informationPostId: number;
 
-  @Column("varchar", { name: "imgUrl", nullable: true, length: 255 })
+  @Column('varchar', { name: 'imgUrl', nullable: true, length: 255 })
   imgUrl: string | null;
 
-  @Column("timestamp", {
-    name: "createdAt",
+  @Column('timestamp', {
+    name: 'createdAt',
     nullable: true,
-    default: () => "CURRENT_TIMESTAMP",
+    default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date | null;
 
-  @Column("timestamp", {
-    name: "updatedAt",
+  @Column('timestamp', {
+    name: 'updatedAt',
     nullable: true,
-    default: () => "CURRENT_TIMESTAMP",
+    default: () => 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date | null;
 
   @ManyToOne(
     () => InformationPosts,
     (informationPosts) => informationPosts.informationPostImages,
-    { onDelete: "NO ACTION", onUpdate: "NO ACTION" }
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
-    { name: "informationPostId", referencedColumnName: "informationPostId" },
+    { name: 'informationPostId', referencedColumnName: 'informationPostId' },
   ])
   informationPost: InformationPosts;
 }
