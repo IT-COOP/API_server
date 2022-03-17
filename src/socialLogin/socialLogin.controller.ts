@@ -1,12 +1,12 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { SocialLoginService } from './socialLogin.service';
 import {
+  All,
   Body,
   Controller,
   Get,
   Headers,
-  HttpException,
-  HttpStatus,
+  Param,
   Post,
   Query,
   Req,
@@ -51,9 +51,22 @@ export class SocialLoginController {
   @Post('completion')
   firstLogin(
     @Headers('authorization') accessTokenBearer: string,
-    @Body() body: CompleteFirstLoginDTO,
+    @Body() completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
     console.log(accessTokenBearer);
-    return this.socialLoginService.completeFirstLogin(accessTokenBearer, body);
+    return this.socialLoginService.completeFirstLogin(
+      accessTokenBearer,
+      completeFistLoginDTO,
+    );
+  }
+
+  @Post('refresh')
+  refreshAccessToken(@Body('refreshToken') refreshTokenBearer: string) {
+    return this.refreshAccessToken(refreshTokenBearer);
+  }
+
+  @Get('duplicateCheck/nickname/:nickname')
+  duplicationCheckByNickname(@Param('nickname') nickname: string) {
+    return this.socialLoginService.duplicationCheckByNickname(nickname);
   }
 }

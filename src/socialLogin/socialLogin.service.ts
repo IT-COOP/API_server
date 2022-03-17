@@ -3,9 +3,10 @@ import {
   ACCESS_TOKEN_DURATION,
   MY_SECRET_KEY,
   REFRESH_TOKEN_DURATION,
+  requiredColumns,
 } from '../auth/jwt/jwt.secret';
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
-import { Users } from '../socialLogin/entity/Users';
+import { Users } from './entity/Users';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
@@ -14,8 +15,8 @@ import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LoginType } from './enum/enums';
-import { v1 } from 'uuid';
+import { LoginType, RefreshTokenErrorMessage } from './enum/enums';
+import { SHA3 } from 'sha3';
 
 @Injectable()
 export class SocialLoginService {
@@ -26,6 +27,8 @@ export class SocialLoginService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
+
+  hash = new SHA3(224);
 
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -133,7 +136,7 @@ export class SocialLoginService {
     res: Response,
     idToken?: string,
   ) {
-    let indigenousKey: string;
+    const container = this.hash;
     let userInfo: AxiosResponse<any, any>;
 
     try {
@@ -146,7 +149,7 @@ export class SocialLoginService {
               Authorization: `Bearer ${accessToken}`,
             },
           });
-          indigenousKey = String(userInfo.data.id);
+          container.update(String(userInfo.data.id));
 
           break;
         case LoginType.google:
@@ -160,7 +163,7 @@ export class SocialLoginService {
               id_token: `${idToken}`,
             },
           });
-          indigenousKey = String(userInfo.data.sub);
+          container.update(String(userInfo.data.sub));
           break;
         case LoginType.github:
           userInfo = await axios({
@@ -172,7 +175,7 @@ export class SocialLoginService {
               Accept: 'application/json',
             },
           });
-          indigenousKey = String(userInfo.data.id);
+          container.update(String(userInfo.data.id));
           break;
         default:
           throw new HttpException(
@@ -186,6 +189,7 @@ export class SocialLoginService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+    const indigenousKey = container.digest('hex');
     return this.internalTokenCreation(indigenousKey, loginType, res);
   }
 
@@ -204,18 +208,11 @@ export class SocialLoginService {
     if (existUser) {
       payload = { sub: existUser.userId };
     } else {
-      const userId = v1();
       const newUser = new Users();
-      newUser.userId = userId;
       newUser.loginType = loginType;
       newUser.indigenousKey = indigenousKey;
-      await this.userRepository
-        .createQueryBuilder()
-        .insert()
-        .into(Users)
-        .values(newUser)
-        .execute();
-      payload = { sub: userId };
+      const storedUser = await this.userRepository.save(newUser);
+      payload = { sub: storedUser.userId };
     }
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
@@ -251,14 +248,14 @@ export class SocialLoginService {
     const targetUser = await this.userRepository
       .createQueryBuilder('users')
       .where('userId = :userId', { userId: payload.sub })
-      .select(['users.userId', 'users.nickname', 'users.profileImgUrl'])
+      .select(requiredColumns)
       .getOne();
-
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const accessToken = this.authService.createAccessTokenWithUserId(
       payload.sub,
     );
     if (targetUser.nickname) {
-      // 닉네임 이미 채움
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
@@ -267,6 +264,7 @@ export class SocialLoginService {
         data: {
           userInfo: targetUser,
           authorization: `Bearer ${accessToken}`,
+          expiresAt,
           refreshToken: `Bearer ${refreshToken}`,
         },
       };
@@ -278,6 +276,7 @@ export class SocialLoginService {
       data: {
         userInfo: targetUser,
         authorization: `Bearer ${accessToken}`,
+        expiresAt,
       },
     };
   }
@@ -296,23 +295,22 @@ export class SocialLoginService {
         MY_SECRET_KEY,
       );
       if (typeof verified === 'string') {
-        // 타입스크립트가 지랄해서 넣음
         throw new HttpException(
-          'Unprocessable Entity',
+          'Unprocessable Token',
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
-      const payload: jwt.JwtPayload = verified;
-      userId = payload.sub;
+      userId = verified.sub;
     } catch (err) {
       throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
     }
-
-    const payload: jwt.JwtPayload = { sub: body.userId };
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+    const payload: jwt.JwtPayload = { sub: userId };
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
     });
-    const refreshToken = jwt.sign({ sub: body.userId }, MY_SECRET_KEY, {
+    const refreshToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
       expiresIn: REFRESH_TOKEN_DURATION,
     });
     const mySet: any = {};
@@ -323,13 +321,15 @@ export class SocialLoginService {
 
     const existUser = await this.userRepository
       .createQueryBuilder()
-      .select('users')
-      .where('userId = :userId', { userId })
-      .orWhere('nickname = :nickname', { nickname: mySet.nickname })
+      .select(['userId', 'profileImgUrl', 'activityPoint', 'nickname'])
+      .where('nickname = :nickname', { nickname: mySet.nickname })
       .getOne();
 
     if (existUser) {
-      ('중복');
+      throw new HttpException(
+        'No Duplicated Nickname allowed',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const result = await this.userRepository
@@ -341,23 +341,54 @@ export class SocialLoginService {
       .andWhere('nickname = :nickname', { nickname: '' })
       .execute();
 
-    console.log(result);
-    if (existUser || (result && result.affected === 0)) {
-      // 중복 있고, 토큰이 먼가 잘못됨.
-      throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+    if (result && result.affected === 0) {
+      throw new HttpException('Not Valid Request', HttpStatus.BAD_REQUEST);
     }
 
-    const userInfo = await this.userRepository.findOne({
-      where: {
-        userId: mySet.userId,
-      },
-      select: ['nickname', 'profileImgUrl'],
-    });
+    const userInfo = await this.userRepository
+      .createQueryBuilder()
+      .select(requiredColumns)
+      .where('userId = :userId', { userId: mySet.userId })
+      .getOne();
 
     return {
       userInfo: userInfo,
       authorization: `Bearer ${accessToken}`,
+      expiresAt,
       refreshToken: `Bearer ${refreshToken}`,
     };
+  }
+
+  async refreshAccessToken(refreshTokenBearer) {
+    const refreshToken = refreshTokenBearer.split(' ')[1];
+    const decrypted = this.authService.jwtVerification(refreshToken);
+    const userId =
+      this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
+    const user = await this.authService.findUserByUserIdAndRefreshToken(
+      userId,
+      refreshToken,
+    );
+    if (user) {
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+      const accessToken = this.authService.createAccessTokenWithUserId(userId);
+      return {
+        authorize: `Bearer ${accessToken}`,
+        expiresAt,
+      };
+    }
+    throw new HttpException(
+      RefreshTokenErrorMessage.tokenMalformed,
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  async duplicationCheckByNickname(nickname: string) {
+    const result = await this.userRepository
+      .createQueryBuilder()
+      .select('nickname')
+      .where('nickname = :nickname', { nickname })
+      .getOne();
+    return !result;
   }
 }

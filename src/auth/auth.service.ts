@@ -4,17 +4,24 @@ import {
   AccessTokenErrorMessage,
 } from './../socialLogin/enum/enums';
 import { CheckUserIdInterface, JwtVerifyInterFace } from './type/auth.type';
-import { Users } from '../socialLogin/entity/Users';
+import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  HttpException,
+  ExecutionContext,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import {
   MY_SECRET_KEY,
   ACCESS_TOKEN_DURATION,
   REFRESH_TOKEN_DURATION,
+  requiredColumns,
 } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +34,7 @@ export class AuthService {
   async findUserByUserId(userId: string): Promise<Users | undefined> {
     return await this.userRepository
       .createQueryBuilder()
-      .select('users')
+      .select(requiredColumns)
       .where('userId = :userId', { userId })
       .getOne();
   }
@@ -38,7 +45,7 @@ export class AuthService {
   ): Promise<Users | undefined> {
     return await this.userRepository
       .createQueryBuilder()
-      .select('users')
+      .select(requiredColumns)
       .where('userId = :userId', { userId })
       .andWhere('refreshToken = :refreshToken', { refreshToken })
       .getOne();
@@ -127,5 +134,29 @@ export class AuthService {
       default:
         return decrypted.userId;
     }
+  }
+
+  getTokensFromContext(context: ExecutionContext): {
+    req: Request;
+    accessTokenBearer: string;
+    refreshTokenBearer: string;
+  } {
+    const req = context.getArgByIndex(0);
+    const headers: string[] = req.rawHeaders;
+    const indexOfAccessTokenBearer = headers.indexOf('authorize');
+    const indexOfRefreshTokenBearer = headers.indexOf('refreshToken');
+    const accessTokenBearer =
+      indexOfAccessTokenBearer !== -1
+        ? headers[indexOfAccessTokenBearer + 1]
+        : '';
+    const refreshTokenBearer =
+      indexOfRefreshTokenBearer !== -1
+        ? headers[indexOfRefreshTokenBearer + 1]
+        : '';
+    return {
+      req,
+      accessTokenBearer,
+      refreshTokenBearer,
+    };
   }
 }
