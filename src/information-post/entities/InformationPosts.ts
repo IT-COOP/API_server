@@ -40,6 +40,7 @@ export class InformationPosts {
     name: 'informationKeepCount',
     nullable: true,
     unsigned: true,
+    default: () => 0,
   })
   informationKeepCount: number | null;
 
@@ -47,6 +48,7 @@ export class InformationPosts {
     name: 'informationLoveCount',
     nullable: true,
     unsigned: true,
+    default: () => 0,
   })
   informationLoveCount: number | null;
 
@@ -54,10 +56,16 @@ export class InformationPosts {
     name: 'informationCommentCount',
     nullable: true,
     unsigned: true,
+    default: () => 0,
   })
   informationCommentCount: number | null;
 
-  @Column('int', { name: 'viewCount', nullable: true, unsigned: true })
+  @Column('int', {
+    name: 'viewCount',
+    nullable: true,
+    unsigned: true,
+    default: () => 0,
+  })
   viewCount: number | null;
 
   @Column('timestamp', {
