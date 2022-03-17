@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
-  providers: [AuthService],
+  providers: [AuthService, StrictGuard, LooseGuard],
   imports: [ConfigModule, PassportModule, TypeOrmModule.forFeature([Users])],
   exports: [AuthService, StrictGuard, LooseGuard],
 })

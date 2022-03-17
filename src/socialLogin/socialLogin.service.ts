@@ -15,7 +15,7 @@ import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LoginType } from './enum/enums';
+import { LoginType, RefreshTokenErrorMessage } from './enum/enums';
 import { SHA3 } from 'sha3';
 
 @Injectable()
@@ -250,7 +250,8 @@ export class SocialLoginService {
       .where('userId = :userId', { userId: payload.sub })
       .select(requiredColumns)
       .getOne();
-
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const accessToken = this.authService.createAccessTokenWithUserId(
       payload.sub,
     );
@@ -263,6 +264,7 @@ export class SocialLoginService {
         data: {
           userInfo: targetUser,
           authorization: `Bearer ${accessToken}`,
+          expiresAt,
           refreshToken: `Bearer ${refreshToken}`,
         },
       };
@@ -274,6 +276,7 @@ export class SocialLoginService {
       data: {
         userInfo: targetUser,
         authorization: `Bearer ${accessToken}`,
+        expiresAt,
       },
     };
   }
@@ -301,7 +304,8 @@ export class SocialLoginService {
     } catch (err) {
       throw new HttpException(`${err}`, HttpStatus.BAD_REQUEST);
     }
-
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const payload: jwt.JwtPayload = { sub: userId };
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,
@@ -350,12 +354,37 @@ export class SocialLoginService {
     return {
       userInfo: userInfo,
       authorization: `Bearer ${accessToken}`,
+      expiresAt,
       refreshToken: `Bearer ${refreshToken}`,
     };
   }
 
+  async refreshAccessToken(refreshTokenBearer) {
+    const refreshToken = refreshTokenBearer.split(' ')[1];
+    const decrypted = this.authService.jwtVerification(refreshToken);
+    const userId =
+      this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
+    const user = await this.authService.findUserByUserIdAndRefreshToken(
+      userId,
+      refreshToken,
+    );
+    if (user) {
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+      const accessToken = this.authService.createAccessTokenWithUserId(userId);
+      return {
+        authorize: `Bearer ${accessToken}`,
+        expiresAt,
+      };
+    }
+    throw new HttpException(
+      RefreshTokenErrorMessage.tokenMalformed,
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
   async duplicationCheckByNickname(nickname: string) {
-    const result = this.userRepository
+    const result = await this.userRepository
       .createQueryBuilder()
       .select('nickname')
       .where('nickname = :nickname', { nickname })

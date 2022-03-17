@@ -8,7 +8,6 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class StrictGuard implements CanActivate {
@@ -42,19 +41,9 @@ export class StrictGuard implements CanActivate {
       );
     }
     if (existUser && existUser.nickname) {
-      const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
-      if (refreshTokenBearer) {
-        req.user = {
-          userInfo: existUser,
-          authorization: `Bearer ${novelAccessToken}`,
-        };
-      } else {
-        req.user = {
-          userInfo: existUser,
-        };
-      }
+      req.user = {
+        userInfo: existUser,
+      };
       return true;
     } else if (!existUser.nickname) {
       throw new HttpException('There Is No Such User', HttpStatus.FORBIDDEN);
@@ -89,12 +78,8 @@ export class LooseGuard implements CanActivate {
       );
     }
     if (existUser && existUser.nickname) {
-      const novelAccessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-        expiresIn: ACCESS_TOKEN_DURATION,
-      });
       req.user = {
         userInfo: existUser,
-        authorization: `Bearer ${novelAccessToken}`,
       };
       return true;
     } else {

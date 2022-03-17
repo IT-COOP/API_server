@@ -21,7 +21,7 @@ import {
   requiredColumns,
 } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
