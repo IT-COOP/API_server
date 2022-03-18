@@ -9,7 +9,7 @@ import {
 import { RecruitPosts } from './RecruitPosts';
 
 @Index('recruitPostId', ['recruitPostId'], {})
-@Entity('recruitTasks')
+@Entity('recruitTasks', { schema: 'test' })
 export class RecruitTasks {
   @PrimaryGeneratedColumn({
     type: 'int',
@@ -21,14 +21,14 @@ export class RecruitTasks {
   @Column('int', { name: 'recruitPostId', unsigned: true })
   recruitPostId: number;
 
-  @Column('int', { name: 'recruitTask', nullable: true })
-  recruitTask: number | null;
+  @Column('int', { name: 'recruitTask', unsigned: true })
+  recruitTask: number;
 
-  @Column('int', { name: 'numberOfPeopleRequired', nullable: true })
-  numberOfPeopleRequired: number | null;
+  @Column('int', { name: 'numberOfPeopleRequired', unsigned: true })
+  numberOfPeopleRequired: number;
 
-  @Column('int', { name: 'numberOfPeopleSet', nullable: true })
-  numberOfPeopleSet: number | null;
+  @Column('int', { name: 'numberOfPeopleSet', unsigned: true })
+  numberOfPeopleSet: number;
 
   @Column('timestamp', {
     name: 'createdAt',
@@ -45,8 +45,8 @@ export class RecruitTasks {
   updatedAt: Date | null;
 
   @ManyToOne(() => RecruitPosts, (recruitPosts) => recruitPosts.recruitTasks, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn([
     { name: 'recruitPostId', referencedColumnName: 'recruitPostId' },
