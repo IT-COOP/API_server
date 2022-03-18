@@ -1,41 +1,49 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Delete, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 import { RecruitPostService } from './recruit-post.service';
 
 @Controller('recruit')
 export class RecruitPostController {
-  constructor(private readonly recruitPostService: RecruitPostService) {
+  constructor(private readonly recruitPostService: RecruitPostService) {}
 
+  @ApiParam({
+    name: 'recruitPostId',
+    required: true,
+    description: '포스트 아이디',
+  })
+  @ApiOperation({ summary: '협업 신청 취소하기' })
+  @Delete('/:recruitPostId/:applyId')
+  async removeApply(@Param('applyId', ParseIntPipe) applyId: number) {
+    this.recruitService.deleteApply(applyId);
 
-    @Get()
-    async getAllRecruits(@Query() query: any) {
-      query;
-    // const order = query.order;
-    // const items = query.items ? query.items : 12;
-    // const location = query.location;
-    // const task = query.task;
-    // const stack = query.stack;
-    // const lastId = query.lastId;
+    return { success: true };
+  }
 
-    console.log('서비스 전');
+  @ApiParam({
+    name: 'recruitKeepId',
+    required: true,
+    description: '킵잇 아이디',
+  })
+  @ApiOperation({ summary: '협업 keep취소하기' })
+  @Delete('/:recruitKeepId')
+  async removeKeepIt(@Param('recruitKeepId', ParseIntPipe) keepId: number) {
+    this.recruitService.deleteKeepIt(keepId);
 
-    const recruits = await this.recruitService
-      .ReadAllRecruits
-      // userId,
-      // order,
-      // items,
-      // location,
-      // task,
-      // stack,
-      // lastId,
-      ();
+    return { success: true };
+  }
 
-    const post = recruits.map((item: any) => {
-      const obj: any = item;
-      obj.recruitDurationWeeks = item.recruitDurationDays / 7;
-      return obj;
-    });
+  @ApiParam({
+    name: 'recruitCommentId',
+    required: true,
+    description: '댓글 아이디',
+  })
+  @ApiOperation({ summary: '협업 댓글 삭제하기' })
+  @Delete('/:recruitCommentId')
+  async removeComment(
+    @Param('recruitCommentId', ParseIntPipe) commentId: number,
+  ) {
+    this.recruitPostService.deleteComment(commentId);
 
-    return post;
-    }
+    return { success: true };
   }
 }
