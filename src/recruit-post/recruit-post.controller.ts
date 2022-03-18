@@ -232,18 +232,18 @@ export class RecruitPostController {
   @ApiOperation({ summary: '협업 신청하기' })
   @Post('/:recruitPostId/apply')
   async postApply(
-    @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
+    @Param('recruitPostId', ParseIntPipe) postId: number,
     @Body() body: RecruitApplyDTO,
   ) {
     const userId = 'cgh';
     const apply = new RecruitApplies();
     apply.applicant = userId;
-    apply.recruitPostId = recruitPostId;
+    apply.recruitPostId = postId;
     apply.applyMessage = body.applyMessage;
     apply.task = body.task;
     apply.isAccepted = false;
 
-    await this.recruitPostService.createApply(apply);
+    await this.recruitPostService.createApply(postId, apply);
 
     return { success: true };
   }
@@ -261,7 +261,7 @@ export class RecruitPostController {
     recruitKeepIt.userId = userId;
     recruitKeepIt.recruitPostId = recruitId;
 
-    this.recruitPostService.createKeepIt(recruitKeepIt);
+    this.recruitPostService.createKeepIt(recruitId, recruitKeepIt);
 
     return { success: true };
   }

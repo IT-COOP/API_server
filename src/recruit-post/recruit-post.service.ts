@@ -32,6 +32,7 @@ export class RecruitPostService {
     private connection: Connection,
   ) {}
 
+  //해봐야 알듯?
   async ReadAllRecruits(
     loginId: string, // 사용자가 좋아요 한 게시물을 위한
     sort: number, //정렬을 위한 0 = 최신순 정렬 , 1 = 킵잇 순 정렬
@@ -212,31 +213,31 @@ export class RecruitPostService {
     }
   }
 
+  //마무리
   async createComment(recruitPostId: number, comment: object) {
     try {
-      const post: RecruitPosts = await this.recruitPostsRepository.findOne(
-        recruitPostId,
-      );
-      post.recruitCommentCount = post.recruitCommentCount + 1;
       await Promise.all([
         this.recruitCommentsRepository.save(comment),
-        this.recruitPostsRepository.save(post),
+        this.recruitPostsRepository
+          .createQueryBuilder()
+          .update(RecruitPosts)
+          .set({ recruitCommentCount: () => 'recruitCommentCount + 1' })
+          .where('recruitPostId = :recruitPostId', { recruitPostId })
+          .execute(),
       ]);
     } catch (error) {
       throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
-  async createKeepIt(keepIt: RecruitKeeps) {
+  //마무리
+  async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
     try {
       const returned = await this.recruitKeepsRepository
         .createQueryBuilder('K')
-        .leftJoinAndSelect('K.recruitPost', 'P')
         .getOne();
       if (returned) throw new HttpException('이미 킵잇되있어용~', 400);
 
-      const post: RecruitPosts = returned.recruitPost;
-      post.recruitKeepCount++;
       await Promise.all([
         this.recruitKeepsRepository
           .createQueryBuilder('K')
@@ -245,10 +246,10 @@ export class RecruitPostService {
           .values(keepIt)
           .execute(),
         this.recruitPostsRepository
-          .createQueryBuilder('P')
-          .insert()
-          .into('P')
-          .values(post)
+          .createQueryBuilder()
+          .update(RecruitPosts)
+          .set({ recruitKeepCount: () => 'recruitKeepCount + 1' })
+          .where('recruitPostId = :recruitPostId', { recruitPostId })
           .execute(),
       ]);
     } catch (error) {
@@ -256,14 +257,29 @@ export class RecruitPostService {
     }
   }
 
-  async createApply(apply: object) {
+  //마무리
+  async createApply(recruitPostId: number, apply: RecruitApplies) {
     try {
-      await this.recruitAppliesRepository.save(apply);
+      const returnedApply = await this.recruitAppliesRepository.findOne(
+        recruitPostId,
+      );
+
+      if (returnedApply.recruitApplyId) {
+        throw new HttpException('이미 신청했어요', 400);
+      } else {
+        await this.recruitAppliesRepository
+          .createQueryBuilder('A')
+          .insert()
+          .into('A')
+          .values(apply)
+          .execute();
+      }
     } catch (error) {
       throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
+  //천천히
   async updateRecruitPost(
     recruitPost: RecruitPosts,
     recruitPostImages: string[],
@@ -288,19 +304,21 @@ export class RecruitPostService {
     }
   }
 
+  //마무리
   async updateComment(commentId: number, comment: object) {
     try {
-      await this.recruitCommentsRepository.update(commentId, comment);
+      await this.recruitCommentsRepository.upsert(comment, ['commentId']);
     } catch (error) {
       throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
-  //로직 변경
+  //로직 변경 논의
   async deleteComment(recruitPostId: number, commentId: number) {
     /*
     1, KeepIt post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, 있으면 지우고 없으면 error를 띄움 post에 comment 카운트를 낮추고 저장
+    3, 
     */
     try {
       const returnedComments = await this.recruitCommentsRepository
@@ -310,6 +328,9 @@ export class RecruitPostService {
 
       if (!returnedComments.recruitCommentId) {
         throw new HttpException('지울 데이터가 없어요', 400);
+      }
+      if (returnedComments.commentDepth === 0) {
+        // 여기 대댓글이 안달려있으면 지우는 것 생각 해보기
       }
       if (returnedComments.commentDepth === 1) {
         await this.recruitCommentsRepository.delete(returnedComments);
@@ -361,7 +382,7 @@ export class RecruitPostService {
         this.recruitKeepsRepository.delete(recruitKeepId),
         this.recruitPostsRepository
           .createQueryBuilder()
-          .update()
+          .update(RecruitPosts)
           .set({ recruitKeepCount: () => 'recruitKeepCount - 1' })
           .where('P.recruitPostId = :recruitPostId', { recruitPostId })
           .execute(),
