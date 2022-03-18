@@ -1,45 +1,41 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { RecruitPostService } from './recruit-post.service';
-import { CreateRecruitPostDto } from './dto/create-recruit-post.dto';
-import { UpdateRecruitPostDto } from './dto/update-recruit-post.dto';
 
-@Controller('recruit-post')
+@Controller('recruit')
 export class RecruitPostController {
-  constructor(private readonly recruitPostService: RecruitPostService) {}
+  constructor(private readonly recruitPostService: RecruitPostService) {
 
-  @Post()
-  create(@Body() createRecruitPostDto: CreateRecruitPostDto) {
-    return this.recruitPostService.create(createRecruitPostDto);
-  }
 
-  @Get()
-  findAll() {
-    return this.recruitPostService.findAll();
-  }
+    @Get()
+    async getAllRecruits(@Query() query: any) {
+      query;
+    // const order = query.order;
+    // const items = query.items ? query.items : 12;
+    // const location = query.location;
+    // const task = query.task;
+    // const stack = query.stack;
+    // const lastId = query.lastId;
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.recruitPostService.findOne(+id);
-  }
+    console.log('서비스 전');
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateRecruitPostDto: UpdateRecruitPostDto,
-  ) {
-    return this.recruitPostService.update(+id, updateRecruitPostDto);
-  }
+    const recruits = await this.recruitService
+      .ReadAllRecruits
+      // userId,
+      // order,
+      // items,
+      // location,
+      // task,
+      // stack,
+      // lastId,
+      ();
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.recruitPostService.remove(+id);
+    const post = recruits.map((item: any) => {
+      const obj: any = item;
+      obj.recruitDurationWeeks = item.recruitDurationDays / 7;
+      return obj;
+    });
+
+    return post;
+    }
   }
 }

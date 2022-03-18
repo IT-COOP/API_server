@@ -9,7 +9,7 @@ import {
 import { RecruitPosts } from './RecruitPosts';
 
 @Index('recruitPostId', ['recruitPostId'], {})
-@Entity('recruitStacks', { schema: 'test' })
+@Entity('recruitStacks')
 export class RecruitStacks {
   @PrimaryGeneratedColumn({
     type: 'int',

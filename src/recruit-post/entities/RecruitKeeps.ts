@@ -11,7 +11,7 @@ import { Users } from '../../socialLogin/entity/Users';
 
 @Index('recruitPostId', ['recruitPostId'], {})
 @Index('userId', ['userId'], {})
-@Entity('recruitKeeps', { schema: 'test' })
+@Entity('recruitKeeps')
 export class RecruitKeeps {
   @PrimaryGeneratedColumn({
     type: 'int',
