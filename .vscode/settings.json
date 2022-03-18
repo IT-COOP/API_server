@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["Fastify", "kakao", "nestjs", "typeorm"]
+  "cSpell.words": ["Fastify", "kakao", "nestjs", "typeorm"],
+  "files.eol": "\r\n"
 }
