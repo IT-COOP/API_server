@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/socialLogin/entity/Users';
-import { Connection, getRepository, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
