@@ -23,6 +23,7 @@ import { RecruitStacks } from './recruit-post/entities/RecruitStacks';
 import { RecruitTasks } from './recruit-post/entities/RecruitTasks';
 import { Notification } from './user/entities/Notification';
 import { UserReputation } from './user/entities/UserReputation';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { UserReputation } from './user/entities/UserReputation';
     RecruitPostModule,
     InformationPostModule,
     UserModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

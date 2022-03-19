@@ -9,6 +9,8 @@ import { RecruitComments } from '../../recruit-post/entities/RecruitComments';
 import { RecruitKeeps } from '../../recruit-post/entities/RecruitKeeps';
 import { RecruitPosts } from '../../recruit-post/entities/RecruitPosts';
 import { UserReputation } from '../../user/entities/UserReputation';
+import { ChatMembers } from 'src/socket/entities/ChatMembers';
+import { Chats } from 'src/socket/entities/Chats';
 @Entity('users', { schema: 'test' })
 export class Users {
   @Column('varchar', { primary: true, name: 'userId', length: 50 })
@@ -130,4 +132,10 @@ export class Users {
     (userReputation) => userReputation.userReputationReceiver2,
   )
   userReputations2: UserReputation[];
+
+  @OneToMany(() => ChatMembers, (chatMembers) => chatMembers.member2)
+  chatMembers: ChatMembers[];
+
+  @OneToMany(() => Chats, (chats) => chats.speaker2)
+  chats: Chats[];
 }
