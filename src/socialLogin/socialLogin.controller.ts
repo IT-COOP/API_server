@@ -8,7 +8,6 @@ import {
   Param,
   Post,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -39,9 +38,7 @@ export class SocialLoginController {
   userValidation(
     @Headers('authorization') accessTokenBearer: string,
     @Headers('refreshToken') refreshTokenBearer: string,
-    @Req() req,
   ) {
-    console.log(req);
     return this.socialLoginService.userValidation(
       accessTokenBearer,
       refreshTokenBearer,
@@ -49,11 +46,10 @@ export class SocialLoginController {
   }
 
   @Post('completion')
-  firstLogin(
+  completeFirstLogin(
     @Headers('authorization') accessTokenBearer: string,
     @Body() completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
-    console.log(accessTokenBearer);
     return this.socialLoginService.completeFirstLogin(
       accessTokenBearer,
       completeFistLoginDTO,

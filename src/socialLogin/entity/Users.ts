@@ -1,4 +1,4 @@
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { InformationComments } from '../../information-post/entities/InformationComments';
 import { InformationKeeps } from '../../information-post/entities/InformationKeeps';
 import { InformationLoves } from '../../information-post/entities/InformationLoves';

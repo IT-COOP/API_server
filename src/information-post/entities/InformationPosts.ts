@@ -29,6 +29,13 @@ export class InformationPosts {
   @Column('varchar', { name: 'author', nullable: true, length: 50 })
   author: string | null;
 
+  @Column('int', {
+    name: 'informationPostType',
+    nullable: false,
+    unsigned: true,
+  })
+  informationPostType: number;
+
   @Column('varchar', {
     name: 'informationContent',
     nullable: true,

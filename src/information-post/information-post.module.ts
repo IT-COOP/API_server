@@ -1,3 +1,4 @@
+import { AuthModule } from './../auth/auth.module';
 import { Module } from '@nestjs/common';
 import { InformationPostService } from './information-post.service';
 import { InformationPostController } from './information-post.controller';
@@ -17,6 +18,7 @@ import { InformationPosts } from './entities/InformationPosts';
       InformationPostImages,
       InformationPosts,
     ]),
+    AuthModule,
   ],
   controllers: [InformationPostController],
   providers: [InformationPostService],

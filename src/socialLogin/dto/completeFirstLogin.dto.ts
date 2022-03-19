@@ -1,23 +1,21 @@
-import { IsString, IsNumber, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CompleteFirstLoginDTO {
-  @MaxLength(13)
-  @MinLength(2)
+  @IsNotEmpty()
   @IsString()
+  @MaxLength(30)
+  @MinLength(2)
   nickname: string;
 
   @IsString()
-  profileImgUrl: string;
+  technologyStack: string | undefined;
 
   @IsString()
-  technologyStack: string;
-
-  @IsNumber()
-  activityPoint: number;
+  selfIntroduction: string | undefined;
 
   @IsString()
-  selfIntroduction: string;
+  portfolioUrl: string | undefined;
 
   @IsString()
-  portfolioUrl: string;
+  profileImgUrl: string | undefined;
 }

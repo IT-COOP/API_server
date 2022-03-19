@@ -21,6 +21,7 @@ import { SHA3 } from 'sha3';
 @Injectable()
 export class SocialLoginService {
   constructor(
+    public S3_BUCKET_NAME: string,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
@@ -283,7 +284,7 @@ export class SocialLoginService {
 
   async completeFirstLogin(
     accessTokenBearer: string,
-    body: CompleteFirstLoginDTO,
+    completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
     const userQuery = this.userRepository.createQueryBuilder('user');
     if (typeof accessTokenBearer !== 'string') {
@@ -314,15 +315,12 @@ export class SocialLoginService {
     const refreshToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
       expiresIn: REFRESH_TOKEN_DURATION,
     });
-    const mySet: any = {};
-    for (const each in body) {
-      mySet[each] = body[each];
-    }
-    mySet.refreshToken = refreshToken;
 
     const existUser = await userQuery
       .select(requiredColumns)
-      .where('users.nickname = :nickname', { nickname: mySet.nickname })
+      .where('users.nickname = :nickname', {
+        nickname: completeFistLoginDTO.nickname,
+      })
       .getOne();
 
     if (existUser) {
@@ -336,7 +334,14 @@ export class SocialLoginService {
       .createQueryBuilder()
       .select('users')
       .update(Users)
-      .set(mySet)
+      .set({
+        nickname: completeFistLoginDTO.nickname,
+        portfolioUrl: completeFistLoginDTO.portfolioUrl,
+        selfIntroduction: completeFistLoginDTO.selfIntroduction,
+        technologyStack: completeFistLoginDTO.technologyStack,
+        refreshToken,
+        profileImgUrl: completeFistLoginDTO.profileImgUrl,
+      })
       .where('userId = :userId', { userId })
       .andWhere('nickname = :nickname', { nickname: '' })
       .execute();
@@ -347,7 +352,7 @@ export class SocialLoginService {
 
     const userInfo = await userQuery
       .select(requiredColumns)
-      .where('users.userId = :userId', { userId: mySet.userId })
+      .where('users.userId = :userId', { userId })
       .getOne();
 
     return {
@@ -388,6 +393,6 @@ export class SocialLoginService {
       .select('users.nickname')
       .where('nickname = :nickname', { nickname })
       .getOne();
-    return !result;
+    return { result: !result };
   }
 }
