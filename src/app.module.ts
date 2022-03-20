@@ -24,6 +24,7 @@ import { RecruitTasks } from './recruit-post/entities/RecruitTasks';
 import { Notification } from './user/entities/Notification';
 import { UserReputation } from './user/entities/UserReputation';
 import { SocketModule } from './socket/socket.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { SocketModule } from './socket/socket.module';
     InformationPostModule,
     UserModule,
     SocketModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

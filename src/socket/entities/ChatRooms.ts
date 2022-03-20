@@ -1,4 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { RecruitPosts } from './../../recruit-post/entities/RecruitPosts';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ChatMembers } from './ChatMembers';
 import { Chats } from './Chats';
 
@@ -6,6 +14,9 @@ import { Chats } from './Chats';
 export class ChatRooms {
   @PrimaryGeneratedColumn({ type: 'int', name: 'chatRoomId', unsigned: true })
   chatRoomId: number;
+
+  @Column('int', { name: 'participantCount', nullable: true, unsigned: true })
+  participantCount: number | null;
 
   @Column('timestamp', {
     name: 'createdAt',
@@ -16,6 +27,13 @@ export class ChatRooms {
 
   @OneToMany(() => ChatMembers, (chatMembers) => chatMembers.chatRoom)
   chatMembers: ChatMembers[];
+
+  @OneToOne(() => RecruitPosts, (recruitPosts) => recruitPosts.chatRooms, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'chatRoomId', referencedColumnName: 'recruitPostId' }])
+  chatRoom: RecruitPosts;
 
   @OneToMany(() => Chats, (chats) => chats.chatRoom)
   chats: Chats[];

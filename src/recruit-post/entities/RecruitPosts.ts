@@ -1,3 +1,4 @@
+import { ChatRooms } from './../../socket/entities/ChatRooms';
 import {
   Column,
   Entity,
@@ -5,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RecruitApplies } from './RecruitApplies';
@@ -78,6 +80,9 @@ export class RecruitPosts {
     default: () => 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date | null;
+
+  @OneToOne(() => ChatRooms, (chatRooms) => chatRooms.chatRoom)
+  chatRooms: ChatRooms;
 
   @OneToMany(
     () => RecruitApplies,
