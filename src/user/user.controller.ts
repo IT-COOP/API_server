@@ -1,8 +1,4 @@
-import {
-  Controller,
-  Get,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -21,11 +17,22 @@ export class UserController {
 
   @Get('/keepIt')
   async getKeepPosts(@Req() user) {
-    return await this.userService.readKeepPosts(user.userId);
+    try {
+      return await this.userService.readKeepPosts(user.userId);
+    } catch (e) {}
   }
 
-  @Get('/recruit')
-  async getMyRecruit(@Req() user){
-    return await this.userService.readMyRecruit(user.userId);
+  @Get('/myRecruits')
+  async getMyRecruit(@Req() user) {
+    try {
+      return await this.userService.readMyRecruit(user.userId);
+    } catch (e) {}
+  }
+
+  @Post('/profile')
+  async postMyRecruit(@Req() user, @Body() ) {
+    try {
+      return await this.userService.readMyRecruit(user.userId);
+    } catch (e) {}
   }
 }

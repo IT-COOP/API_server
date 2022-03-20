@@ -17,7 +17,6 @@ import { InformationPosts } from './information-post/entities/InformationPosts';
 import { RecruitApplies } from './recruit-post/entities/RecruitApplies';
 import { RecruitComments } from './recruit-post/entities/RecruitComments';
 import { RecruitKeeps } from './recruit-post/entities/RecruitKeeps';
-import { RecruitPostImages } from './recruit-post/entities/RecruitPostImages';
 import { RecruitPosts } from './recruit-post/entities/RecruitPosts';
 import { RecruitStacks } from './recruit-post/entities/RecruitStacks';
 import { RecruitTasks } from './recruit-post/entities/RecruitTasks';
@@ -52,7 +51,6 @@ import { ImageModule } from './image/image.module';
             RecruitApplies,
             RecruitComments,
             RecruitKeeps,
-            RecruitPostImages,
             RecruitPosts,
             RecruitStacks,
             RecruitTasks,
