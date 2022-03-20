@@ -1,3 +1,6 @@
+import { Chats } from './socket/entities/Chats';
+import { ChatMembers } from './socket/entities/ChatMembers';
+import { ChatRooms } from './socket/entities/ChatRooms';
 import { socialLoginModule } from './socialLogin/socialLogin.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
@@ -59,6 +62,9 @@ import { ImageModule } from './image/image.module';
             RecruitTasks,
             Notification,
             UserReputation,
+            ChatRooms,
+            ChatMembers,
+            Chats,
           ],
           synchronize: true,
           logger: 'debug',
