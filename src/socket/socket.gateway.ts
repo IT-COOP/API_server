@@ -1,4 +1,4 @@
-import { Users } from './../../output/entities/Users';
+import { Users } from './../socialLogin/entity/Users';
 import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { Notification } from './../user/entities/Notification';
