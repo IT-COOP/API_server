@@ -1,7 +1,6 @@
 import { StrictGuard } from './../auth/auth.guard';
 import { Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
 import { UploadFileService } from './upload-file.service';
-import { Request, Response } from 'express';
 
 @Controller('upload')
 export class UploadFileController {

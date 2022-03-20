@@ -16,7 +16,7 @@ import {
 import { Repository } from 'typeorm';
 import { requiredColumns } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
