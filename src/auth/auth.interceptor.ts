@@ -10,8 +10,8 @@ import { map } from 'rxjs/operators';
 @Injectable()
 export class ExcludeNullInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const req = context.getArgByIndex(0);
-    const novelAccessTokenBearer = req.user.authorization;
+    const [res] = context.getArgs();
+    const novelAccessTokenBearer = res.locals.authorization;
     if (novelAccessTokenBearer) {
       return next.handle().pipe(
         map((data) => {

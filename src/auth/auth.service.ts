@@ -14,14 +14,9 @@ import {
   ExecutionContext,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import {
-  MY_SECRET_KEY,
-  ACCESS_TOKEN_DURATION,
-  REFRESH_TOKEN_DURATION,
-  requiredColumns,
-} from './jwt/jwt.secret';
+import { requiredColumns } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +25,13 @@ export class AuthService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
+  MY_SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  ACCESS_TOKEN_DURATION = this.configService.get<string>(
+    'ACCESS_TOKEN_DURATION',
+  );
+  REFRESH_TOKEN_DURATION = this.configService.get<string>(
+    'REFRESH_TOKEN_DURATION',
+  );
 
   async findUserByUserId(userId: string): Promise<Users | undefined> {
     return await this.userRepository
@@ -56,7 +58,7 @@ export class AuthService {
       message: null,
       userId: null,
     };
-    jwt.verify(token, MY_SECRET_KEY, (err, decoded: jwt.JwtPayload) => {
+    jwt.verify(token, this.MY_SECRET_KEY, (err, decoded: jwt.JwtPayload) => {
       if (err) {
         ret.message = err.message;
         /**
@@ -72,15 +74,15 @@ export class AuthService {
   }
 
   createAccessTokenWithUserId(userId: string): string {
-    const accessToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-      expiresIn: ACCESS_TOKEN_DURATION,
+    const accessToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
+      expiresIn: this.ACCESS_TOKEN_DURATION,
     });
     return accessToken;
   }
 
   createRefreshTokenWithUserId(userId: string): string {
-    const refreshToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-      expiresIn: REFRESH_TOKEN_DURATION,
+    const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
+      expiresIn: this.REFRESH_TOKEN_DURATION,
     });
     return refreshToken;
   }
@@ -137,11 +139,11 @@ export class AuthService {
   }
 
   getTokensFromContext(context: ExecutionContext): {
-    req: Request;
+    res: Response;
     accessTokenBearer: string;
     refreshTokenBearer: string;
   } {
-    const req = context.getArgByIndex(0);
+    const [req, res] = context.getArgs();
     const headers: string[] = req.rawHeaders;
     const indexOfAccessTokenBearer = headers.indexOf('authorize');
     const indexOfRefreshTokenBearer = headers.indexOf('refreshToken');
@@ -154,7 +156,7 @@ export class AuthService {
         ? headers[indexOfRefreshTokenBearer + 1]
         : '';
     return {
-      req,
+      res,
       accessTokenBearer,
       refreshTokenBearer,
     };

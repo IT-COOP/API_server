@@ -1,5 +1,5 @@
 import { StrictGuard } from './../auth/auth.guard';
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
 
 @Controller('chat')
@@ -7,8 +7,8 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
   @UseGuards(StrictGuard)
   @Get()
-  getAllChatRooms(@Req() req) {
-    const { userId } = req.user.userInfo;
+  getAllChatRooms(@Res() res) {
+    const { userId } = res.locals.user;
     return this.chatService.getAllChatRooms(userId);
   }
 }

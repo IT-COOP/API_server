@@ -13,7 +13,7 @@ export class StrictGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const { req, accessTokenBearer, refreshTokenBearer } =
+    const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
     let userId: string;
     let existUser: Users | undefined;
@@ -40,9 +40,7 @@ export class StrictGuard implements CanActivate {
       );
     }
     if (existUser && existUser.nickname) {
-      req.user = {
-        userInfo: existUser,
-      };
+      res.locals.user = existUser;
       return true;
     } else if (!existUser.nickname) {
       throw new HttpException('There Is No Such User', HttpStatus.FORBIDDEN);
@@ -55,7 +53,7 @@ export class LooseGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const { req, accessTokenBearer, refreshTokenBearer } =
+    const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
 
     let userId: string;
@@ -77,9 +75,7 @@ export class LooseGuard implements CanActivate {
       );
     }
     if (existUser && existUser.nickname) {
-      req.user = {
-        userInfo: existUser,
-      };
+      res.locals.user = existUser;
       return true;
     } else {
       return true;

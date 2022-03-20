@@ -11,7 +11,7 @@ export class UploadFileController {
   async uploadRecruitImage(@Req() req, @Res() res) {
     return await this.uploadFileService.uploadFile(
       'recruit',
-      req.user.userInfo.userId,
+      res.locals.user.userId,
       req,
       res,
     );
@@ -22,7 +22,7 @@ export class UploadFileController {
   async uploadInformationImage(@Req() req, @Res() res) {
     return await this.uploadFileService.uploadFile(
       'information',
-      req.user.userInfo.userId,
+      res.locals.user.userId,
       req,
       res,
     );
@@ -33,7 +33,7 @@ export class UploadFileController {
   async uploadProfileImage(@Req() req, @Res() res) {
     return await this.uploadFileService.uploadFile(
       'profile',
-      req.user.userInfo.userId,
+      res.locals.user.userId,
       req,
       res,
     );
