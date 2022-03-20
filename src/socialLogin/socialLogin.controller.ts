@@ -1,7 +1,6 @@
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { SocialLoginService } from './socialLogin.service';
 import {
-  All,
   Body,
   Controller,
   Get,

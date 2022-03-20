@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   Param,
   ParseIntPipe,
   Post,
@@ -10,7 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RecruitApplyDTO } from './dto/apply.dto';
 import { RecruitCommentDTO } from './dto/recruitComment.dto';
 import { RecruitPostDTO } from './dto/recruitPost.dto';
@@ -22,6 +23,7 @@ import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { RecruitPostService } from './recruit-post.service';
 
+@ApiTags('프로젝트 게시판')
 @Controller('recruit')
 export class RecruitPostController {
   constructor(private readonly recruitPostService: RecruitPostService) {}
@@ -38,7 +40,7 @@ export class RecruitPostController {
   })
   @ApiQuery({
     name: 'items',
-    required: true,
+    required: false,
     description: 'items',
   })
   @ApiQuery({
@@ -63,23 +65,26 @@ export class RecruitPostController {
     const stack = query.stack ? query.stack : null;
     const lastId = query.lastId ? query.lastId : null;
 
-    const recruits = await this.recruitPostService.ReadAllRecruits(
-      userId,
-      order,
-      items,
-      location,
-      task,
-      stack,
-      lastId,
-    );
+    try {
+      const recruits = await this.recruitPostService.ReadAllRecruits(
+        userId,
+        order,
+        items,
+        location,
+        task,
+        stack,
+        lastId,
+      );
+      const post = recruits.map((item: any) => {
+        const obj: any = item;
+        obj.recruitDurationWeeks = item.recruitDurationDays / 7;
+        return obj;
+      });
 
-    const post = recruits.map((item: any) => {
-      const obj: any = item;
-      obj.recruitDurationWeeks = item.recruitDurationDays / 7;
-      return obj;
-    });
-
-    return post;
+      return post;
+    } catch (e) {
+      return new HttpException('db불러오기 실패', 500);
+    }
   }
 
   @ApiParam({
@@ -117,12 +122,11 @@ export class RecruitPostController {
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.endAt = null;
+    recruitPost.thumbImgUrl = body.imgUrl;
     recruitPost.recruitKeepCount = 0;
     recruitPost.viewCount = 0;
     recruitPost.recruitCommentCount = 0;
 
-    const imgUrls = body.imgUrls;
     const {
       recruitTasks,
       recruitStacks,
@@ -130,7 +134,6 @@ export class RecruitPostController {
 
     await this.recruitPostService.createRecruit(
       recruitPost,
-      imgUrls,
       recruitStacks,
       recruitTasks,
     );
@@ -156,15 +159,13 @@ export class RecruitPostController {
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.endAt = null;
+    recruitPost.thumbImgUrl = body.imgUrl;
 
-    const imgUrls = body.imgUrls;
     const recruitStacks = body.recruitStacks;
     const recruitTasks = body.recruitTasks;
 
     this.recruitPostService.updateRecruitPost(
       recruitPost,
-      imgUrls,
       recruitStacks,
       recruitTasks,
     );
@@ -255,13 +256,13 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 keep하기' })
   @Post('/:recruitPostId/keepIt')
-  async postKeepIt(@Param('recruitPostId', ParseIntPipe) recruitId) {
+  async postKeepIt(@Param('recruitPostId', ParseIntPipe) postId) {
     const userId = 'cgh';
     const recruitKeepIt = new RecruitKeeps();
     recruitKeepIt.userId = userId;
-    recruitKeepIt.recruitPostId = recruitId;
+    recruitKeepIt.recruitPostId = postId;
 
-    this.recruitPostService.createKeepIt(recruitId, recruitKeepIt);
+    this.recruitPostService.createKeepIt(postId, recruitKeepIt);
 
     return { success: true };
   }

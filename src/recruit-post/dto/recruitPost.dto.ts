@@ -29,10 +29,10 @@ export class RecruitPostDTO {
   public recruitDurationWeek: number;
 
   @ApiProperty({
-    example: ['이미지 url1'],
+    example: '이미지 url',
     description: '프로젝트 이미지 url',
   })
-  public imgUrls: string[];
+  public imgUrl: string;
 
   @ApiProperty({
     example: [

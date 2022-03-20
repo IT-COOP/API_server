@@ -41,7 +41,7 @@ export class InformationPostImages {
   @ManyToOne(
     () => InformationPosts,
     (informationPosts) => informationPosts.informationPostImages,
-    { onDelete: "NO ACTION", onUpdate: "NO ACTION" }
+    { onDelete: "CASCADE", onUpdate: "CASCADE" }
   )
   @JoinColumn([
     { name: "informationPostId", referencedColumnName: "informationPostId" },

@@ -1,4 +1,3 @@
-import { MY_SECRET_KEY, ACCESS_TOKEN_DURATION } from './jwt/jwt.secret';
 import { AuthService } from './auth.service';
 import { Users } from './../socialLogin/entity/Users';
 import {

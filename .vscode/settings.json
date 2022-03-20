@@ -3,6 +3,7 @@
     "Fastify",
     "kakao",
     "nestjs",
+    "originalname",
     "typeorm",
     "upsert"
   ],

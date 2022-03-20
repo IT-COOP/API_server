@@ -6,8 +6,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { InformationPosts } from './InformationPosts';
 import { Users } from '../../socialLogin/entity/Users';
+import { InformationPosts } from './InformationPosts';
 
 @Index('informationPostId', ['informationPostId'], {})
 @Index('userId', ['userId'], {})
@@ -20,8 +20,8 @@ export class InformationKeeps {
   })
   informationKeepId: number;
 
-  @Column('varchar', { name: 'userId', length: 50 })
-  userId: string;
+  @Column('varchar', { name: 'userId', nullable: true, length: 50 })
+  userId: string | null;
 
   @Column('int', { name: 'informationPostId', unsigned: true })
   informationPostId: number;
@@ -33,20 +33,20 @@ export class InformationKeeps {
   })
   createdAt: Date | null;
 
+  @ManyToOne(() => Users, (users) => users.informationKeeps, {
+    onDelete: 'SET NULL',
+    onUpdate: 'RESTRICT',
+  })
+  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
+  user: Users;
+
   @ManyToOne(
     () => InformationPosts,
     (informationPosts) => informationPosts.informationKeeps,
-    { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' },
+    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   @JoinColumn([
     { name: 'informationPostId', referencedColumnName: 'informationPostId' },
   ])
   informationPost: InformationPosts;
-
-  @ManyToOne(() => Users, (users) => users.informationKeeps, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  @JoinColumn([{ name: 'userId', referencedColumnName: 'userId' }])
-  user: Users;
 }
