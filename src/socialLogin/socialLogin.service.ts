@@ -17,6 +17,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginType, RefreshTokenErrorMessage } from './enum/enums';
 import { SHA3 } from 'sha3';
+import { v1 as uuid } from 'uuid';
 
 @Injectable()
 export class SocialLoginService {
@@ -202,6 +203,7 @@ export class SocialLoginService {
     const existUser = await this.userRepository
       .createQueryBuilder()
       .where('indigenousKey = :indigenousKey', { indigenousKey })
+      .andWhere('loginType = :loginType', { loginType })
       .getOne();
     let payload: jwt.JwtPayload;
     let isProfileSet = 'isProfileSet=false';
@@ -209,10 +211,11 @@ export class SocialLoginService {
       payload = { sub: existUser.userId };
     } else {
       const newUser = new Users();
+      newUser.userId = uuid();
       newUser.loginType = loginType;
       newUser.indigenousKey = indigenousKey;
-      const storedUser = await this.userRepository.save(newUser);
-      payload = { sub: storedUser.userId };
+      await this.userRepository.insert(newUser);
+      payload = { sub: newUser.userId };
     }
     const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
       expiresIn: ACCESS_TOKEN_DURATION,

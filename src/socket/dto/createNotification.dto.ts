@@ -1,7 +1,8 @@
+import { EventType } from '../enum/eventType.enum';
 export class CreateNotificationDto {
   notificationSender: string;
   notificationReceiver: string;
-  eventType: number;
+  eventType: EventType;
   eventContent: string;
   targetId: number;
   isRead: boolean;

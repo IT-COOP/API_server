@@ -1,4 +1,4 @@
-export enum EventTypeTo {
+export enum EventType {
   recruitComment = 1,
   recruitCommentReply = 2,
   recruitApply = 3,

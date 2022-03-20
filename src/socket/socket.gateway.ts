@@ -258,7 +258,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() userId: string,
   ) {
-    client.rooms.clear();
     client.join(userId);
     const notifications = this.notificationRepository.find({
       where: {
@@ -273,7 +272,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return notifications;
   }
 
-  @SubscribeMessage('notificationToServer') // 누군가가 뭔 짓을 하면 프론트에서 이런 이벤트를 emit시키라고 요구할 겁니다.
+  @SubscribeMessage('notificationToServer') // 누군가가 뭔 짓을 하면 프론트에서 이런 이벤트를 emit시키라고 요구할 겁니다. << 이게 좀 아닌 것 같음..
   async handleNotification(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CreateNotificationDto,
@@ -292,9 +291,3 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return result;
   }
 }
-
-// 채팅방에 대응하는 새로운 모듈을 만든다.
-// 그냥 오면 그 사람이 연결할 수 있는 채팅방을 보여준다.
-// 그 사람이 채팅방을 누르면, 채팅방에 접속한다.
-// 채팅방에 접속하면, 그 채팅방에 지금까지 쌓인 채팅들을 보여준다.
-// 그 사람이 채팅을 하면, 연결된 소켓 서버를 통해 그 채팅방에 있는 사람들에게 메시지를 띄워주면서 DB에 해당 채팅을 저장한다.
