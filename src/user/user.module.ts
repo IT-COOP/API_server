@@ -4,9 +4,16 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { Notification } from './entities/Notification';
 import { UserReputation } from './entities/UserReputation';
+import { ConfigModule } from '@nestjs/config';
+import { Users } from 'src/socialLogin/entity/Users';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification, UserReputation])],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forFeature([Notification, UserReputation, Users]),
+  ],
   controllers: [UserController],
   providers: [UserService],
 })

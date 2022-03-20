@@ -5,10 +5,10 @@ import { RecruitPostController } from './recruit-post.controller';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
-import { RecruitPostImages } from './entities/RecruitPostImages';
 import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
+import { Users } from 'src/socialLogin/entity/Users';
 
 @Module({
   imports: [
@@ -16,10 +16,10 @@ import { RecruitTasks } from './entities/RecruitTasks';
       RecruitApplies,
       RecruitComments,
       RecruitKeeps,
-      RecruitPostImages,
       RecruitPosts,
       RecruitStacks,
       RecruitTasks,
+      Users,
     ]),
   ],
   controllers: [RecruitPostController],

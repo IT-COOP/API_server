@@ -6,8 +6,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { InformationPosts } from './InformationPosts';
 import { Users } from '../../socialLogin/entity/Users';
+import { InformationPosts } from './InformationPosts';
 
 @Index('informationPostId', ['informationPostId'], {})
 @Index('userId', ['userId'], {})

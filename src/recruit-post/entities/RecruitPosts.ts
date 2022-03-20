@@ -9,6 +9,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ChatRooms } from '../../socket/entities/ChatRooms';
 import { RecruitApplies } from './RecruitApplies';
 import { RecruitComments } from './RecruitComments';
 import { RecruitKeeps } from './RecruitKeeps';
