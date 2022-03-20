@@ -71,3 +71,5 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+교훈 1 Service의 constructor 안에는 injectable한 친구들만 import해서 넣어야 한다.

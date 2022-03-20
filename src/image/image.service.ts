@@ -14,10 +14,9 @@ AWS.config.update({
 
 @Injectable()
 export class ImageService {
-  constructor(
-    private readonly awsS3: AWS.S3,
-    public readonly S3_BUCKET_NAME: string,
-  ) {}
+  S3_BUCKET_NAME: string;
+  awsS3: AWS.S3;
+
   async uploadImage(file: Express.Multer.File, folder: string, userId: string) {
     const upload = multer({
       storage: multerS3({
