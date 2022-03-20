@@ -1,4 +1,4 @@
-import { ChatRooms } from './../../output/entities/ChatRooms';
+import { ChatRooms } from './../socket/entities/ChatRooms';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { RecruitPostService } from './recruit-post.service';
