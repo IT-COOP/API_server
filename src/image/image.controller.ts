@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Req,
+  Res,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -18,26 +19,38 @@ export class ImageController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadProfileImage(
     @UploadedFiles() file: Express.Multer.File,
-    @Req() user: any,
+    @Res() res,
   ) {
-    return this.imageService.uploadImage(file, 'profile', user.userId);
+    return this.imageService.uploadImage(
+      file,
+      'profile',
+      res.locals.user.userId,
+    );
   }
 
   @Post('/recruit')
   @UseInterceptors(FileInterceptor('file'))
   async uploadRecruitImage(
     @UploadedFiles() file: Express.Multer.File,
-    @Req() user: any,
+    @Res() res,
   ) {
-    return this.imageService.uploadImage(file, 'recruit', user);
+    return this.imageService.uploadImage(
+      file,
+      'recruit',
+      res.locals.user.userId,
+    );
   }
 
   @Post('/information')
   @UseInterceptors(FileInterceptor('file'))
   async uploadInformationImage(
     @UploadedFiles() file: Express.Multer.File,
-    @Req() user: Users,
+    @Res() res,
   ) {
-    return this.imageService.uploadImage(file, 'information', user);
+    return this.imageService.uploadImage(
+      file,
+      'information',
+      res.locals.user.userId,
+    );
   }
 }

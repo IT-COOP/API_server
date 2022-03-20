@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Put, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -29,8 +29,8 @@ export class UserController {
     } catch (e) {}
   }
 
-  @Post('/profile')
-  async postMyRecruit(@Req() user, @Body() ) {
+  @Put('/profile')
+  async postMyRecruit(@Req() user, @Body() body) {
     try {
       return await this.userService.readMyRecruit(user.userId);
     } catch (e) {}

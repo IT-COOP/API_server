@@ -2,7 +2,6 @@ import Faker from 'faker';
 import { RecruitApplies } from 'src/recruit-post/entities/RecruitApplies';
 import { RecruitComments } from 'src/recruit-post/entities/RecruitComments';
 import { RecruitKeeps } from 'src/recruit-post/entities/RecruitKeeps';
-import { RecruitPostImages } from 'src/recruit-post/entities/RecruitPostImages';
 import { RecruitPosts } from 'src/recruit-post/entities/RecruitPosts';
 import { RecruitStacks } from 'src/recruit-post/entities/RecruitStacks';
 import { RecruitTasks } from 'src/recruit-post/entities/RecruitTasks';
@@ -24,7 +23,6 @@ define(RecruitPosts, (faker: typeof Faker) => {
   recruitPosts.recruitApplies = factory(RecruitApplies)() as any;
   recruitPosts.recruitStacks = factory(RecruitStacks)() as any;
   recruitPosts.recruitTasks = factory(RecruitTasks)() as any;
-  recruitPosts.recruitPostImages = factory(RecruitPostImages)() as any;
   recruitPosts.recruitKeeps = factory(RecruitKeeps)() as any;
   recruitPosts.recruitComments = factory(RecruitComments)() as any;
   recruitPosts.author2 = factory(Users)() as any;

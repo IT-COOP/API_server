@@ -1,3 +1,4 @@
+import { ChatRooms } from './../../output/entities/ChatRooms';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { RecruitPostService } from './recruit-post.service';
@@ -20,6 +21,7 @@ import { Users } from 'src/socialLogin/entity/Users';
       RecruitStacks,
       RecruitTasks,
       Users,
+      ChatRooms,
     ]),
   ],
   controllers: [RecruitPostController],

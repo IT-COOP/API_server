@@ -1,4 +1,3 @@
-import { ChatRooms } from './../../socket/entities/ChatRooms';
 import {
   Column,
   Entity,

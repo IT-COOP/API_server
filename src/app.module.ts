@@ -71,7 +71,7 @@ import { ImageModule } from './image/image.module';
     SocketModule,
     ChatModule,
     UploadFileModule,
-    ImageModule,
+    // ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
