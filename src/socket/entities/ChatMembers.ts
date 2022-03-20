@@ -4,12 +4,10 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ChatRooms } from './ChatRooms';
-import { Users } from './../../../output/entities/Users';
-import { Chats } from './Chats';
+import { Users } from './../../socialLogin/entity/Users';
 
 @Index('chatRoomId', ['chatRoomId'], {})
 @Index('member', ['member'], {})
@@ -44,7 +42,4 @@ export class ChatMembers {
   })
   @JoinColumn([{ name: 'member', referencedColumnName: 'userId' }])
   member2: Users;
-
-  @OneToMany(() => Chats, (chats) => chats.speaker2)
-  chats: Chats[];
 }

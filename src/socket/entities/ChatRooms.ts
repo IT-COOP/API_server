@@ -1,4 +1,3 @@
-import { RecruitPosts } from './../../recruit-post/entities/RecruitPosts';
 import {
   Column,
   Entity,
@@ -9,6 +8,7 @@ import {
 } from 'typeorm';
 import { ChatMembers } from './ChatMembers';
 import { Chats } from './Chats';
+import { RecruitPosts } from './../../recruit-post/entities/RecruitPosts';
 
 @Entity('chatRooms', { schema: 'test' })
 export class ChatRooms {
@@ -24,6 +24,9 @@ export class ChatRooms {
     default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date | null;
+
+  @Column('tinyint', { name: 'isValid', nullable: true, width: 1 })
+  isValid: boolean | null;
 
   @OneToMany(() => ChatMembers, (chatMembers) => chatMembers.chatRoom)
   chatMembers: ChatMembers[];

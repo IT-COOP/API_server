@@ -29,44 +29,32 @@ export class InformationPosts {
   @Column('varchar', { name: 'author', nullable: true, length: 50 })
   author: string | null;
 
-  @Column('varchar', {
-    name: 'informationContent',
-    nullable: true,
-    length: 255,
-  })
-  informationContent: string | null;
+  @Column('text', { name: 'informationContent' })
+  informationContent: string;
 
   @Column('int', {
     name: 'informationKeepCount',
-    nullable: true,
     unsigned: true,
-    default: () => 0,
+    default: () => "'0'",
   })
-  informationKeepCount: number | null;
+  informationKeepCount: number;
 
   @Column('int', {
     name: 'informationLoveCount',
-    nullable: true,
     unsigned: true,
-    default: () => 0,
+    default: () => "'0'",
   })
-  informationLoveCount: number | null;
+  informationLoveCount: number;
 
   @Column('int', {
     name: 'informationCommentCount',
-    nullable: true,
     unsigned: true,
-    default: () => 0,
+    default: () => "'0'",
   })
-  informationCommentCount: number | null;
+  informationCommentCount: number;
 
-  @Column('int', {
-    name: 'viewCount',
-    nullable: true,
-    unsigned: true,
-    default: () => 0,
-  })
-  viewCount: number | null;
+  @Column('int', { name: 'viewCount', unsigned: true, default: () => "'0'" })
+  viewCount: number;
 
   @Column('timestamp', {
     name: 'createdAt',

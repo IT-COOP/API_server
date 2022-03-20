@@ -1,4 +1,3 @@
-import { Users } from 'src/socialLogin/entity/Users';
 import {
   Column,
   Entity,
@@ -8,9 +7,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ChatRooms } from './ChatRooms';
+import { Users } from './../../socialLogin/entity/Users';
 
-@Index('speaker', ['speaker'], {})
 @Index('chatRoomId', ['chatRoomId'], {})
+@Index('speaker', ['speaker'], {})
 @Entity('chats', { schema: 'test' })
 export class Chats {
   @PrimaryGeneratedColumn({ type: 'int', name: 'chatId', unsigned: true })
@@ -32,7 +32,7 @@ export class Chats {
   })
   createdAt: Date | null;
 
-  @ManyToOne(() => Users, (users) => users.userId, {
+  @ManyToOne(() => Users, (users) => users.chats, {
     onDelete: 'RESTRICT',
     onUpdate: 'RESTRICT',
   })

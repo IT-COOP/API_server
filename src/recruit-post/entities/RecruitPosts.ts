@@ -12,7 +12,6 @@ import {
 import { RecruitApplies } from './RecruitApplies';
 import { RecruitComments } from './RecruitComments';
 import { RecruitKeeps } from './RecruitKeeps';
-import { RecruitPostImages } from './RecruitPostImages';
 import { Users } from '../../socialLogin/entity/Users';
 import { RecruitStacks } from './RecruitStacks';
 import { RecruitTasks } from './RecruitTasks';
@@ -33,6 +32,9 @@ export class RecruitPosts {
 
   @Column('varchar', { name: 'author', nullable: true, length: 50 })
   author: string | null;
+
+  @Column('varchar', { name: 'thumbImgUrl', nullable: true, length: 255 })
+  thumbImgUrl: string | null;
 
   @Column('text', { name: 'recruitContent', nullable: true })
   recruitContent: string | null;
@@ -98,12 +100,6 @@ export class RecruitPosts {
 
   @OneToMany(() => RecruitKeeps, (recruitKeeps) => recruitKeeps.recruitPost)
   recruitKeeps: RecruitKeeps[];
-
-  @OneToMany(
-    () => RecruitPostImages,
-    (recruitPostImages) => recruitPostImages.recruitPost,
-  )
-  recruitPostImages: RecruitPostImages[];
 
   @ManyToOne(() => Users, (users) => users.recruitPosts, {
     onDelete: 'SET NULL',
