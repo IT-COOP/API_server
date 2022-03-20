@@ -1,8 +1,11 @@
+import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
+import { Chats } from 'src/socket/entities/Chats';
+import { ChatRooms } from './entities/ChatRooms';
+import { ChatMembers } from 'src/socket/entities/ChatMembers';
+import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
+import { Users } from './../socialLogin/entity/Users';
+import { socialLoginModule } from './../socialLogin/socialLogin.module';
 import { UserModule } from './../user/user.module';
-import { RecruitPosts } from './../../output/entities/RecruitPosts';
-import { Chats } from './../../output/entities/Chats';
-import { ChatRooms } from './../../output/entities/ChatRooms';
-import { ChatMembers } from './../../output/entities/ChatMembers';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { SocketService } from './socket.service';
@@ -19,9 +22,12 @@ import { Notification } from 'src/user/entities/Notification';
       Chats,
       RecruitPosts,
       Notification,
+      Users,
+      RecruitApplies,
     ]),
     RecruitPostModule,
     UserModule,
+    socialLoginModule,
   ],
 })
 export class SocketModule {}

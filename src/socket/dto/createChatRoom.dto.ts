@@ -1,3 +1,4 @@
 export class CreateChatRoomDto {
-  userId: string[];
+  recruitPostId: number;
+  userId: string;
 }

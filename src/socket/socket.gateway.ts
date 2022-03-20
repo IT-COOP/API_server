@@ -1,3 +1,6 @@
+import { Users } from './../../output/entities/Users';
+import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
+import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { Notification } from './../user/entities/Notification';
 import { CreateChatRoomDto } from './dto/createChatRoom.dto';
 import { MsgToServerDto } from './dto/msgToServer.dto';
@@ -17,19 +20,21 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Repository } from 'typeorm';
-import { RecruitPosts } from 'src/recruit-post/entities/RecruitPosts';
-import { RecruitApplies } from 'src/recruit-post/entities/RecruitApplies';
-import { emit } from 'process';
+import { CreateNotificationDto } from './dto/createNotification.dto';
 
+/**
+ * 목표 골조 : 최초에 모집이 완료되었을 때, 채팅방을 생성해준다.
+ * 현재 골조 : 아직 완성하지 못하였다.
+ */
 // 문제 1. 토큰을 받아야 할 것인가 아니면 userId를 직접 받아야 할 것인가?
 @WebSocketGateway({ namespace: 'socket' })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectRepository(Chats)
     private readonly chatRepository: Repository<Chats>,
-    @InjectRepository(Chats)
+    @InjectRepository(ChatRooms)
     private readonly chatRoomRepository: Repository<ChatRooms>,
-    @InjectRepository(Chats)
+    @InjectRepository(ChatMembers)
     private readonly chatMemberRepository: Repository<ChatMembers>,
     @InjectRepository(RecruitPosts)
     private readonly recruitPostRepository: Repository<RecruitPosts>,
@@ -37,6 +42,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly recruitApplyRepository: Repository<RecruitApplies>,
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(Users)
+    private readonly userRepository: Repository<Users>,
   ) {}
   @WebSocketServer()
   public server: Server;
@@ -56,40 +63,56 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     //   userId: userId,
     //   chat: chat
     // }
-
-    const check = await this.chatMemberRepository.findOne({
-      where: {
-        member: data.userId,
-        chatRoomId: data.chatRoomId,
-      },
-    });
-
-    if (!check) {
-      return "Wrong Request User Don't Belong In The Chatroom";
-    }
-    if (!client.rooms.has(String(data.chatRoomId))) {
-      return 'Bad Request Must Join Chatroom First';
+    if (client.rooms.has(String(data.chatRoomId))) {
+      return 'Bad Request Must Join The Chatroom First';
     }
 
-    const savedChat = await this.chatRepository.save(
+    await this.chatRepository.save(
       this.chatRepository.create({
         chatRoomId: data.chatRoomId,
         speaker: data.userId,
         chat: data.chat,
       }),
     );
-
-    const chat = this.chatRepository.find({
-      where: { chatId: savedChat.chatId },
-      take: 1,
-      relations: ['speaker2'],
-      order: {
-        chatId: 'DESC',
+    const user = await this.userRepository.findOne({
+      where: {
+        userId: data.userId,
       },
     });
 
-    // 해당 chatRoom에 입장한 상태인지 판별 먼저 한다.
-    client.to(String(data.chatRoomId)).emit('msgToClient', chat);
+    // 알림을 추가해야함.
+    // 다른 member들에게.
+    //
+
+    const crews = await this.chatMemberRepository.find({
+      where: { chatRoomId: data.chatRoomId },
+      select: ['member'],
+    });
+    const instances = [];
+    const notification: CreateNotificationDto = {
+      notificationSender: data.userId,
+      notificationReceiver: '',
+      eventType: 7,
+      eventContent: data.chat.slice(0, 30),
+      targetId: data.chatRoomId,
+      isRead: false,
+    };
+
+    for (const crew of crews) {
+      if (crew.member === data.userId) continue;
+      notification.notificationReceiver = crew.member;
+      client.to(crew.member).emit('notificationToClient', notification);
+      instances.push(notification);
+    }
+
+    await this.notificationRepository.insert(instances);
+
+    client.to(String(data.chatRoomId)).emit('msgToClient', {
+      profileImgUrl: user.profileImgUrl,
+      nickname: user.nickname,
+      userId: data.userId,
+      chat: data.chat,
+    });
     // 여기서 DB에 메시지 저장하고, 연결된 Room에 있는 사람들에게 emit시켜주는 기능을 구현해야함.
     // 해당 Room에 존재하는 사람들 모두에게 방송해주는 것도 구현해야함. 아마도 to emit?
 
@@ -110,48 +133,44 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     //   chatRoomId: chatRoomId,
     //   userId: userId,
     // }
-
-    const check = this.chatMemberRepository.find({
+    const isBelonging = await this.chatMemberRepository.count({
       where: {
         chatRoomId: data.chatRoomId,
         member: data.userId,
       },
     });
-
-    if (!check) {
-      return 'bad request';
+    if (!isBelonging) {
+      return 'BadRequest Not Authorized';
     }
+    // 해당 채팅방이 실존하고, 이 사람도 거기 속해있음.
 
-    const newest = await this.chatMemberRepository.find({
+    const source = await this.recruitPostRepository.findOne({
       where: {
-        member: data.userId,
+        recruitPostId: data.chatRoomId,
       },
-      order: {
-        chatRoomId: 'DESC',
-      },
-      take: 1,
     });
 
-    // 또한, 채팅 로그는 보여줄 수 있지만, 완성된 프로젝트의 경우에는 다시 참가할 수는 없어야 한다.
+    if (!source) {
+      // 그런 글 없습니다.
+      return 'Such Project Does Not Exist';
+    }
+    if (source.endAt === source.createdAt) {
+      // 아직 시작도 안함!
+      return 'Project Not Yet Begun';
+    }
 
     const chats = await this.chatRepository.find({
       where: { chatRoomId: data.chatRoomId },
       relations: ['speaker2'],
     });
 
-    if (newest[0].chatRoomId !== data.chatRoomId) {
-      // endAt이 createdAt과 다르고, 이미 지난 경우도 추가해야함.
-      return {
-        isNew: false,
-        chats,
-      };
+    if (source.endAt < new Date()) {
+      // 종료된 프로젝트
+      return { chats, isOver: true };
     }
 
     client.join(String(data.chatRoomId));
-    return {
-      isNew: true,
-      chats,
-    };
+    return { chats, isOver: false };
   }
 
   @SubscribeMessage('createChatRoom')
@@ -160,34 +179,68 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: CreateChatRoomDto,
   ) {
     // data = {
-    //   userId: userId[],
+    //   userId: userId,
+    //   recruitPostId: recruitPostId
     // }
 
-    const newChatRoom = await this.chatRoomRepository.save(
-      this.chatRoomRepository.create({
-        participantCount: data.userId.length,
-      }),
-    );
+    const recruitPost = await this.recruitPostRepository.findOne({
+      where: {
+        recruitPostId: data.recruitPostId,
+      },
+    });
 
-    const values = [];
-    for (const user in data.userId) {
-      values.push({
-        chatRoomId: newChatRoom.chatRoomId,
-        member: user,
-      });
+    const isAlreadyPresent = await this.chatRoomRepository.findOne({
+      where: {
+        chatRoomId: recruitPost.recruitPostId,
+      },
+    });
+
+    if (
+      recruitPost && // 게시글도 있고, endAt default가 createdAt이랑 같으니까 이게 다르면 시작한 걸로 봅니다.
+      recruitPost.createdAt !== recruitPost.endAt &&
+      recruitPost.endAt <= new Date() && // 이게 아직 끝나지 않았는 지를 판별합니다.
+      recruitPost.author === data.userId && // 게시글 작성자만 할 수 있습니다.
+      !isAlreadyPresent // 채팅방이 이미 존재하면 안됩니다.
+    ) {
+      // 여기는 만들어줘도 됨
+      const newChatRoom = await this.chatRoomRepository.save(
+        this.chatRoomRepository.create({
+          chatRoomId: data.recruitPostId,
+        }),
+      );
+
+      const crews = await this.recruitApplyRepository.find({
+        select: ['applicant'], // 사실 이게 어떻게 작동할 지는 모르겠지만....;; 작성자는 apply하지 않아도 이미 포함된 사람이니까용
+        where: {
+          recruitPostId: data.recruitPostId,
+          isAccepted: true,
+        },
+      }); // 넵
+
+      const instances = [
+        {
+          member: recruitPost.author,
+          chatRoomId: data.recruitPostId,
+        },
+      ]; // author도 넣어야 함/ << 여기서 넣어주면 될 것 같습니다.
+      for (const crew of crews) {
+        instances.push({
+          member: crew.applicant,
+          chatRoomId: data.recruitPostId,
+        });
+      } // 여기 부분이 좀 불완전한 것 같네요... 나중에 고치겠습니다.
+      await this.chatMemberRepository.insert(instances); // << 여기에 object의 array가 와야 하니까
+      client.join(String(data.recruitPostId));
+      return String(newChatRoom.chatRoomId);
+    } else {
+      // 여기는 꺼지라고 하면 됨.
+      return 'Bad Request Validation Failure';
     }
-
-    await this.chatMemberRepository.insert(values);
-
-    client.join(String(newChatRoom.chatRoomId));
-    // 최초에 채팅방을 만드는 기능을 구현해야 한다.
-    // db에다가 만들어서 chatroomId를 돌려주면 될 것 같음.
-
-    return String(newChatRoom.chatRoomId);
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    client.leave(client.id); // << 이 기능은 추후 notification 기능을 고려하면 필요 없을 듯???
+    // << 이 기능은 추후 notification 기능을 고려하면 필요 없을 듯???
+    client.to(client.id).emit('requestingNotificationConnect');
     // 연결이 되었을 때,
     // 유저는 이미 자기 채팅방을 알고 있어야 함.
     // 다른 채팅 서비스에서 닉네임을 올려준 것과 마찬가지로 채팅방을 올려줌
@@ -197,11 +250,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
     client.rooms.clear();
-    // 연결이 끊어졌을 때
-    // 연결이 끊어져도 이 사람은 다음에 또 왔을 때 같은 채팅방에 들어가야함.
-    // 혹은 새로운 것이 생기더라도, 이것은 DB에서 긁어와서 해야함.
-    // 또한, 정상적으로 disconnected event가 발생하지 않고 연결이 끊어지는 경우도 많을 것임.
-    // 우리는 관계 없을 듯?
     return 'disconnected';
   }
 
@@ -215,33 +263,32 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const notifications = this.notificationRepository.find({
       where: {
         notificationReceiver: userId,
+        isRead: false,
+      },
+      take: 20,
+      order: {
+        notificationId: 'DESC',
       },
     });
     return notifications;
   }
 
-  @SubscribeMessage('notification')
+  @SubscribeMessage('notificationToServer') // 누군가가 뭔 짓을 하면 프론트에서 이런 이벤트를 emit시키라고 요구할 겁니다.
   async handleNotification(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data,
+    @MessageBody() data: CreateNotificationDto,
   ) {
-    const result = await this.notificationRepository.save(
-      this.notificationRepository.create({
-        notificationReceiver: data.notificationReceiver,
-        notificationSender: data.notificationSender,
-        eventType: data.eventType,
-        eventContent: data.eventContent,
-        targetId: data.targetId,
-        isRead: false,
-      }),
-    );
+    // data = {
+    //   notificationReceiver: notificationReceiver,
+    //   notificationSender: notificationSender,
+    //   eventType: eventType, << 이 친구 enum도 정해줘야 겠군요
+    //   eventContent: eventContent,
+    //   targetId: targetId,
+    //   isRead: false,
+    // }
+    const result = await this.notificationRepository.insert(data);
 
-    client.to(data.notificationReceiver).emit('notification', {
-      notificationSender: data.notificationSender,
-      eventType: data.eventType,
-      eventContent: data.eventContent,
-      targetId: data.targetId,
-    });
+    client.to(data.notificationReceiver).emit('notificationToClient', data);
     return result;
   }
 }

@@ -7,9 +7,6 @@ export class ChatRooms {
   @PrimaryGeneratedColumn({ type: 'int', name: 'chatRoomId', unsigned: true })
   chatRoomId: number;
 
-  @Column('int', { name: 'participantCount', nullable: true, unsigned: true })
-  participantCount: number | null;
-
   @Column('timestamp', {
     name: 'createdAt',
     nullable: true,
