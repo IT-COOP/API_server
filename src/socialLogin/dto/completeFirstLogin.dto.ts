@@ -1,9 +1,9 @@
 import { IsString, IsNumber, MaxLength, MinLength } from 'class-validator';
 
 export class CompleteFirstLoginDTO {
+  @IsString()
   @MaxLength(13)
   @MinLength(2)
-  @IsString()
   nickname: string;
 
   @IsString()
@@ -16,6 +16,7 @@ export class CompleteFirstLoginDTO {
   activityPoint: number;
 
   @IsString()
+  @MaxLength(300)
   selfIntroduction: string;
 
   @IsString()

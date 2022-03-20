@@ -1,3 +1,4 @@
+import { Notification } from './../user/entities/Notification';
 import { CreateChatRoomDto } from './dto/createChatRoom.dto';
 import { MsgToServerDto } from './dto/msgToServer.dto';
 import { EnterChatRoomDto } from './dto/enterChatRoom.dto';
@@ -16,7 +17,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Repository } from 'typeorm';
+import { RecruitPosts } from 'src/recruit-post/entities/RecruitPosts';
+import { RecruitApplies } from 'src/recruit-post/entities/RecruitApplies';
+import { emit } from 'process';
 
+// 문제 1. 토큰을 받아야 할 것인가 아니면 userId를 직접 받아야 할 것인가?
 @WebSocketGateway({ namespace: 'socket' })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
@@ -26,6 +31,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatRoomRepository: Repository<ChatRooms>,
     @InjectRepository(Chats)
     private readonly chatMemberRepository: Repository<ChatMembers>,
+    @InjectRepository(RecruitPosts)
+    private readonly recruitPostRepository: Repository<RecruitPosts>,
+    @InjectRepository(RecruitApplies)
+    private readonly recruitApplyRepository: Repository<RecruitApplies>,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
   ) {}
   @WebSocketServer()
   public server: Server;
@@ -33,6 +44,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * 클라이언트에서 메시지를 보내는 기능
    * event 이름은 msgToServer
+   * chatRoomId를 recruitPostId로 1:1 대응을 시키고, 이에 대해서 참가 여부를 판별하는 것으로 해야한다.
    */
   @SubscribeMessage('msgToServer')
   async handleSubmittedMessage(
@@ -45,30 +57,44 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     //   chat: chat
     // }
 
-    const check = this.chatMemberRepository.find({
+    const check = await this.chatMemberRepository.findOne({
       where: {
         member: data.userId,
         chatRoomId: data.chatRoomId,
       },
     });
+
     if (!check) {
-      return 'wrong request';
+      return "Wrong Request User Don't Belong In The Chatroom";
+    }
+    if (!client.rooms.has(String(data.chatRoomId))) {
+      return 'Bad Request Must Join Chatroom First';
     }
 
-    const chat = this.chatRepository.create({
-      chatRoomId: data.chatRoomId,
-      speaker: data.userId,
-      chat: data.chat,
+    const savedChat = await this.chatRepository.save(
+      this.chatRepository.create({
+        chatRoomId: data.chatRoomId,
+        speaker: data.userId,
+        chat: data.chat,
+      }),
+    );
+
+    const chat = this.chatRepository.find({
+      where: { chatId: savedChat.chatId },
+      take: 1,
+      relations: ['speaker2'],
+      order: {
+        chatId: 'DESC',
+      },
     });
-    const savedChat = this.chatRepository.save(chat);
 
     // 해당 chatRoom에 입장한 상태인지 판별 먼저 한다.
-    client.to(String(data.chatRoomId)).emit('msgToClient', savedChat);
+    client.to(String(data.chatRoomId)).emit('msgToClient', chat);
     // 여기서 DB에 메시지 저장하고, 연결된 Room에 있는 사람들에게 emit시켜주는 기능을 구현해야함.
     // 해당 Room에 존재하는 사람들 모두에게 방송해주는 것도 구현해야함. 아마도 to emit?
 
     // 문제 1. 누가 발화하였는 지 어떻게 판별할 것인가?
-    return 'message sent';
+    return data;
   }
 
   /**
@@ -106,19 +132,26 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       take: 1,
     });
 
-    if (newest[0].chatRoomId !== data.chatRoomId) {
-      return 'you cannot chat in old chatRooms';
-    }
-
     // 또한, 채팅 로그는 보여줄 수 있지만, 완성된 프로젝트의 경우에는 다시 참가할 수는 없어야 한다.
-    client.join(String(data.chatRoomId));
 
     const chats = await this.chatRepository.find({
       where: { chatRoomId: data.chatRoomId },
-      relations: ['Users'],
+      relations: ['speaker2'],
     });
 
-    return chats;
+    if (newest[0].chatRoomId !== data.chatRoomId) {
+      // endAt이 createdAt과 다르고, 이미 지난 경우도 추가해야함.
+      return {
+        isNew: false,
+        chats,
+      };
+    }
+
+    client.join(String(data.chatRoomId));
+    return {
+      isNew: true,
+      chats,
+    };
   }
 
   @SubscribeMessage('createChatRoom')
@@ -170,6 +203,46 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 또한, 정상적으로 disconnected event가 발생하지 않고 연결이 끊어지는 경우도 많을 것임.
     // 우리는 관계 없을 듯?
     return 'disconnected';
+  }
+
+  @SubscribeMessage('notificationConnect')
+  async handleNotificationConnect(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() userId: string,
+  ) {
+    client.rooms.clear();
+    client.join(userId);
+    const notifications = this.notificationRepository.find({
+      where: {
+        notificationReceiver: userId,
+      },
+    });
+    return notifications;
+  }
+
+  @SubscribeMessage('notification')
+  async handleNotification(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data,
+  ) {
+    const result = await this.notificationRepository.save(
+      this.notificationRepository.create({
+        notificationReceiver: data.notificationReceiver,
+        notificationSender: data.notificationSender,
+        eventType: data.eventType,
+        eventContent: data.eventContent,
+        targetId: data.targetId,
+        isRead: false,
+      }),
+    );
+
+    client.to(data.notificationReceiver).emit('notification', {
+      notificationSender: data.notificationSender,
+      eventType: data.eventType,
+      eventContent: data.eventContent,
+      targetId: data.targetId,
+    });
+    return result;
   }
 }
 

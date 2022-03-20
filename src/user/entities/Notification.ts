@@ -38,7 +38,11 @@ export class Notification {
   @Column('int', { name: 'targetId', nullable: true, unsigned: true })
   targetId: number | null;
 
-  @Column('tinyint', { name: 'isRead', nullable: true, width: 1 })
+  @Column('tinyint', {
+    name: 'isRead',
+    nullable: true,
+    width: 1,
+  })
   isRead: boolean | null;
 
   @Column('timestamp', {
