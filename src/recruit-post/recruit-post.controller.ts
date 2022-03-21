@@ -12,6 +12,7 @@ import {
   Query,
   Res,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -67,16 +68,16 @@ export class RecruitPostController {
     @Query('lastId') lastId: any,
     @Res() res: Response,
   ) {
-    order = parseInt(order) ? parseInt(order) : 0;
-    items = parseInt(items) ? parseInt(items) : 12;
-    location = parseInt(location) ? parseInt(location) : null;
-    task = parseInt(task) ? parseInt(task) : null;
-    stack = parseInt(stack) ? parseInt(stack) : null;
-    lastId = parseInt(lastId) ? parseInt(lastId) : null;
+    order = parseInt(order) || 0;
+    items = parseInt(items) || 12;
+    location = parseInt(location) || 0;
+    task = parseInt(task) || 0;
+    stack = parseInt(stack) || 0;
+    lastId = parseInt(lastId) || 0;
 
     console.log('GET 컨트롤러 진입함');
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-
+    console.log(userId);
     try {
       const recruits = await this.recruitPostService.ReadAllRecruits(
         userId,
@@ -127,7 +128,10 @@ export class RecruitPostController {
   @UseGuards(StrictGuard)
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
-  async postRecruit(@Res() res: Response, @Body() body: recruitPostDTO) {
+  async postRecruit(
+    @Res() res: Response,
+    @Body(ValidationPipe) body: recruitPostDTO,
+  ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
@@ -165,7 +169,7 @@ export class RecruitPostController {
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res() res: Response,
-    @Body() body: recruitPostDTO,
+    @Body(ValidationPipe) body: recruitPostDTO,
   ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
