@@ -60,7 +60,6 @@ export class AuthService {
         ret.message = err.message;
         /**
          * 'jwt expired'
-         *
          * 'jwt malformed'
          */
       } else {

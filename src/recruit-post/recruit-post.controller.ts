@@ -56,25 +56,26 @@ export class RecruitPostController {
     description: 'lastId',
   })
   @UseGuards(LooseGuard)
-  @Get()
+  @Get('')
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
   async getAllRecruits(
-    @Query('sort', ParseIntPipe) order: number,
-    @Query('items', ParseIntPipe) items: number,
-    @Query('loc', ParseIntPipe) location: number,
-    @Query('task', ParseIntPipe) task: number,
-    @Query('stack', ParseIntPipe) stack: number,
-    @Query('lastId', ParseIntPipe) lastId: number,
+    @Query('sort') order: any,
+    @Query('items') items: any,
+    @Query('loc') location: any,
+    @Query('task') task: any,
+    @Query('stack') stack: any,
+    @Query('lastId') lastId: any,
     @Res() res: Response,
   ) {
+    order = parseInt(order) ? parseInt(order) : 0;
+    items = parseInt(items) ? parseInt(items) : 12;
+    location = parseInt(location) ? parseInt(location) : null;
+    task = parseInt(task) ? parseInt(task) : null;
+    stack = parseInt(stack) ? parseInt(stack) : null;
+    lastId = parseInt(lastId) ? parseInt(lastId) : null;
+
     console.log('GET 컨트롤러 진입함');
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-    order = order ? order : 0;
-    items = items ? items : 12;
-    location = location ? location : null;
-    task = task ? task : null;
-    stack = stack ? stack : null;
-    lastId = lastId ? lastId : null;
 
     try {
       const recruits = await this.recruitPostService.ReadAllRecruits(
