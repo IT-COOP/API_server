@@ -128,8 +128,6 @@ export class RecruitPostService {
         .andWhere('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'DESC')
         .getOne();
-      recruitPost.viewCount++;
-      await this.recruitPostsRepository.save(recruitPost);
 
       return recruitPost;
     } catch {
