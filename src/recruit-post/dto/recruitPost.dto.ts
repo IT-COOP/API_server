@@ -1,15 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-
-class recruitStack {
-  recruitStack: number;
-  numberOfPeopleRequired: number;
-  numberOfPeopleSet: number;
-}
-class recruitTask {
-  recruitTask: number;
-  numberOfPeopleRequired: number;
-  numberOfPeopleSet: number;
-}
+import { RecruitStacks } from '../entities/RecruitStacks';
+import { RecruitTasks } from '../entities/RecruitTasks';
 
 //주의 사항 프로젝트 기간을 주로 받아 일로 변환해 db에 저장하기 프로젝트 종료 시간을 구하기 위해
 export class recruitPostDTO {
@@ -53,7 +44,7 @@ export class recruitPostDTO {
     ],
     description: '프로젝트 사용 기술',
   })
-  public recruitStacks: recruitStack[];
+  public recruitStacks: RecruitStacks[];
 
   @ApiProperty({
     example: [
@@ -61,5 +52,5 @@ export class recruitPostDTO {
     ],
     description: '직무별 필요 인원',
   })
-  public recruitTasks: recruitTask[];
+  public recruitTasks: RecruitTasks[];
 }

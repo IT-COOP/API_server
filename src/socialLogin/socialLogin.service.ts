@@ -1,10 +1,5 @@
 import { AuthService } from './../auth/auth.service';
-import {
-  ACCESS_TOKEN_DURATION,
-  MY_SECRET_KEY,
-  REFRESH_TOKEN_DURATION,
-  requiredColumns,
-} from '../auth/jwt/jwt.secret';
+import { requiredColumns } from '../auth/jwt/jwt.secret';
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { Users } from './entity/Users';
 import { HttpService } from '@nestjs/axios';
@@ -30,6 +25,13 @@ export class SocialLoginService {
   ) {}
 
   hash = new SHA3(224);
+  ACCESS_TOKEN_DURATION = this.configService.get<string>(
+    'ACCESS_TOKEN_DURATION',
+  );
+  MY_SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  REFRESH_TOKEN_DURATION = this.configService.get<string>(
+    'REFRESH_TOKEN_DURATION',
+  );
 
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -217,8 +219,8 @@ export class SocialLoginService {
       await this.userRepository.insert(newUser);
       payload = { sub: newUser.userId };
     }
-    const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
-      expiresIn: ACCESS_TOKEN_DURATION,
+    const accessToken = jwt.sign(payload, this.MY_SECRET_KEY, {
+      expiresIn: this.ACCESS_TOKEN_DURATION,
     });
     if (existUser && existUser.nickname) {
       isProfileSet = 'isProfileSet=true';
@@ -296,7 +298,7 @@ export class SocialLoginService {
     try {
       const verified = jwt.verify(
         accessTokenBearer.split(' ')[1],
-        MY_SECRET_KEY,
+        this.MY_SECRET_KEY,
       );
       if (typeof verified === 'string') {
         throw new HttpException(
@@ -311,11 +313,11 @@ export class SocialLoginService {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const payload: jwt.JwtPayload = { sub: userId };
-    const accessToken = jwt.sign(payload, MY_SECRET_KEY, {
-      expiresIn: ACCESS_TOKEN_DURATION,
+    const accessToken = jwt.sign(payload, this.MY_SECRET_KEY, {
+      expiresIn: this.ACCESS_TOKEN_DURATION,
     });
-    const refreshToken = jwt.sign({ sub: userId }, MY_SECRET_KEY, {
-      expiresIn: REFRESH_TOKEN_DURATION,
+    const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
+      expiresIn: this.REFRESH_TOKEN_DURATION,
     });
     const mySet: any = {};
     for (const each in body) {
