@@ -125,8 +125,7 @@ export class RecruitPostService {
         .leftJoin('C.user', 'U')
         .addSelect(['U.nickname', 'U.activityPoint', 'U.userId'])
         .andWhere('P.recruitPostId = :id', { id: recruitPostId })
-        .orderBy('C.commentGroup', 'ASC')
-        .addOrderBy('C.recruitCommentId', 'DESC')
+        .orderBy('C.recruitCommentId', 'DESC')
         .getOne();
       recruitPost.viewCount = recruitPost.viewCount + 1;
       await this.recruitPostsRepository
