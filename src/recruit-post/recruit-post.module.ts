@@ -1,3 +1,4 @@
+import { AuthModule } from './../auth/auth.module';
 import { ChatRooms } from './../socket/entities/ChatRooms';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { Users } from 'src/socialLogin/entity/Users';
       Users,
       ChatRooms,
     ]),
+    AuthModule,
   ],
   controllers: [RecruitPostController],
   providers: [RecruitPostService],

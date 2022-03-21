@@ -73,23 +73,24 @@ export class RecruitPostService {
       );
     }
 
-    const cursorKeepCount = cursorPost.recruitKeepCount;
-    const cursorPostId = cursorPost.recruitPostId;
-    // 페이지네이션
     let paginationQuery = filterQuery;
-    if (cursorPost && sort === 1) {
+    if (cursorPost) {
+      const cursorKeepCount = cursorPost.recruitKeepCount;
+      const cursorPostId = cursorPost.recruitPostId;
+      // 페이지네이션
+      if (cursorPost && sort === 1) {
+        paginationQuery = paginationQuery.andWhere(
+          'P.recruitKeepCount <= :cursorKeepCount',
+          {
+            cursorKeepCount,
+          },
+        );
+      }
       paginationQuery = paginationQuery.andWhere(
-        'P.recruitKeepCount <= :cursorKeepCount',
-        {
-          cursorKeepCount,
-        },
+        'P.recruitPostId <:cursorPostId',
+        { cursorPostId },
       );
     }
-    paginationQuery = paginationQuery.andWhere(
-      'P.recruitPostId <:cursorPostId',
-      { cursorPostId },
-    );
-
     // 0 최신순 1 keepIt 순
     let sortQuery = paginationQuery;
     if (sort === 0) {

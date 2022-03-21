@@ -1,3 +1,4 @@
+import { LooseGuard, StrictGuard } from './../auth/auth.guard';
 import {
   Body,
   Controller,
@@ -10,6 +11,7 @@ import {
   Put,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -53,6 +55,7 @@ export class RecruitPostController {
     required: false,
     description: 'lastId',
   })
+  @UseGuards(LooseGuard)
   @Get()
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
   async getAllRecruits(@Query() query: any, @Res() res: Response) {
@@ -92,6 +95,7 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물',
   })
+  @UseGuards(LooseGuard)
   @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   async getDetailRecruit(
@@ -111,6 +115,7 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물 아이디',
   })
+  @UseGuards(StrictGuard)
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
   async postRecruit(@Res() res: Response, @Body() body: recruitPostDTO) {
@@ -146,6 +151,7 @@ export class RecruitPostController {
     description: '상세 협업 게시물 아이디',
   })
   @ApiOperation({ summary: '협업 게시물 수정' })
+  @UseGuards(StrictGuard)
   @Put('/:recruitPostId')
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
@@ -177,6 +183,7 @@ export class RecruitPostController {
     description: '댓글 쓰기',
   })
   @ApiOperation({ summary: '협업 댓글 쓰기' })
+  @UseGuards(StrictGuard)
   @Post('/:recruitPostId/comment')
   async postComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
@@ -206,6 +213,7 @@ export class RecruitPostController {
     required: true,
     description: '댓글 아이디',
   })
+  @UseGuards(StrictGuard)
   @Put('/:recruitPostId/comment/:recruitCommentId')
   @ApiOperation({ summary: '협업 댓글 수정하기' })
   async modifyComment(
@@ -233,6 +241,7 @@ export class RecruitPostController {
     description: '포스트 아이디',
   })
   @ApiOperation({ summary: '협업 신청하기' })
+  @UseGuards(StrictGuard)
   @Post('/:recruitPostId/apply')
   async postApply(
     @Param('recruitPostId', ParseIntPipe) postId: number,
@@ -258,6 +267,7 @@ export class RecruitPostController {
     description: '포스트 아이디',
   })
   @ApiOperation({ summary: '협업 keep하기' })
+  @UseGuards(StrictGuard)
   @Post('/:recruitPostId/keepIt')
   async postKeepIt(
     @Param('recruitPostId', ParseIntPipe) postId: number,
@@ -304,6 +314,7 @@ export class RecruitPostController {
     description: '협업 신청 아이디',
   })
   @ApiOperation({ summary: '협업 신청 취소하기' })
+  @UseGuards(StrictGuard)
   @Delete('/:recruitPostId/:applyId')
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
