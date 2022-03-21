@@ -34,6 +34,16 @@ export class RecruitPostService {
   ) {
     console.log(loginId, sort, items, location, task, stack, lastId);
 
+    let cursorPost;
+    if (lastId) {
+      cursorPost = await this.connection
+        .getRepository(RecruitPosts)
+        .findOne(lastId);
+      console.log(cursorPost);
+      if (!cursorPost.recruitPostId) {
+        return; //잘못되있으면 커서아이디가  리턴
+      }
+    }
     let recruitQuery;
     if (!loginId) {
       recruitQuery = this.recruitPostsRepository
@@ -52,7 +62,7 @@ export class RecruitPostService {
         ])
         .where('P.recruitPostId > 0');
     } else {
-      recruitQuery = await this.recruitPostsRepository
+      recruitQuery = this.recruitPostsRepository
         .createQueryBuilder('P')
         .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
           id: loginId,
@@ -71,12 +81,21 @@ export class RecruitPostService {
         ])
         .where('P.recruitPostId > 0');
     }
+    let paginationQuery = recruitQuery;
+    if (lastId && sort) {
+      const cursorKeepCount = cursorPost.recruitKeepCount;
+      paginationQuery = paginationQuery.andWhere(
+        'P.recruitKeepCount < :cursorKeepCount',
+        { cursorKeepCount },
+      );
+    }
+    if (lastId) {
+      paginationQuery = paginationQuery.andWhere('P.recruitPostId < :lastId', {
+        lastId,
+      });
+    }
 
-    // orderBy('P.recruitKeepCount', 'DESC')
-    // .addOrderBy('P.recruitPostId', 'DESC')
-
-    // .where("P.recruitLocation IN (:..location)", { location: [locations] })
-    let filterQuery = recruitQuery;
+    let filterQuery = paginationQuery;
     if (location) {
       filterQuery = filterQuery.andWhere('P.recruitLocation = :location', {
         location,
@@ -88,35 +107,8 @@ export class RecruitPostService {
       filterQuery = recruitQuery.andWhere('S.recruitStack = :stack', { stack });
     }
 
-    let paginationQuery = filterQuery;
-    let cursorPost;
-    let cursorKeepCount;
-    let cursorPostId;
-    // 페이지네이션
-    // if (!lastId) {
-    //   cursorPost = await this.connection
-    //     .getRepository(RecruitPosts)
-    //     .findOne(lastId);
-    //   cursorKeepCount = cursorPost.recruitKeepCount;
-    //   cursorPostId = cursorPost.recruitPostId;
-    //   if (sort) {
-    //     paginationQuery = paginationQuery.andWhere(
-    //       'P.recruitKeepCount <= :cursorKeepCount',
-    //       {
-    //         cursorKeepCount,
-    //       },
-    //     );
-    //   }
-    // }
-    // if (lastId){
-    //   paginationQuery = paginationQuery.andWhere(
-    //     'P.recruitPostId <: cursorPostId',
-    //     { cursorPostId },
-    //   );
-    // }
-
     // 0 최신순 1 keepIt 순
-    let sortQuery = paginationQuery;
+    let sortQuery = filterQuery;
     if (!sort) {
       sortQuery = sortQuery.orderBy('P.recruitPostId', 'DESC');
     } else if (sort) {
@@ -126,8 +118,9 @@ export class RecruitPostService {
     }
 
     const endQuery = await sortQuery.take(items).getMany();
-    console.log(endQuery);
 
+    console.log(endQuery);
+    
     return endQuery;
   }
 
