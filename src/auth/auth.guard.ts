@@ -24,6 +24,7 @@ export class StrictGuard implements CanActivate {
       );
     }
     if (accessTokenBearer) {
+      console.log('디크립트 합니까?');
       const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
@@ -41,9 +42,10 @@ export class StrictGuard implements CanActivate {
     }
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
+      console.log('strict Guard passed');
       return true;
     } else if (!existUser.nickname) {
-      throw new HttpException('There Is No Such User', HttpStatus.FORBIDDEN);
+      throw new HttpException('No User Matches JWT', HttpStatus.FORBIDDEN);
     }
   }
 }
@@ -77,8 +79,12 @@ export class LooseGuard implements CanActivate {
     }
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
+<<<<<<< HEAD
       console.log('유저를 넣음');
 
+=======
+      console.log('가드 마지막');
+>>>>>>> 39c6fa8e9ef64ffadf60bd3f64729ea07e1e18bd
       return true;
     } else {
       res.locals.user = '';

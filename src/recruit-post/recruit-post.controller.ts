@@ -12,6 +12,7 @@ import {
   Query,
   Res,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -55,8 +56,8 @@ export class RecruitPostController {
     required: false,
     description: 'lastId',
   })
-  @UseGuards(StrictGuard)
-  @Get()
+  @UseGuards(LooseGuard)
+  @Get('')
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
   async getAllRecruits(
     @Query('sort') order: any,
@@ -67,8 +68,6 @@ export class RecruitPostController {
     @Query('lastId') lastId: any,
     @Res() res: Response,
   ) {
-    const { userId } = res.locals.user;
-
     order = parseInt(order) || 0;
     items = parseInt(items) || 12;
     location = parseInt(location) || 0;
@@ -76,6 +75,9 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
 
+    console.log('GET 컨트롤러 진입함');
+    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+    console.log(userId);
     try {
       const recruits: RecruitPosts[] =
         await this.recruitPostService.ReadAllRecruits(
@@ -111,6 +113,7 @@ export class RecruitPostController {
     @Res() res: any,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
+    console.log('디테일 컨트롤러 도착');
     const details: any = await this.recruitPostService.ReadSpecificRecruits(
       recruitPostId,
     );
@@ -127,7 +130,10 @@ export class RecruitPostController {
   @UseGuards(StrictGuard)
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
-  async postRecruit(@Res() res: Response, @Body() body: recruitPostDTO) {
+  async postRecruit(
+    @Res() res: Response,
+    @Body(ValidationPipe) body: recruitPostDTO,
+  ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
@@ -165,7 +171,7 @@ export class RecruitPostController {
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res() res: Response,
-    @Body() body: recruitPostDTO,
+    @Body(ValidationPipe) body: recruitPostDTO,
   ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();

@@ -133,6 +133,7 @@ export class RecruitPostService {
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number) {
+    console.log('디테일 서비스 도착');
     try {
       const recruitPost = await this.recruitPostsRepository
         .createQueryBuilder('P')
@@ -144,17 +145,10 @@ export class RecruitPostService {
         .andWhere('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'DESC')
         .getOne();
-      recruitPost.viewCount = recruitPost.viewCount + 1;
-      await this.recruitPostsRepository
-        .createQueryBuilder()
-        .insert()
-        .into(RecruitPosts)
-        .values(recruitPost)
-        .execute();
 
       return recruitPost;
     } catch {
-      return new HttpException('다시 시도해주세요', 500);
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
@@ -225,7 +219,7 @@ export class RecruitPostService {
         .where('recruitPostId = :recruitPostId', { recruitPostId })
         .execute();
     } catch (error) {
-      return new HttpException('다시 시도해주세요', 500);
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
@@ -234,7 +228,7 @@ export class RecruitPostService {
     try {
       const returned = await this.recruitKeepsRepository.findOne(recruitPostId);
       if (returned.recruitKeepId)
-        return new HttpException('이미 킵잇되있어용~', 400);
+        throw new HttpException('이미 킵잇되있어용~', 400);
 
       await this.recruitKeepsRepository
         .createQueryBuilder()
@@ -249,7 +243,7 @@ export class RecruitPostService {
         .where('recruitPostId = :recruitPostId', { recruitPostId })
         .execute();
     } catch (error) {
-      return new HttpException('다시 시도해주세요', 500);
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
@@ -261,7 +255,7 @@ export class RecruitPostService {
       );
 
       if (returnedApply.recruitApplyId) {
-        return new HttpException('이미 신청했어요', 400);
+        throw new HttpException('이미 신청했어요', 400);
       } else {
         await this.recruitAppliesRepository
           .createQueryBuilder('A')
@@ -271,7 +265,7 @@ export class RecruitPostService {
           .execute();
       }
     } catch (error) {
-      return new HttpException('다시 시도해주세요', 500);
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
@@ -343,7 +337,7 @@ export class RecruitPostService {
         .getOne();
 
       if (!returnedComments.recruitCommentId) {
-        return new HttpException('지울 데이터가 없어요', 400);
+        throw new HttpException('지울 데이터가 없어요', 400);
       }
 
       await this.recruitCommentsRepository.delete(returnedComments);
@@ -401,10 +395,10 @@ export class RecruitPostService {
         .getOne();
 
       if (isExist.recruitPostId != recruitPostId) {
-        return new HttpException('잘못된 요청입니다.', 400);
+        throw new HttpException('잘못된 요청입니다.', 400);
       }
       if (!isExist.recruitKeepId) {
-        return new HttpException('지울 데이터가 없어요', 400);
+        throw new HttpException('지울 데이터가 없어요', 400);
       }
       await this.recruitKeepsRepository.delete(recruitKeepId);
       await this.recruitPostsRepository
@@ -429,10 +423,10 @@ export class RecruitPostService {
         await this.recruitAppliesRepository.findOne(applyId);
 
       if (!isExist.recruitApplyId) {
-        return new HttpException('지울 데이터가 없어요', 400);
+        throw new HttpException('지울 데이터가 없어요', 400);
       }
       if (isExist.recruitPostId != recruitPostId) {
-        return new HttpException('잘못된 요청입니다.', 400);
+        throw new HttpException('잘못된 요청입니다.', 400);
       }
       if (isExist.isAccepted) {
         await this.recruitAppliesRepository.delete({
@@ -442,7 +436,7 @@ export class RecruitPostService {
 
       await this.recruitKeepsRepository.delete(applyId);
     } catch (error) {
-      return new HttpException('다시 시도해주세요', 500);
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
