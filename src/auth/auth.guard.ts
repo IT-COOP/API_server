@@ -79,12 +79,7 @@ export class LooseGuard implements CanActivate {
     }
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
-<<<<<<< HEAD
-      console.log('유저를 넣음');
-
-=======
       console.log('가드 마지막');
->>>>>>> 39c6fa8e9ef64ffadf60bd3f64729ea07e1e18bd
       return true;
     } else {
       res.locals.user = '';
