@@ -61,6 +61,7 @@ export class RecruitPostController {
   async getAllRecruits(@Query() query: any, @Res() res: Response) {
     const { userId } = res.locals.user;
 
+    const id = userId ? userId : '';
     const order = query.sort ? query.sort : 0;
     const items = query.items ? query.items : 12;
     const location = query.loc ? query.loc : null;
@@ -70,7 +71,7 @@ export class RecruitPostController {
 
     try {
       const recruits = await this.recruitPostService.ReadAllRecruits(
-        userId,
+        id,
         order,
         items,
         location,
