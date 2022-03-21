@@ -12,7 +12,7 @@ class recruitTask {
 }
 
 //주의 사항 프로젝트 기간을 주로 받아 일로 변환해 db에 저장하기 프로젝트 종료 시간을 구하기 위해
-export class RecruitPostDTO {
+export class recruitPostDTO {
   @ApiProperty({
     example: '좋은 테스트 코드 짜는 방법',
     description: '타이틀',
