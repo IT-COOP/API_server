@@ -32,35 +32,48 @@ export class RecruitPostService {
     stack: number | null, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
     lastId: number | null, // 커서 기반 페이지네이션을 위함
   ) {
-    const id = lastId ? lastId : 21000000;
-    const cursorPost: RecruitPosts = await this.recruitPostsRepository
-      .createQueryBuilder('R')
-      .where('R.recruitPostId <= :id', { id })
-      .orderBy('R.recruitPostId', 'DESC')
-      .take(1)
-      .getMany()[0];
+    console.log(loginId, sort, items, location, task, stack, lastId);
 
-    //쿼리 빌더 시작
-    console.log('서비스 진입함');
-    const recruitQuery = this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-        id: loginId,
-      })
-      .leftJoin('P.recruitTasks', 'T')
-      .leftJoin('P.recruitStacks', 'S')
-      .addSelect([
-        'S.recruitStackId',
-        'S.recruitStack',
-        'S.numberOfPeopleRequired',
-        'S.numberOfPeopleSet',
-        'T.recruitTaskId',
-        'T.recruitTask',
-        'T.numberOfPeopleRequired',
-        'T.numberOfPeopleSet',
-      ]);
+    let recruitQuery;
+    if (!loginId) {
+      recruitQuery = this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoin('P.recruitTasks', 'T')
+        .leftJoin('P.recruitStacks', 'S')
+        .addSelect([
+          'S.recruitStackId',
+          'S.recruitStack',
+          'S.numberOfPeopleRequired',
+          'S.numberOfPeopleSet',
+          'T.recruitTaskId',
+          'T.recruitTask',
+          'T.numberOfPeopleRequired',
+          'T.numberOfPeopleSet',
+        ])
+        .where('P.recruitPostId > 0');
+    } else {
+      recruitQuery = await this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
+          id: loginId,
+        })
+        .leftJoin('P.recruitTasks', 'T')
+        .leftJoin('P.recruitStacks', 'S')
+        .addSelect([
+          'S.recruitStackId',
+          'S.recruitStack',
+          'S.numberOfPeopleRequired',
+          'S.numberOfPeopleSet',
+          'T.recruitTaskId',
+          'T.recruitTask',
+          'T.numberOfPeopleRequired',
+          'T.numberOfPeopleSet',
+        ])
+        .where('P.recruitPostId > 0');
+    }
 
-    console.log(123412341234);
+    // orderBy('P.recruitKeepCount', 'DESC')
+    // .addOrderBy('P.recruitPostId', 'DESC')
 
     // .where("P.recruitLocation IN (:..location)", { location: [locations] })
     let filterQuery = recruitQuery;
@@ -71,46 +84,50 @@ export class RecruitPostService {
     }
     if (task) {
       filterQuery = filterQuery.andWhere('T.recruitTask = :task', { task });
+    } else if (stack) {
+      filterQuery = recruitQuery.andWhere('S.recruitStack = :stack', { stack });
     }
-    if (stack) {
-      filterQuery = filterQuery = recruitQuery.andWhere(
-        'S.recruitStack = :stack',
-        { stack },
-      );
-    }
-    console.log(456456789);
 
-    const cursorKeepCount = cursorPost.recruitKeepCount;
-    const cursorPostId = cursorPost.recruitPostId;
-    // 페이지네이션
     let paginationQuery = filterQuery;
-    if (cursorPost && sort === 1) {
-      paginationQuery = paginationQuery.andWhere(
-        'P.recruitKeepCount <= :cursorKeepCount',
-        {
-          cursorKeepCount,
-        },
-      );
-    }
-    paginationQuery = paginationQuery.andWhere(
-      'P.recruitPostId <:cursorPostId',
-      { cursorPostId },
-    );
+    let cursorPost;
+    let cursorKeepCount;
+    let cursorPostId;
+    // 페이지네이션
+    // if (!lastId) {
+    //   cursorPost = await this.connection
+    //     .getRepository(RecruitPosts)
+    //     .findOne(lastId);
+    //   cursorKeepCount = cursorPost.recruitKeepCount;
+    //   cursorPostId = cursorPost.recruitPostId;
+    //   if (sort) {
+    //     paginationQuery = paginationQuery.andWhere(
+    //       'P.recruitKeepCount <= :cursorKeepCount',
+    //       {
+    //         cursorKeepCount,
+    //       },
+    //     );
+    //   }
+    // }
+    // if (lastId){
+    //   paginationQuery = paginationQuery.andWhere(
+    //     'P.recruitPostId <: cursorPostId',
+    //     { cursorPostId },
+    //   );
+    // }
 
     // 0 최신순 1 keepIt 순
     let sortQuery = paginationQuery;
-    if (sort === 0) {
-      sortQuery = paginationQuery.orderBy('P.recruitPostId', 'DESC');
-    } else if (sort === 1) {
+    if (!sort) {
+      sortQuery = sortQuery.orderBy('P.recruitPostId', 'DESC');
+    } else if (sort) {
       sortQuery = sortQuery
         .orderBy('P.recruitKeepCount', 'DESC')
         .addOrderBy('P.recruitPostId', 'DESC');
     }
-    console.log(987989598798213);
 
     const endQuery = await sortQuery.take(items).getMany();
+    console.log(endQuery);
 
-    console.log(1111111111111111);
     return endQuery;
   }
 

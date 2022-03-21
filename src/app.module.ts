@@ -66,8 +66,7 @@ import { ImageModule } from './image/image.module';
             ChatMembers,
             Chats,
           ],
-          synchronize: true,
-          logger: 'debug',
+          logging: true,
         };
       },
     }),
