@@ -74,3 +74,6 @@ Nest is [MIT licensed](LICENSE).
 
 교훈 1 Service의 constructor 안에는 injectable한 친구들만 import해서 넣어야 한다.
 교훈 2 Nestjs 서버를 배포하기 위해서는 dist 폴더를 따로 업로드 해주어야 한다. (프리티어 기준)
+교훈 3 SQL문을 모르는 상태에서 SQL문의 형태를 모사하는 typeORM의 querybuilder를 사용하며 익숙해질 수 있었다.
+교훈 4 굳이 필요 없는 댓글 갯수 같은 걸 column으로 넣으면, 읽는 속도는 빨라지지만 오히려 쓰는 경우가 너무 많이 늘어난다.
+가능한 한 이런 column은 최소화하되, 꼭 필요한 경우만 추가하자

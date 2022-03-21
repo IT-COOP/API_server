@@ -20,6 +20,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('/profile')
   async getProfile(@Res() res: Response) {
+    //Unknown column 'R.userReputationReceiver' in 'on clause'
     return await this.userService.readMyProfile(res.locals.user.userId);
   }
 
