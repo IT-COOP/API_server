@@ -112,6 +112,7 @@ export class RecruitPostController {
     @Res() res: any,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
+    console.log('디테일 컨트롤러 도착');
     const details: any = await this.recruitPostService.ReadSpecificRecruits(
       recruitPostId,
     );
