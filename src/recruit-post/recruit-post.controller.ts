@@ -9,12 +9,13 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
 
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RecruitApplyDTO } from './dto/apply.dto';
 import { RecruitCommentDTO } from './dto/recruitComment.dto';
-import { RecruitPostDTO } from './dto/recruitPost.dto';
+import { recruitPostDTO } from './dto/recruitPost.dto';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
@@ -22,6 +23,7 @@ import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { RecruitPostService } from './recruit-post.service';
+import { Response } from 'express';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
@@ -55,8 +57,8 @@ export class RecruitPostController {
   })
   @Get()
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
-  async getAllRecruits(@Query() query: any) {
-    const userId = 'cgh';
+  async getAllRecruits(@Query() query: any, @Res() res: Response) {
+    const { userId } = res.locals.user;
 
     const order = query.sort ? query.sort : 0;
     const items = query.items ? query.items : 12;
@@ -95,10 +97,9 @@ export class RecruitPostController {
   @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   async getDetailRecruit(
+    @Res() res: any,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    console.log(' 컨트롤러 도착 서비스 전');
-
     const details: any = await this.recruitPostService.ReadSpecificRecruits(
       recruitPostId,
     );
@@ -114,8 +115,8 @@ export class RecruitPostController {
   })
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
-  async postRecruit(@Body() body: RecruitPostDTO) {
-    const userId = 'cgh';
+  async postRecruit(@Res() res: Response, @Body() body: recruitPostDTO) {
+    const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
     recruitPost.title = body.title;
@@ -150,9 +151,10 @@ export class RecruitPostController {
   @Put('/:recruitPostId')
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
-    @Body() body: RecruitPostDTO,
+    @Res() res: Response,
+    @Body() body: recruitPostDTO,
   ) {
-    const userId = 'test';
+    const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
     recruitPost.title = body.title;
@@ -180,9 +182,10 @@ export class RecruitPostController {
   @Post('/:recruitPostId/comment')
   async postComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
+    @Res() res: Response,
     @Body() body: RecruitCommentDTO,
   ) {
-    const userId = 'cgh';
+    const { userId } = res.locals.user;
     const comment = new RecruitComments();
     comment.userId = userId;
     comment.recruitPostId = recruitPostId;
@@ -210,9 +213,10 @@ export class RecruitPostController {
   async modifyComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Param('recruitCommentId', ParseIntPipe) recruitCommentId,
+    @Res() res: Response,
     @Body() body: RecruitCommentDTO,
   ) {
-    const userId = this.checkUser('cgh');
+    const { userId } = res.locals.user;
 
     const comment = new RecruitComments();
     comment.userId = userId;
@@ -234,9 +238,10 @@ export class RecruitPostController {
   @Post('/:recruitPostId/apply')
   async postApply(
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res() res: Response,
     @Body() body: RecruitApplyDTO,
   ) {
-    const userId = 'cgh';
+    const { userId } = res.locals.user;
     const apply = new RecruitApplies();
     apply.applicant = userId;
     apply.recruitPostId = postId;
@@ -256,8 +261,11 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 keep하기' })
   @Post('/:recruitPostId/keepIt')
-  async postKeepIt(@Param('recruitPostId', ParseIntPipe) postId) {
-    const userId = 'cgh';
+  async postKeepIt(
+    @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res() res: Response,
+  ) {
+    const { userId } = res.locals.user;
     const recruitKeepIt = new RecruitKeeps();
     recruitKeepIt.userId = userId;
     recruitKeepIt.recruitPostId = postId;
@@ -301,8 +309,11 @@ export class RecruitPostController {
   @Delete('/:recruitPostId/:applyId')
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
-    @Param('recruitPostId', ParseIntPipe) postId,
+    @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res() res: Response,
   ) {
+    const { userId } = res.locals.user;
+    userId;
     this.recruitPostService.deleteApply(postId, applyId);
 
     return { success: true };
@@ -327,10 +338,5 @@ export class RecruitPostController {
     this.recruitPostService.deleteKeepIt(postId, keepId);
 
     return { success: true };
-  }
-
-  checkUser(userId) {
-    userId = 'cgh';
-    return userId;
   }
 }
