@@ -1,5 +1,5 @@
 import Faker from 'faker';
-import { Users } from 'src/socialLogin/entity/Users';
+import { Users } from './../../socialLogin/entity/Users';
 import { define, factory } from 'typeorm-seeding';
 
 define(Users, (faker: typeof Faker) => {

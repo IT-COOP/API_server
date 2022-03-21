@@ -73,3 +73,4 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 Nest is [MIT licensed](LICENSE).
 
 교훈 1 Service의 constructor 안에는 injectable한 친구들만 import해서 넣어야 한다.
+교훈 2 Nestjs 서버를 배포하기 위해서는 dist 폴더를 따로 업로드 해주어야 한다. (프리티어 기준)

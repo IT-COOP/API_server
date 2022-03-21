@@ -10,6 +10,7 @@ import {
   Query,
   Req,
   Res,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Stacks, Tasks } from 'src/common/enums';
@@ -51,7 +52,7 @@ export class SocialLoginController {
   @Post('completion')
   firstLogin(
     @Headers('authorization') accessTokenBearer: string,
-    @Body() completeFistLoginDTO: CompleteFirstLoginDTO,
+    @Body('', ValidationPipe) completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
     console.log(accessTokenBearer);
     return this.socialLoginService.completeFirstLogin(

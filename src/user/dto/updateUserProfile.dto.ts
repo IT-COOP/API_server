@@ -1,17 +1,30 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class CreateUserProfileDTO {
-  @MaxLength(13)
-  @MinLength(4)
+export class UpdateUserProfileDTO {
+  @MaxLength(8)
+  @MinLength(2)
   @IsString()
   nickname: string;
 
+  @IsOptional()
   @IsString()
   technologyStack: string;
 
+  @IsOptional()
+  @IsUrl()
+  profileImgUrl;
+
+  @IsOptional()
   @IsString()
   selfIntroduction: string;
 
+  @IsOptional()
   @IsString()
   portfolioUrl: string;
 }
