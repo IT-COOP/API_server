@@ -53,6 +53,7 @@ export class LooseGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    console.log(1);
     const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
 
@@ -78,6 +79,8 @@ export class LooseGuard implements CanActivate {
       res.locals.user = existUser;
       return true;
     } else {
+      res.locals.user = {};
+      console.log(987987987);
       return true;
     }
   }

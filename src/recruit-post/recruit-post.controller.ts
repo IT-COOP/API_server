@@ -60,20 +60,27 @@ export class RecruitPostController {
   @UseGuards(LooseGuard)
   @Get()
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
-  async getAllRecruits(@Query() query: any, @Res() res: Response) {
-    const { userId } = res.locals.user;
-
-    const id = userId ? userId : '';
-    const order = query.sort ? query.sort : 0;
-    const items = query.items ? query.items : 12;
-    const location = query.loc ? query.loc : null;
-    const task = query.task ? query.task : null;
-    const stack = query.stack ? query.stack : null;
-    const lastId = query.lastId ? query.lastId : null;
+  async getAllRecruits(
+    @Query('sort', ParseIntPipe) order: number,
+    @Query('items', ParseIntPipe) items: number,
+    @Query('loc', ParseIntPipe) location: number,
+    @Query('task', ParseIntPipe) task: number,
+    @Query('stack', ParseIntPipe) stack: number,
+    @Query('lastId', ParseIntPipe) lastId: number,
+    @Res() res: Response,
+  ) {
+    console.log('GET 컨트롤러 진입함');
+    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+    order = order ? order : 0;
+    items = items ? items : 12;
+    location = location ? location : null;
+    task = task ? task : null;
+    stack = stack ? stack : null;
+    lastId = lastId ? lastId : null;
 
     try {
       const recruits = await this.recruitPostService.ReadAllRecruits(
-        id,
+        userId,
         order,
         items,
         location,
