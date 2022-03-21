@@ -20,8 +20,6 @@ import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
 import { RecruitPosts } from './entities/RecruitPosts';
-import { RecruitStacks } from './entities/RecruitStacks';
-import { RecruitTasks } from './entities/RecruitTasks';
 import { RecruitPostService } from './recruit-post.service';
 import { Response } from 'express';
 
@@ -131,7 +129,7 @@ export class RecruitPostController {
     const {
       recruitTasks,
       recruitStacks,
-    }: { recruitTasks: RecruitTasks[]; recruitStacks: RecruitStacks[] } = body;
+    }: { recruitTasks: any; recruitStacks: any } = body;
 
     await this.recruitPostService.createRecruit(
       recruitPost,
