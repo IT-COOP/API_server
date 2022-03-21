@@ -1,5 +1,5 @@
 import Faker from 'faker';
-import { RecruitStacks } from 'src/recruit-post/entities/RecruitStacks';
+import { RecruitStacks } from './../../recruit-post/entities/RecruitStacks';
 import { define } from 'typeorm-seeding';
 
 define(RecruitStacks, (faker: typeof Faker) => {

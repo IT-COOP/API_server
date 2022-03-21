@@ -42,7 +42,7 @@ import { ImageModule } from './image/image.module';
       useFactory: async (configService: ConfigService) => {
         return {
           type: 'mysql',
-          host: 'localhost',
+          host: '127.0.0.1',
           port: 3306,
           username: configService.get('DB_USERNAME'),
           password: configService.get('DB_PASSWORD'),
@@ -77,7 +77,7 @@ import { ImageModule } from './image/image.module';
     SocketModule,
     ChatModule,
     UploadFileModule,
-    // ImageModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

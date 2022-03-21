@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/socialLogin/entity/Users';
@@ -116,13 +117,13 @@ export class UserService {
         'R.userReputationReceiver = :userId',
         { userId },
       )
-      .addSelect('SUM(RR.userReputationPoint)', 'SUM')
+      .addSelect('AVG(RR.userReputationPoint)', 'AVG')
       .where('U.userId = :userId', { userId })
       .getRawOne();
     return myProfile;
   }
 
-  //결과 확인 해보자
+  // 결과 확인 해보자
   async readMyRecruit(userId: string) {
     const myRecruitPosts = await this.userRepository
       .createQueryBuilder('U')
@@ -135,12 +136,45 @@ export class UserService {
   }
 
   //업데이트 프로필
-  async updateMyProfile(userId: string, userProfile: Users) {
-    await this.userRepository
-      .createQueryBuilder()
+  async updateMyProfile(
+    userId: string,
+    updateUserProfileDTO: UpdateUserProfileDTO,
+  ) {
+    const result = await this.userRepository
+      .createQueryBuilder('U')
       .update()
-      .set(userProfile)
+      .set(updateUserProfileDTO)
       .where('U.userId = :userId', { userId })
       .execute();
+
+    if (!result.affected) {
+      throw new BadRequestException('Profile Update Failure');
+    }
+    return { success: true };
+  }
+
+  // 다른놈 프로필 훔쳐보기
+  async getAnotherUserProfile(userId, anotherUserId) {
+    const profile = await this.userRepository
+      .createQueryBuilder('U')
+      .leftJoinAndSelect(
+        'U.userReputations2',
+        'RR',
+        'R.userReputationReceiver = :anotherUserId',
+        { anotherUserId },
+      )
+      .addSelect('AVG(RR.userReputationPoint)', 'AVG')
+      .addSelect([
+        'U.nickname',
+        'U.profileImgUrl',
+        'U.technologyStack',
+        'U.activityPoint',
+        'U.selfIntroduction',
+        'U.portfolioUrl',
+      ])
+      .where('U.userId = :anotherUserId', { anotherUserId })
+      .getRawOne();
+
+    return profile;
   }
 }

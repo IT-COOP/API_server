@@ -1,11 +1,11 @@
 import Faker from 'faker';
-import { RecruitApplies } from 'src/recruit-post/entities/RecruitApplies';
-import { RecruitComments } from 'src/recruit-post/entities/RecruitComments';
-import { RecruitKeeps } from 'src/recruit-post/entities/RecruitKeeps';
-import { RecruitPosts } from 'src/recruit-post/entities/RecruitPosts';
-import { RecruitStacks } from 'src/recruit-post/entities/RecruitStacks';
-import { RecruitTasks } from 'src/recruit-post/entities/RecruitTasks';
-import { Users } from 'src/socialLogin/entity/Users';
+import { RecruitApplies } from './../../recruit-post/entities/RecruitApplies';
+import { RecruitComments } from './../../recruit-post/entities/RecruitComments';
+import { RecruitKeeps } from './../../recruit-post/entities/RecruitKeeps';
+import { RecruitPosts } from './../../recruit-post/entities/RecruitPosts';
+import { RecruitStacks } from './../../recruit-post/entities/RecruitStacks';
+import { RecruitTasks } from './../../recruit-post/entities/RecruitTasks';
+import { Users } from './../../socialLogin/entity/Users';
 import { define, factory } from 'typeorm-seeding';
 
 define(RecruitPosts, (faker: typeof Faker) => {
