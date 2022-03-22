@@ -24,7 +24,7 @@ import { RecruitKeeps } from './entities/RecruitKeeps';
 import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitPostService } from './recruit-post.service';
 import { Response } from 'express';
-// import { UpdateDetailPostsDTO } from './dto/updateRecruitPost.dto';
+import { UpdateDetailPostsDTO } from './dto/updateRecruitPost.dto';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
