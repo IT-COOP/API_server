@@ -164,7 +164,6 @@ export class RecruitPostController {
     @Body(ValidationPipe) body: UpdateDetailPostsDTO,
   ) {
     const { userId } = res.locals.user;
-
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
     recruitPost.title = body.title;

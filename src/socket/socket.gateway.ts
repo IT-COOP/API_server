@@ -133,7 +133,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     //   chatRoomId: chatRoomId,
     //   userId: userId,
     // }
-    const isBelonging = await this.chatMemberRepository.count({
+    const isBelonging = await this.chatMemberRepository.findOne({
       where: {
         chatRoomId: data.chatRoomId,
         member: data.userId,

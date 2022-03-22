@@ -19,7 +19,7 @@ export class StrictGuard implements CanActivate {
     let existUser: Users | undefined;
     if (!accessTokenBearer && !refreshTokenBearer) {
       throw new HttpException(
-        '로그인이 필요한 기능입니다.',
+        'You Need To Login First.',
         HttpStatus.FORBIDDEN, // 403 ERROR
       );
     }
