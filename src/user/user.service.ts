@@ -97,6 +97,9 @@ export class UserService {
       .leftJoinAndSelect('K.recruitPost', 'P')
       .leftJoinAndSelect('P.recruitStacks', 'S')
       .leftJoinAndSelect('P.recruitTasks', 'T')
+      .leftJoinAndSelect('P.recruitComments', 'C')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect('C.recruitCommentId')
       .where('K.userId = :userId', { userId })
       .getMany();
     return post;
@@ -113,6 +116,10 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
       .andWhere('P.endAt > :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .getMany();
@@ -124,6 +131,11 @@ export class UserService {
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.recruitApplies', 'A')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
       .where('A.isAccepted = 0')
       .andWhere('A.applicant = :userId', { userId })
       .getMany();
@@ -135,6 +147,10 @@ export class UserService {
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.recruitApplies', 'A')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })
       .andWhere('P.endAt = P.createdAt')
       .getMany();
@@ -143,12 +159,19 @@ export class UserService {
 
   // 진행 완료한 프로젝트
   async getMyOverProject(userId: string) {
+    const offset = new Date().getTimezoneOffset(); // -5400으로 만들어야 함 얘가 -3000이 있다고 쳐, 그럼 나는 5400을 만들어야 하니까 2400을 더 빼야해
+    const now = new Date(-offset - 5400);
+
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
       .where('P.endAt != P.createdAt')
-      .andWhere('P.endAt < :now', { now: new Date() })
+      .andWhere('P.endAt < :now', { now })
       .andWhere('M.member = :userId', { userId })
       .getMany();
     return post;

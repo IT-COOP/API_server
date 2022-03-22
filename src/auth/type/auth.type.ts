@@ -7,7 +7,16 @@ export interface CheckUserIdInterface {
   isProfileSet: boolean;
 }
 
-export interface JwtVerifyInterFace {
-  userId: string | null;
-  message: string | null;
+export type JwtVerifyType = VerificationSucceeded | VerificationFailure;
+
+export interface VerificationSucceeded {
+  userId: string;
+  message: null;
 }
+
+export interface VerificationFailure {
+  userId: null;
+  message: string;
+}
+
+// constraint union
