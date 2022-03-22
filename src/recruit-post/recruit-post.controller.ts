@@ -66,7 +66,7 @@ export class RecruitPostController {
     @Query('task') task: any,
     @Query('stack') stack: any,
     @Query('lastId') lastId: any,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     order = parseInt(order) || 0;
     items = parseInt(items) || 12;
@@ -75,27 +75,20 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
 
-    console.log('GET 컨트롤러 진입함');
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log(userId);
     try {
-      const recruits: RecruitPosts[] =
-        await this.recruitPostService.ReadAllRecruits(
-          userId,
-          order,
-          items,
-          location,
-          task,
-          stack,
-          lastId,
-        );
-      const post = recruits.map((item: any) => {
-        const obj: any = item;
-        obj.recruitDurationWeeks = item.recruitDurationDays / 7;
-        return obj;
-      });
-
-      return post;
+      const recruits: any = await this.recruitPostService.ReadAllRecruits(
+        userId,
+        order,
+        items,
+        location,
+        task,
+        stack,
+        lastId,
+      );
+      console.log(recruits);
+      return recruits;
     } catch (e) {
       return new HttpException('db불러오기 실패', 500);
     }
@@ -110,16 +103,19 @@ export class RecruitPostController {
   @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   async getDetailRecruit(
-    @Res() res: any,
+    @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    console.log('디테일 컨트롤러 도착');
-    const details: any = await this.recruitPostService.ReadSpecificRecruits(
-      recruitPostId,
-    );
+    const { userId } = res.locals.user;
 
-    details.recruitDurationWeeks = details.recruitDurationDays / 7;
-    return details;
+    try {
+      const details: any = await this.recruitPostService.ReadSpecificRecruits(
+        recruitPostId,
+        userId,
+      );
+      details.recruitDurationWeeks = details.recruitDurationDays / 7;
+      return details;
+    } catch {}
   }
 
   @ApiParam({
@@ -131,7 +127,7 @@ export class RecruitPostController {
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
   async postRecruit(
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body(ValidationPipe) body: recruitPostDTO,
   ) {
     const { userId } = res.locals.user;
@@ -170,7 +166,7 @@ export class RecruitPostController {
   @Put('/:recruitPostId')
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body(ValidationPipe) body: recruitPostDTO,
   ) {
     const { userId } = res.locals.user;
@@ -202,7 +198,7 @@ export class RecruitPostController {
   @Post('/:recruitPostId/comment')
   async postComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: RecruitCommentDTO,
   ) {
     const { userId } = res.locals.user;
@@ -234,7 +230,7 @@ export class RecruitPostController {
   async modifyComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Param('recruitCommentId', ParseIntPipe) recruitCommentId,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: RecruitCommentDTO,
   ) {
     const { userId } = res.locals.user;
@@ -260,7 +256,7 @@ export class RecruitPostController {
   @Post('/:recruitPostId/apply')
   async postApply(
     @Param('recruitPostId', ParseIntPipe) postId: number,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: RecruitApplyDTO,
   ) {
     const { userId } = res.locals.user;
@@ -286,7 +282,7 @@ export class RecruitPostController {
   @Post('/:recruitPostId/keepIt')
   async postKeepIt(
     @Param('recruitPostId', ParseIntPipe) postId: number,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const { userId } = res.locals.user;
     const recruitKeepIt = new RecruitKeeps();
@@ -334,7 +330,7 @@ export class RecruitPostController {
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const { userId } = res.locals.user;
     userId;
@@ -353,12 +349,15 @@ export class RecruitPostController {
     required: true,
     description: '킵잇 아이디',
   })
+  @UseGuards(StrictGuard)
   @ApiOperation({ summary: '협업 keep취소하기' })
   @Delete('/:recruitPostId/:recruitKeepId')
   async removeKeepIt(
     @Param('recruitKeepId', ParseIntPipe) keepId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
+    const { userId } = res.locals.user;
     this.recruitPostService.deleteKeepIt(postId, keepId);
 
     return { success: true };

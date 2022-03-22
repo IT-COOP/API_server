@@ -1,6 +1,8 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
+import { ResDetailPostDTO } from './dto/resDetailPost.dto';
+import { ResRecruitPostsDTO } from './dto/resRecruitPosts.dto';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
@@ -48,9 +50,23 @@ export class RecruitPostService {
     if (!loginId) {
       recruitQuery = this.recruitPostsRepository
         .createQueryBuilder('P')
+        .leftJoin('P.recruitKeeps', 'K')
         .leftJoin('P.recruitTasks', 'T')
         .leftJoin('P.recruitStacks', 'S')
+        .leftJoin('P.author2', 'U')
+        .select([
+          'P.recruitPostId',
+          'P.title',
+          'P.thumbImgUrl',
+          'P.recruitContent',
+          'P.recruitLocation',
+          'P.recruitKeepCount',
+          'P.recruitDurationDays',
+          'P.createdAt',
+        ])
         .addSelect([
+          'K.userId',
+          'U.nickname',
           'S.recruitStackId',
           'S.recruitStack',
           'S.numberOfPeopleRequired',
@@ -64,12 +80,27 @@ export class RecruitPostService {
     } else {
       recruitQuery = this.recruitPostsRepository
         .createQueryBuilder('P')
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
+        .leftJoin('P.recruitKeeps', 'K', 'K.userId = :id', {
           id: loginId,
         })
         .leftJoin('P.recruitTasks', 'T')
         .leftJoin('P.recruitStacks', 'S')
+        .leftJoin('P.user', 'U')
+        .select([
+          'P.recruitPostId',
+          'P.title',
+          'P.author',
+          'P.thumbImgUrl',
+          'P.recruitContent',
+          'P.recruitLocation',
+          'P.recruitKeepCount',
+          'P.recruitDurationDays',
+          'P.createdAt',
+        ])
         .addSelect([
+          'K.userId',
+          'U.nickname',
+          'K.recruitPostId',
           'S.recruitStackId',
           'S.recruitStack',
           'S.numberOfPeopleRequired',
@@ -118,18 +149,43 @@ export class RecruitPostService {
     }
 
     const endQuery = await sortQuery.take(items).getMany();
-
     console.log(endQuery);
-    
-    return endQuery;
+
+    const recruits = endQuery.map((item: any) => {
+      const obj = new ResRecruitPostsDTO();
+      obj.recruitPostId = item.recruitPostId;
+      obj.title = item.title;
+      obj.author = item.author2.nickname;
+      obj.thumbImgUrl = item.thumbImgUrl;
+      obj.recruitContent = item.recruitContent;
+      obj.recruitLocation = item.recruitLocation;
+      obj.recruitKeepCount = item.recruitKeepCount;
+      obj.recruitDurationWeeks = item.recruitDurationDays / 7;
+      obj.createdAt = item.createdAt.toISOString();
+
+      obj.isKeeps = item.recruitKeeps.length ? true : false;
+
+      obj.recruitTasks = item.recruitTasks;
+      obj.recruitStacks = item.recruitStacks;
+
+      return obj;
+    });
+    console.log(recruits);
+
+    return recruits;
   }
 
   //마무리
-  async ReadSpecificRecruits(recruitPostId: number) {
-    console.log('디테일 서비스 도착');
+  async ReadSpecificRecruits(recruitPostId: number, loginId) {
     try {
+      console.log('디테일 서비스 도착');
+      
       const recruitPost = await this.recruitPostsRepository
         .createQueryBuilder('P')
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
+          id: loginId,
+        })
+        .leftJoinAndSelect('P.user', 'U')
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
@@ -138,6 +194,24 @@ export class RecruitPostService {
         .andWhere('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'DESC')
         .getOne();
+
+      console.log(recruitPost);
+
+      // const obj = new ResDetailPostDTO();
+      // obj.recruitPostId = recruitPost.recruitPostId;
+      // obj.title = recruitPost.title;
+      // obj.author = recruitPost.author2.nickname;
+      // obj.thumbImgUrl = recruitPost.thumbImgUrl;
+      // obj.recruitContent = recruitPost.recruitContent;
+      // obj.recruitLocation = recruitPost.recruitLocation;
+      // obj.recruitKeepCount = recruitPost.recruitKeepCount;
+      // obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+      // obj.createdAt = recruitPost.createdAt.toISOString();
+
+      // obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+
+      // obj.recruitTasks = recruitPost.recruitTasks;
+      // obj.recruitStacks = recruitPost.recruitStacks;
 
       return recruitPost;
     } catch {
@@ -309,13 +383,18 @@ export class RecruitPostService {
 
   //마무리
   async updateComment(commentId: number, comment: object) {
-    await this.recruitCommentsRepository.upsert(comment, ['commentId']);
+    await this.recruitCommentsRepository
+      .createQueryBuilder()
+      .update(RecruitComments)
+      .set(comment)
+      .select('RecruitComments.')
+      .execute();
   }
 
   async deleteRecruitPost(postId: number) {
-    await this.recruitAppliesRepository.delete(postId);
+    await this.recruitPostsRepository.delete(postId);
   }
-  //로직 변경 논의
+
   //마무리
   async deleteComment(recruitPostId: number, commentId: number) {
     /*
@@ -333,13 +412,11 @@ export class RecruitPostService {
         throw new HttpException('지울 데이터가 없어요', 400);
       }
 
-      await this.recruitCommentsRepository.delete(returnedComments);
-
       const queryRunner = this.connection.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
       try {
-        if (returnedComments) {
+        if (returnedComments.recruitCommentId) {
           await queryRunner.manager
             .getRepository(RecruitComments)
             .createQueryBuilder()
@@ -351,7 +428,7 @@ export class RecruitPostService {
             .getRepository(RecruitPosts)
             .createQueryBuilder()
             .update()
-            .set({ recruitKeepCount: () => 'recruitKeepCount - 1' })
+            .set({ recruitCommentCount: () => 'recruitCommentCount - 1' })
             .where('P.recruitPostId = :recruitPostId', { recruitPostId })
             .execute();
 

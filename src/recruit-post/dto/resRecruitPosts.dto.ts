@@ -1,7 +1,7 @@
 import { RecruitStacks } from '../entities/RecruitStacks';
 import { RecruitTasks } from '../entities/RecruitTasks';
 
-export class ResDetailPostDTO {
+export class ResRecruitPostsDTO {
   public recruitPostId: number;
   public author: string;
   public thumbImgUrl: string;

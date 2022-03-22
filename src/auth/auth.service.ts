@@ -147,7 +147,7 @@ export class AuthService {
       indexOfAccessTokenBearer !== -1
         ? headers[indexOfAccessTokenBearer + 1]
         : '';
-    console.log('acc', accessTokenBearer);
+    console.log('acc', accessTokenBearer, headers);
     const refreshTokenBearer =
       indexOfRefreshTokenBearer !== -1
         ? headers[indexOfRefreshTokenBearer + 1]
