@@ -34,7 +34,6 @@ export class RecruitPostService {
     stack: number, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
     lastId: number, // 커서 기반 페이지네이션을 위함
   ) {
-
     let cursorPost;
     if (lastId) {
       cursorPost = await this.connection
@@ -145,7 +144,6 @@ export class RecruitPostService {
     }
 
     const endQuery = await sortQuery.take(items).getMany();
-  
 
     const recruits = await endQuery.map((item: any) => {
       const obj = new ResRecruitPostsDTO();
