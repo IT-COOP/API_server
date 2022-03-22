@@ -113,7 +113,6 @@ export class RecruitPostController {
         recruitPostId,
         userId,
       );
-      details.recruitDurationWeeks = details.recruitDurationDays / 7;
       return details;
     } catch {}
   }
@@ -170,6 +169,7 @@ export class RecruitPostController {
     @Body(ValidationPipe) body: recruitPostDTO,
   ) {
     const { userId } = res.locals.user;
+    
     const recruitPost = new RecruitPosts();
     recruitPost.author = userId;
     recruitPost.title = body.title;
