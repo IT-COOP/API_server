@@ -177,46 +177,41 @@ export class RecruitPostService {
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number, loginId) {
-    try {
-      console.log('디테일 서비스 도착');
-      
-      const recruitPost = await this.recruitPostsRepository
-        .createQueryBuilder('P')
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-          id: loginId,
-        })
-        .leftJoinAndSelect('P.user', 'U')
-        .leftJoinAndSelect('P.recruitStacks', 'S')
-        .leftJoinAndSelect('P.recruitTasks', 'T')
-        .leftJoinAndSelect('P.recruitComments', 'C')
-        .leftJoin('C.user', 'U')
-        .addSelect(['U.nickname', 'U.activityPoint', 'U.userId'])
-        .andWhere('P.recruitPostId = :id', { id: recruitPostId })
-        .orderBy('C.recruitCommentId', 'DESC')
-        .getOne();
+    console.log('디테일 서비스 도착');
+    const recruitPost = await this.recruitPostsRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
+        id: loginId,
+      })
+      .leftJoinAndSelect('P.user', 'U')
+      .leftJoinAndSelect('P.recruitStacks', 'S')
+      .leftJoinAndSelect('P.recruitTasks', 'T')
+      .leftJoinAndSelect('P.recruitComments', 'C')
+      .leftJoin('C.user', 'U')
+      .addSelect(['U.nickname', 'U.activityPoint', 'U.userId'])
+      .andWhere('P.recruitPostId = :id', { id: recruitPostId })
+      .orderBy('C.recruitCommentId', 'DESC')
+      .getOne();
 
-      console.log(recruitPost);
+    console.log(recruitPost);
 
-      // const obj = new ResDetailPostDTO();
-      // obj.recruitPostId = recruitPost.recruitPostId;
-      // obj.title = recruitPost.title;
-      // obj.author = recruitPost.author2.nickname;
-      // obj.thumbImgUrl = recruitPost.thumbImgUrl;
-      // obj.recruitContent = recruitPost.recruitContent;
-      // obj.recruitLocation = recruitPost.recruitLocation;
-      // obj.recruitKeepCount = recruitPost.recruitKeepCount;
-      // obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
-      // obj.createdAt = recruitPost.createdAt.toISOString();
+    // const obj = new ResDetailPostDTO();
+    // obj.recruitPostId = recruitPost.recruitPostId;
+    // obj.title = recruitPost.title;
+    // obj.author = recruitPost.author2.nickname;
+    // obj.thumbImgUrl = recruitPost.thumbImgUrl;
+    // obj.recruitContent = recruitPost.recruitContent;
+    // obj.recruitLocation = recruitPost.recruitLocation;
+    // obj.recruitKeepCount = recruitPost.recruitKeepCount;
+    // obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+    // obj.createdAt = recruitPost.createdAt.toISOString();
 
-      // obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+    // obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
 
-      // obj.recruitTasks = recruitPost.recruitTasks;
-      // obj.recruitStacks = recruitPost.recruitStacks;
+    // obj.recruitTasks = recruitPost.recruitTasks;
+    // obj.recruitStacks = recruitPost.recruitStacks;
 
-      return recruitPost;
-    } catch {
-      throw new HttpException('다시 시도해주세요', 500);
-    }
+    return recruitPost;
   }
 
   //마무리

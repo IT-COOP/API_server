@@ -59,18 +59,22 @@ export class LooseGuard implements CanActivate {
     const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
 
+    console.log('가드 시작');
+
     let userId: string;
     let existUser: Users | undefined;
     if (accessTokenBearer) {
-      const decrypted = this.authService.jwtVerification(
+      const decrypted = await this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
+      console.log('가드 1');
       userId = this.authService.getUserIdFromDecryptedAccessToken(decrypted);
       existUser = await this.authService.findUserByUserId(userId);
     } else if (refreshTokenBearer) {
       const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
+      console.log('가드 2');
       userId = this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
       existUser = await this.authService.findUserByUserIdAndRefreshToken(
         userId,
