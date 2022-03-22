@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 
 export class UpdateUserProfileDTO {
+  @IsOptional()
   @MaxLength(8)
   @MinLength(2)
   @IsString()

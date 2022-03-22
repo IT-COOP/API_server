@@ -30,5 +30,5 @@ export enum Region {
   Jeolla = 106,
   Jeju = 107,
   Online = 108,
-  EtCetera = 109,
+  EtCetera = 109, // 그 외
 }
