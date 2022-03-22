@@ -3,7 +3,7 @@ import {
   RefreshTokenErrorMessage,
   AccessTokenErrorMessage,
 } from './../socialLogin/enum/enums';
-import { CheckUserIdInterface, JwtVerifyInterFace } from './type/auth.type';
+import { CheckUserIdInterface, JwtVerifyType } from './type/auth.type';
 import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -50,8 +50,8 @@ export class AuthService {
       .getOne();
   }
 
-  jwtVerification(token: string): JwtVerifyInterFace {
-    const ret: JwtVerifyInterFace = {
+  jwtVerification(token: string): JwtVerifyType {
+    const ret: JwtVerifyType = {
       message: null,
       userId: null,
     };
@@ -100,7 +100,7 @@ export class AuthService {
     return validation;
   }
 
-  getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyInterFace) {
+  getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyType) {
     switch (decrypted.message) {
       case InputJwtError.tokenExpired:
         throw new HttpException(
@@ -117,7 +117,7 @@ export class AuthService {
     }
   }
 
-  getUserIdFromDecryptedRefreshToken(decrypted: JwtVerifyInterFace) {
+  getUserIdFromDecryptedRefreshToken(decrypted: JwtVerifyType) {
     switch (decrypted.message) {
       case InputJwtError.tokenExpired:
         throw new HttpException(
