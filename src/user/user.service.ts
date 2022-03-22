@@ -138,7 +138,6 @@ export class UserService {
       .where('P.author = :userId', { userId })
       .andWhere('P.endAt = P.createdAt')
       .getMany();
-
     return post;
   }
 
@@ -148,6 +147,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
+      .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .getMany();
