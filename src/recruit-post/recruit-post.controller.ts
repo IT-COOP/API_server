@@ -76,9 +76,7 @@ export class RecruitPostController {
     lastId = parseInt(lastId) || 0;
 
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-    console.log(userId);
 
-    console.log('서비스 진입');
     const recruits: any = await this.recruitPostService.ReadAllRecruits(
       userId,
       order,
@@ -88,7 +86,7 @@ export class RecruitPostController {
       stack,
       lastId,
     );
-    console.log('서비스 빠져나감');
+
     return recruits;
   }
 
@@ -106,13 +104,10 @@ export class RecruitPostController {
   ) {
     const { userId } = res.locals.user;
 
-    console.log('컨트롤러 진입', userId);
-
     const details: any = await this.recruitPostService.ReadSpecificRecruits(
       recruitPostId,
       userId,
     );
-    console.log('서비스 빠저나감');
 
     return details;
   }
