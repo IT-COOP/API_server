@@ -3,7 +3,7 @@ import { RecruitTasks } from '../entities/RecruitTasks';
 
 export class ResDetailPostDTO {
   public recruitPostId: number;
-  public author: string;
+  public nickname: string;
   public thumbImgUrl: string;
   public title: string;
   public recruitContent: string;
