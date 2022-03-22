@@ -155,7 +155,7 @@ export class RecruitPostService {
       const obj = new ResRecruitPostsDTO();
       obj.recruitPostId = item.recruitPostId;
       obj.title = item.title;
-      obj.author = item.author2.nickname;
+      obj.nickname = item.author2.nickname;
       obj.thumbImgUrl = item.thumbImgUrl;
       obj.recruitContent = item.recruitContent;
       obj.recruitLocation = item.recruitLocation;
@@ -180,15 +180,11 @@ export class RecruitPostService {
     console.log('디테일 서비스 도착');
     const recruitPost = await this.recruitPostsRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-        id: loginId,
-      })
+      .leftJoinAndSelect('P.recruitKeeps', 'K')
       .leftJoinAndSelect('P.user', 'U')
       .leftJoinAndSelect('P.recruitStacks', 'S')
       .leftJoinAndSelect('P.recruitTasks', 'T')
       .leftJoinAndSelect('P.recruitComments', 'C')
-      .leftJoin('C.user', 'U')
-      .addSelect(['U.nickname', 'U.activityPoint', 'U.userId'])
       .andWhere('P.recruitPostId = :id', { id: recruitPostId })
       .orderBy('C.recruitCommentId', 'DESC')
       .getOne();
