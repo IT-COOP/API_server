@@ -1,3 +1,5 @@
+import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
+import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { AuthModule } from './../auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -13,7 +15,14 @@ import { Users } from 'src/socialLogin/entity/Users';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forFeature([Notification, UserReputation, Users]),
+    TypeOrmModule.forFeature([
+      Notification,
+      UserReputation,
+      Users,
+      UserReputation,
+      RecruitKeeps,
+      RecruitPosts,
+    ]),
     AuthModule,
   ],
   controllers: [UserController],
