@@ -98,14 +98,6 @@ export class UserController {
   //
 
   //
-
-  //
-
-  //
-
-  //
-
-  //
   //  //내 프로필 가져오기
   //  @UseGuards(StrictGuard)
   //  @Get('/profile')
