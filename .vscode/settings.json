@@ -5,7 +5,8 @@
     "nestjs",
     "originalname",
     "typeorm",
-    "upsert"
+    "upsert",
+    "websockets"
   ],
   "files.eol": "\r\n"
 }

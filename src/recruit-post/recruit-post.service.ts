@@ -1,6 +1,8 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
+import { ResDetailPostDTO } from './dto/resDetailPost.dto';
+import { ResRecruitPostsDTO } from './dto/resRecruitPosts.dto';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
@@ -32,38 +34,99 @@ export class RecruitPostService {
     stack: number | null, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
     lastId: number | null, // 커서 기반 페이지네이션을 위함
   ) {
-    const id = lastId ? lastId : 21000000;
-    const cursorPost: RecruitPosts = await this.recruitPostsRepository
-      .createQueryBuilder('R')
-      .where('R.recruitPostId <= :id', { id })
-      .orderBy('R.recruitPostId', 'DESC')
-      .take(1)
-      .getMany()[0];
+    console.log(loginId, sort, items, location, task, stack, lastId);
 
-    //쿼리 빌더 시작
-    console.log('서비스 진입함');
-    const recruitQuery = this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-        id: loginId,
-      })
-      .leftJoin('P.recruitTasks', 'T')
-      .leftJoin('P.recruitStacks', 'S')
-      .addSelect([
-        'S.recruitStackId',
-        'S.recruitStack',
-        'S.numberOfPeopleRequired',
-        'S.numberOfPeopleSet',
-        'T.recruitTaskId',
-        'T.recruitTask',
-        'T.numberOfPeopleRequired',
-        'T.numberOfPeopleSet',
-      ]);
+    let cursorPost;
+    if (lastId) {
+      cursorPost = await this.connection
+        .getRepository(RecruitPosts)
+        .findOne(lastId);
+      console.log(cursorPost);
+      if (!cursorPost.recruitPostId) {
+        return; //잘못되있으면 커서아이디가  리턴
+      }
+    }
+    let recruitQuery;
+    if (!loginId) {
+      recruitQuery = this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoin('P.recruitKeeps', 'K')
+        .leftJoin('P.recruitTasks', 'T')
+        .leftJoin('P.recruitStacks', 'S')
+        .leftJoin('P.author2', 'U')
+        .select([
+          'P.recruitPostId',
+          'P.title',
+          'P.thumbImgUrl',
+          'P.recruitContent',
+          'P.recruitLocation',
+          'P.recruitKeepCount',
+          'P.recruitDurationDays',
+          'P.createdAt',
+        ])
+        .addSelect([
+          'K.userId',
+          'U.nickname',
+          'S.recruitStackId',
+          'S.recruitStack',
+          'S.numberOfPeopleRequired',
+          'S.numberOfPeopleSet',
+          'T.recruitTaskId',
+          'T.recruitTask',
+          'T.numberOfPeopleRequired',
+          'T.numberOfPeopleSet',
+        ])
+        .where('P.recruitPostId > 0');
+    } else {
+      recruitQuery = this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoin('P.recruitKeeps', 'K', 'K.userId = :id', {
+          id: loginId,
+        })
+        .leftJoin('P.recruitTasks', 'T')
+        .leftJoin('P.recruitStacks', 'S')
+        .leftJoin('P.user', 'U')
+        .select([
+          'P.recruitPostId',
+          'P.title',
+          'P.author',
+          'P.thumbImgUrl',
+          'P.recruitContent',
+          'P.recruitLocation',
+          'P.recruitKeepCount',
+          'P.recruitDurationDays',
+          'P.createdAt',
+        ])
+        .addSelect([
+          'K.userId',
+          'U.nickname',
+          'K.recruitPostId',
+          'S.recruitStackId',
+          'S.recruitStack',
+          'S.numberOfPeopleRequired',
+          'S.numberOfPeopleSet',
+          'T.recruitTaskId',
+          'T.recruitTask',
+          'T.numberOfPeopleRequired',
+          'T.numberOfPeopleSet',
+        ])
+        .where('P.recruitPostId > 0');
+    }
+    let paginationQuery = recruitQuery;
+    if (lastId && sort) {
+      const cursorKeepCount = cursorPost.recruitKeepCount;
+      paginationQuery = paginationQuery.andWhere(
+        'P.recruitKeepCount < :cursorKeepCount',
+        { cursorKeepCount },
+      );
+    }
+    if (lastId) {
+      paginationQuery = paginationQuery.andWhere('P.recruitPostId < :lastId', {
+        lastId,
+      });
+    }
 
-    console.log(123412341234);
-
-    // .where("P.recruitLocation IN (:..location)", { location: [locations] })
-    let filterQuery = recruitQuery;
+    let filterQuery = paginationQuery;
     if (location) {
       filterQuery = filterQuery.andWhere('P.recruitLocation = :location', {
         location,
@@ -71,55 +134,58 @@ export class RecruitPostService {
     }
     if (task) {
       filterQuery = filterQuery.andWhere('T.recruitTask = :task', { task });
+    } else if (stack) {
+      filterQuery = recruitQuery.andWhere('S.recruitStack = :stack', { stack });
     }
-    if (stack) {
-      filterQuery = filterQuery = recruitQuery.andWhere(
-        'S.recruitStack = :stack',
-        { stack },
-      );
-    }
-    console.log(456456789);
-
-    const cursorKeepCount = cursorPost.recruitKeepCount;
-    const cursorPostId = cursorPost.recruitPostId;
-    // 페이지네이션
-    let paginationQuery = filterQuery;
-    if (cursorPost && sort === 1) {
-      paginationQuery = paginationQuery.andWhere(
-        'P.recruitKeepCount <= :cursorKeepCount',
-        {
-          cursorKeepCount,
-        },
-      );
-    }
-    paginationQuery = paginationQuery.andWhere(
-      'P.recruitPostId <:cursorPostId',
-      { cursorPostId },
-    );
 
     // 0 최신순 1 keepIt 순
-    let sortQuery = paginationQuery;
-    if (sort === 0) {
-      sortQuery = paginationQuery.orderBy('P.recruitPostId', 'DESC');
-    } else if (sort === 1) {
+    let sortQuery = filterQuery;
+    if (!sort) {
+      sortQuery = sortQuery.orderBy('P.recruitPostId', 'DESC');
+    } else if (sort) {
       sortQuery = sortQuery
         .orderBy('P.recruitKeepCount', 'DESC')
         .addOrderBy('P.recruitPostId', 'DESC');
     }
-    console.log(987989598798213);
 
     const endQuery = await sortQuery.take(items).getMany();
+    console.log(endQuery);
 
-    console.log(1111111111111111);
-    return endQuery;
+    const recruits = endQuery.map((item: any) => {
+      const obj = new ResRecruitPostsDTO();
+      obj.recruitPostId = item.recruitPostId;
+      obj.title = item.title;
+      obj.author = item.author2.nickname;
+      obj.thumbImgUrl = item.thumbImgUrl;
+      obj.recruitContent = item.recruitContent;
+      obj.recruitLocation = item.recruitLocation;
+      obj.recruitKeepCount = item.recruitKeepCount;
+      obj.recruitDurationWeeks = item.recruitDurationDays / 7;
+      obj.createdAt = item.createdAt.toISOString();
+
+      obj.isKeeps = item.recruitKeeps.length ? true : false;
+
+      obj.recruitTasks = item.recruitTasks;
+      obj.recruitStacks = item.recruitStacks;
+
+      return obj;
+    });
+    console.log(recruits);
+
+    return recruits;
   }
 
   //마무리
-  async ReadSpecificRecruits(recruitPostId: number) {
-    console.log('디테일 서비스 도착');
+  async ReadSpecificRecruits(recruitPostId: number, loginId) {
     try {
+      console.log('디테일 서비스 도착');
+      
       const recruitPost = await this.recruitPostsRepository
         .createQueryBuilder('P')
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
+          id: loginId,
+        })
+        .leftJoinAndSelect('P.user', 'U')
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
@@ -128,6 +194,24 @@ export class RecruitPostService {
         .andWhere('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'DESC')
         .getOne();
+
+      console.log(recruitPost);
+
+      // const obj = new ResDetailPostDTO();
+      // obj.recruitPostId = recruitPost.recruitPostId;
+      // obj.title = recruitPost.title;
+      // obj.author = recruitPost.author2.nickname;
+      // obj.thumbImgUrl = recruitPost.thumbImgUrl;
+      // obj.recruitContent = recruitPost.recruitContent;
+      // obj.recruitLocation = recruitPost.recruitLocation;
+      // obj.recruitKeepCount = recruitPost.recruitKeepCount;
+      // obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+      // obj.createdAt = recruitPost.createdAt.toISOString();
+
+      // obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+
+      // obj.recruitTasks = recruitPost.recruitTasks;
+      // obj.recruitStacks = recruitPost.recruitStacks;
 
       return recruitPost;
     } catch {
@@ -299,13 +383,18 @@ export class RecruitPostService {
 
   //마무리
   async updateComment(commentId: number, comment: object) {
-    await this.recruitCommentsRepository.upsert(comment, ['commentId']);
+    await this.recruitCommentsRepository
+      .createQueryBuilder()
+      .update(RecruitComments)
+      .set(comment)
+      .select('RecruitComments.')
+      .execute();
   }
 
   async deleteRecruitPost(postId: number) {
-    await this.recruitAppliesRepository.delete(postId);
+    await this.recruitPostsRepository.delete(postId);
   }
-  //로직 변경 논의
+
   //마무리
   async deleteComment(recruitPostId: number, commentId: number) {
     /*
@@ -323,13 +412,11 @@ export class RecruitPostService {
         throw new HttpException('지울 데이터가 없어요', 400);
       }
 
-      await this.recruitCommentsRepository.delete(returnedComments);
-
       const queryRunner = this.connection.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
       try {
-        if (returnedComments) {
+        if (returnedComments.recruitCommentId) {
           await queryRunner.manager
             .getRepository(RecruitComments)
             .createQueryBuilder()
@@ -341,7 +428,7 @@ export class RecruitPostService {
             .getRepository(RecruitPosts)
             .createQueryBuilder()
             .update()
-            .set({ recruitKeepCount: () => 'recruitKeepCount - 1' })
+            .set({ recruitCommentCount: () => 'recruitCommentCount - 1' })
             .where('P.recruitPostId = :recruitPostId', { recruitPostId })
             .execute();
 
