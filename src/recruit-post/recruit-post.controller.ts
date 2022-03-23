@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   Param,
   ParseIntPipe,
   Post,
@@ -18,13 +17,14 @@ import {
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RecruitApplyDTO } from './dto/apply.dto';
 import { RecruitCommentDTO } from './dto/recruitComment.dto';
-import { recruitPostDTO } from './dto/recruitPost.dto';
+import { RecruitPostDTO } from './dto/recruitPost.dto';
 import { RecruitApplies } from './entities/RecruitApplies';
 import { RecruitComments } from './entities/RecruitComments';
 import { RecruitKeeps } from './entities/RecruitKeeps';
 import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitPostService } from './recruit-post.service';
 import { Response } from 'express';
+import { UpdateDetailPostsDTO } from './dto/updateRecruitPost.dto';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
@@ -56,9 +56,9 @@ export class RecruitPostController {
     required: false,
     description: 'lastId',
   })
-  @UseGuards(LooseGuard)
   @Get('')
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
+  @UseGuards(LooseGuard)
   async getAllRecruits(
     @Query('sort') order: any,
     @Query('items') items: any,
@@ -76,22 +76,18 @@ export class RecruitPostController {
     lastId = parseInt(lastId) || 0;
 
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-    console.log(userId);
-    try {
-      const recruits: any = await this.recruitPostService.ReadAllRecruits(
-        userId,
-        order,
-        items,
-        location,
-        task,
-        stack,
-        lastId,
-      );
-      console.log(recruits);
-      return recruits;
-    } catch (e) {
-      return new HttpException('db불러오기 실패', 500);
-    }
+
+    const recruits: any = await this.recruitPostService.ReadAllRecruits(
+      userId,
+      order,
+      items,
+      location,
+      task,
+      stack,
+      lastId,
+    );
+
+    return recruits;
   }
 
   @ApiParam({
@@ -99,36 +95,29 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물',
   })
-  @UseGuards(LooseGuard)
   @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
+  @UseGuards(LooseGuard)
   async getDetailRecruit(
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
     const { userId } = res.locals.user;
 
-    try {
-      const details: any = await this.recruitPostService.ReadSpecificRecruits(
-        recruitPostId,
-        userId,
-      );
-      details.recruitDurationWeeks = details.recruitDurationDays / 7;
-      return details;
-    } catch {}
+    const details: any = await this.recruitPostService.ReadSpecificRecruits(
+      recruitPostId,
+      userId,
+    );
+
+    return details;
   }
 
-  @ApiParam({
-    name: 'recruitPostId',
-    required: true,
-    description: '상세 협업 게시물 아이디',
-  })
   @UseGuards(StrictGuard)
   @Post()
   @ApiOperation({ summary: '협업 게시물 쓰기' })
   async postRecruit(
     @Res({ passthrough: true }) res: Response,
-    @Body(ValidationPipe) body: recruitPostDTO,
+    @Body(ValidationPipe) body: RecruitPostDTO,
   ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
@@ -167,7 +156,7 @@ export class RecruitPostController {
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res({ passthrough: true }) res: Response,
-    @Body(ValidationPipe) body: recruitPostDTO,
+    @Body(ValidationPipe) body: UpdateDetailPostsDTO,
   ) {
     const { userId } = res.locals.user;
     const recruitPost = new RecruitPosts();
@@ -182,6 +171,7 @@ export class RecruitPostController {
     const recruitTasks = body.recruitTasks;
 
     this.recruitPostService.updateRecruitPost(
+      recruitPostId,
       recruitPost,
       recruitStacks,
       recruitTasks,
@@ -299,6 +289,20 @@ export class RecruitPostController {
     required: true,
     description: '포스트 아이디',
   })
+  @Delete('/:recruitPostId')
+  async removeRecruitPost(
+    @Param('recruitPostId', ParseIntPipe) postId: number,
+  ) {
+    await this.recruitPostService.deleteRecruitPost(postId);
+
+    return { success: true };
+  }
+
+  @ApiParam({
+    name: 'recruitPostId',
+    required: true,
+    description: '포스트 아이디',
+  })
   @ApiParam({
     name: 'recruitCommentId',
     required: true,
@@ -330,10 +334,7 @@ export class RecruitPostController {
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
-    @Res({ passthrough: true }) res: Response,
   ) {
-    const { userId } = res.locals.user;
-    userId;
     this.recruitPostService.deleteApply(postId, applyId);
 
     return { success: true };
@@ -355,9 +356,7 @@ export class RecruitPostController {
   async removeKeepIt(
     @Param('recruitKeepId', ParseIntPipe) keepId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
-    @Res({ passthrough: true }) res: Response,
   ) {
-    const { userId } = res.locals.user;
     this.recruitPostService.deleteKeepIt(postId, keepId);
 
     return { success: true };

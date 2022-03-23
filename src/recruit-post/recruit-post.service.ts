@@ -29,13 +29,11 @@ export class RecruitPostService {
     loginId: string, // 사용자가 좋아요 한 게시물을 위한
     sort: number, //정렬을 위한 0 = 최신순 정렬 , 1 = 킵잇 순 정렬
     items: number, // 받아올 게시물 갯수
-    location: number | null, // 장소 필터링
-    task: number | null, // 직군 필터링
-    stack: number | null, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
-    lastId: number | null, // 커서 기반 페이지네이션을 위함
+    location: number, // 장소 필터링
+    task: number, // 직군 필터링
+    stack: number, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
+    lastId: number, // 커서 기반 페이지네이션을 위함
   ) {
-    console.log(loginId, sort, items, location, task, stack, lastId);
-
     let cursorPost;
     if (lastId) {
       cursorPost = await this.connection
@@ -43,7 +41,7 @@ export class RecruitPostService {
         .findOne(lastId);
       console.log(cursorPost);
       if (!cursorPost.recruitPostId) {
-        return; //잘못되있으면 커서아이디가  리턴
+        throw new HttpException('잘못된 접근입니다', 400); //잘못되있으면 커서아이디가  리턴
       }
     }
     let recruitQuery;
@@ -80,16 +78,13 @@ export class RecruitPostService {
     } else {
       recruitQuery = this.recruitPostsRepository
         .createQueryBuilder('P')
-        .leftJoin('P.recruitKeeps', 'K', 'K.userId = :id', {
-          id: loginId,
-        })
+        .leftJoin('P.recruitKeeps', 'K', 'P.author = :id', { id: loginId })
         .leftJoin('P.recruitTasks', 'T')
         .leftJoin('P.recruitStacks', 'S')
-        .leftJoin('P.user', 'U')
+        .leftJoin('P.author2', 'U')
         .select([
           'P.recruitPostId',
           'P.title',
-          'P.author',
           'P.thumbImgUrl',
           'P.recruitContent',
           'P.recruitLocation',
@@ -100,7 +95,6 @@ export class RecruitPostService {
         .addSelect([
           'K.userId',
           'U.nickname',
-          'K.recruitPostId',
           'S.recruitStackId',
           'S.recruitStack',
           'S.numberOfPeopleRequired',
@@ -112,6 +106,7 @@ export class RecruitPostService {
         ])
         .where('P.recruitPostId > 0');
     }
+
     let paginationQuery = recruitQuery;
     if (lastId && sort) {
       const cursorKeepCount = cursorPost.recruitKeepCount;
@@ -149,9 +144,8 @@ export class RecruitPostService {
     }
 
     const endQuery = await sortQuery.take(items).getMany();
-    console.log(endQuery);
 
-    const recruits = endQuery.map((item: any) => {
+    const recruits = await endQuery.map((item: any) => {
       const obj = new ResRecruitPostsDTO();
       obj.recruitPostId = item.recruitPostId;
       obj.title = item.title;
@@ -170,44 +164,52 @@ export class RecruitPostService {
 
       return obj;
     });
-    console.log(recruits);
 
     return recruits;
   }
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number, loginId) {
-    console.log('디테일 서비스 도착');
-    const recruitPost = await this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitKeeps', 'K')
-      .leftJoinAndSelect('P.user', 'U')
-      .leftJoinAndSelect('P.recruitStacks', 'S')
-      .leftJoinAndSelect('P.recruitTasks', 'T')
-      .leftJoinAndSelect('P.recruitComments', 'C')
-      .andWhere('P.recruitPostId = :id', { id: recruitPostId })
-      .orderBy('C.recruitCommentId', 'DESC')
-      .getOne();
+    const [recruitPost] = await Promise.all([
+      this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
+          loginId,
+        })
+        .leftJoinAndSelect('P.recruitStacks', 'S')
+        .leftJoinAndSelect('P.recruitTasks', 'T')
+        .leftJoinAndSelect('P.recruitComments', 'C')
+        .leftJoin('P.author2', 'U')
+        .addSelect('U.nickname')
+        .where('P.recruitPostId = :id', { id: recruitPostId })
+        .orderBy('C.recruitCommentId', 'ASC')
+        .getOne(),
+      await this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .update()
+        .set({ viewCount: () => 'viewCount + 1' })
+        .where('recruitPostId = :id', { id: recruitPostId })
+        .execute(),
+    ]);
 
-    console.log(recruitPost);
+    const obj = new ResDetailPostDTO();
+    obj.recruitPostId = recruitPost.recruitPostId;
+    obj.title = recruitPost.title;
+    obj.nickname = recruitPost.author2.nickname;
+    obj.thumbImgUrl = recruitPost.thumbImgUrl;
+    obj.recruitContent = recruitPost.recruitContent;
+    obj.recruitLocation = recruitPost.recruitLocation;
+    obj.recruitKeepCount = recruitPost.recruitKeepCount;
+    obj.viewCount = recruitPost.viewCount;
+    obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+    obj.createdAt = recruitPost.createdAt.toISOString();
 
-    // const obj = new ResDetailPostDTO();
-    // obj.recruitPostId = recruitPost.recruitPostId;
-    // obj.title = recruitPost.title;
-    // obj.author = recruitPost.author2.nickname;
-    // obj.thumbImgUrl = recruitPost.thumbImgUrl;
-    // obj.recruitContent = recruitPost.recruitContent;
-    // obj.recruitLocation = recruitPost.recruitLocation;
-    // obj.recruitKeepCount = recruitPost.recruitKeepCount;
-    // obj.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
-    // obj.createdAt = recruitPost.createdAt.toISOString();
+    obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
 
-    // obj.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+    obj.recruitTasks = recruitPost.recruitTasks;
+    obj.recruitStacks = recruitPost.recruitStacks;
 
-    // obj.recruitTasks = recruitPost.recruitTasks;
-    // obj.recruitStacks = recruitPost.recruitStacks;
-
-    return recruitPost;
+    return obj;
   }
 
   //마무리
@@ -216,10 +218,6 @@ export class RecruitPostService {
     stacks: RecruitStacks[],
     tasks: RecruitTasks[],
   ) {
-    /*
-    1,  
-    2, 
-    */
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -283,18 +281,23 @@ export class RecruitPostService {
 
   //마무리
   async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      const returned = await this.recruitKeepsRepository.findOne(recruitPostId);
+      const returned = await queryRunner.manager
+        .getRepository(RecruitKeeps)
+        .findOne(keepIt);
       if (returned.recruitKeepId)
         throw new HttpException('이미 킵잇되있어용~', 400);
 
-      await this.recruitKeepsRepository
+      await queryRunner.manager
         .createQueryBuilder()
         .insert()
         .into(RecruitKeeps)
         .values(keepIt)
         .execute();
-      this.recruitPostsRepository
+      await queryRunner.manager
         .createQueryBuilder()
         .update('RecruitPosts')
         .set({ recruitKeepCount: () => 'recruitKeepCount + 1' })
@@ -305,30 +308,25 @@ export class RecruitPostService {
     }
   }
 
-  //마무리
+  //3개까지
   async createApply(recruitPostId: number, apply: RecruitApplies) {
-    try {
-      const returnedApply = await this.recruitAppliesRepository.findOne(
-        recruitPostId,
-      );
+    const returnedApply = await this.recruitAppliesRepository.findOne(apply);
 
-      if (returnedApply.recruitApplyId) {
-        throw new HttpException('이미 신청했어요', 400);
-      } else {
-        await this.recruitAppliesRepository
-          .createQueryBuilder('A')
-          .insert()
-          .into('A')
-          .values(apply)
-          .execute();
-      }
-    } catch (error) {
-      throw new HttpException('다시 시도해주세요', 500);
+    if (returnedApply.recruitApplyId) {
+      throw new HttpException('이미 신청했어요', 400);
+    } else {
+      await this.recruitAppliesRepository
+        .createQueryBuilder('A')
+        .insert()
+        .into('A')
+        .values(apply)
+        .execute();
     }
   }
 
   //아직
   async updateRecruitPost(
+    recruitPostId: string,
     recruitPost: RecruitPosts,
     recruitStacks: RecruitStacks[],
     recruitTasks: RecruitTasks[],

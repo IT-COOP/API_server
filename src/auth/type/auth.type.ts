@@ -7,7 +7,7 @@ export interface CheckUserIdInterface {
   isProfileSet: boolean;
 }
 
-export type JwtVerifyType = VerificationSucceeded | VerificationFailure;
+export type JwtVerifyInterFace = VerificationSucceeded | VerificationFailure;
 
 export interface VerificationSucceeded {
   userId: string;
