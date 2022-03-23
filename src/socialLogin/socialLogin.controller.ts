@@ -37,16 +37,8 @@ export class SocialLoginController {
   }
 
   @Get('validation')
-  userValidation(
-    @Headers('authorization') accessTokenBearer: string,
-    @Headers('refreshToken') refreshTokenBearer: string,
-    @Req() req,
-  ) {
-    console.log(req);
-    return this.socialLoginService.userValidation(
-      accessTokenBearer,
-      refreshTokenBearer,
-    );
+  userValidation(@Headers('authorization') accessTokenBearer: string) {
+    return this.socialLoginService.userValidation(accessTokenBearer);
   }
 
   @Post('completion')
@@ -61,14 +53,27 @@ export class SocialLoginController {
     );
   }
 
-  @Post('refresh')
-  refreshAccessToken(@Body('refreshToken') refreshTokenBearer: string) {
-    return this.socialLoginService.refreshAccessToken(refreshTokenBearer);
+  @Get('refresh')
+  refreshAccessToken(
+    @Headers('authorize') accessTokenBearer: string,
+    @Headers('refreshToken') refreshTokenBearer: string,
+  ) {
+    return this.socialLoginService.refreshAccessToken(
+      accessTokenBearer,
+      refreshTokenBearer,
+    );
   }
 
   @Get('duplicateCheck/nickname/:nickname')
   duplicationCheckByNickname(@Param('nickname') nickname: string) {
     return this.socialLoginService.duplicationCheckByNickname(nickname);
+  }
+
+  @Get('me')
+  getUserInfoWithAccessToken(@Headers('authorize') accessTokenBearer: string) {
+    return this.socialLoginService.getUserInfoWithAccessToken(
+      accessTokenBearer,
+    );
   }
 
   @Get('stacks')

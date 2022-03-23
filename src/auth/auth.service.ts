@@ -111,6 +111,12 @@ export class AuthService {
           AccessTokenErrorMessage.tokenMalformed,
           HttpStatus.FORBIDDEN,
         );
+      case InputJwtError.noJWT:
+        throw new HttpException(
+          AccessTokenErrorMessage.noJWT,
+          HttpStatus.BAD_REQUEST,
+        );
+
       default:
         return decrypted.userId;
     }
@@ -127,6 +133,11 @@ export class AuthService {
         throw new HttpException(
           RefreshTokenErrorMessage.tokenMalformed,
           HttpStatus.FORBIDDEN,
+        );
+      case InputJwtError.noJWT:
+        throw new HttpException(
+          RefreshTokenErrorMessage.noJWT,
+          HttpStatus.BAD_REQUEST,
         );
       default:
         return decrypted.userId;

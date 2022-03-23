@@ -99,7 +99,7 @@ export class UserController {
 
   // 유저 평가하기
   @UseGuards(StrictGuard)
-  @Post('rate/')
+  @Post('rate')
   async rateUser(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) rateUserDto: RateUserDto,
@@ -108,8 +108,27 @@ export class UserController {
     return this.userService.rateUser(userId, rateUserDto);
   }
 
-  //
+  // 다른 사람 진행 중인 프로젝트
+  @UseGuards(StrictGuard)
+  @Get('profile/:anotherUserId/running')
+  async getOthersRunningProject(
+    @Res({ passthrough: true }) res,
+    @Param('anotherUserId') anotherUserId: string,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getOthersRunningProject(userId, anotherUserId);
+  }
 
+  // 다른 사람 완료한 프로젝트
+  @UseGuards(StrictGuard)
+  @Get('profile/:anotherUserId/over')
+  async getOthersOverProject(
+    @Res({ passthrough: true }) res,
+    @Param('anotherUserId') anotherUserId: string,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getOthersOverProject(userId, anotherUserId);
+  }
   //
   //  //내 프로필 가져오기
   //  @UseGuards(StrictGuard)
