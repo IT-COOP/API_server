@@ -38,6 +38,7 @@ export class SocialLoginController {
 
   @Get('validation')
   userValidation(@Headers('authorization') accessTokenBearer: string) {
+    console.log(accessTokenBearer);
     return this.socialLoginService.userValidation(accessTokenBearer);
   }
 
@@ -55,7 +56,7 @@ export class SocialLoginController {
 
   @Get('refresh')
   refreshAccessToken(
-    @Headers('authorize') accessTokenBearer: string,
+    @Headers('authorization') accessTokenBearer: string,
     @Headers('refreshToken') refreshTokenBearer: string,
   ) {
     return this.socialLoginService.refreshAccessToken(
@@ -70,7 +71,9 @@ export class SocialLoginController {
   }
 
   @Get('me')
-  getUserInfoWithAccessToken(@Headers('authorize') accessTokenBearer: string) {
+  getUserInfoWithAccessToken(
+    @Headers('authorization') accessTokenBearer: string,
+  ) {
     return this.socialLoginService.getUserInfoWithAccessToken(
       accessTokenBearer,
     );

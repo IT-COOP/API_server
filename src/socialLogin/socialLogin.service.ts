@@ -404,7 +404,7 @@ export class SocialLoginService {
         userIdFromAccessToken,
       );
       return {
-        authorize: `Bearer ${accessToken}`,
+        authorization: `Bearer ${accessToken}`,
         expiresAt,
       };
     }
