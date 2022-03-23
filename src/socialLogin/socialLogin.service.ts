@@ -4,7 +4,12 @@ import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { Users } from './entity/Users';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
@@ -299,6 +304,10 @@ export class SocialLoginService {
     accessTokenBearer: string,
     body: CompleteFirstLoginDTO,
   ) {
+    const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
+    if (!regex.test(body.nickname)) {
+      throw new BadRequestException('Not Allowed Nickname Detected');
+    }
     const userQuery = this.userRepository.createQueryBuilder('user');
     if (typeof accessTokenBearer !== 'string') {
       throw new HttpException('Access Token Required', HttpStatus.FORBIDDEN);

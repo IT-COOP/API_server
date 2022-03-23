@@ -46,7 +46,7 @@ export class CompleteFirstLoginDTO {
   @ApiProperty({
     example: 'https://github.com/aaa22220304',
     description:
-      '문자열로 받아 바로 업로드됩니다. URL 형식이 요구됩니다. 없을 수 있습니다..',
+      '문자열로 받아 바로 업로드됩니다. URL 형식이 요구됩니다. 없을 수 있습니다.',
   })
   @IsOptional()
   @IsString()
