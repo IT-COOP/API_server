@@ -9,4 +9,21 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('notification')
+  getNotificationEnum() {
+    return this.appService.getNotificationEnum();
+  }
+  @Get('location')
+  getLocationEnum() {
+    return this.appService.getLocationEnum();
+  }
+  @Get('stack')
+  getStackEnum() {
+    return this.appService.getStackEnum();
+  }
+  @Get('task')
+  getTaskEnum() {
+    return this.appService.getTaskEnum();
+  }
 }

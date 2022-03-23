@@ -5,6 +5,7 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Put,
   Res,
   UseGuards,
@@ -12,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
+import { RateUserDto } from './dto/rateUser.dto';
 
 @Controller('user')
 export class UserController {
@@ -93,6 +95,17 @@ export class UserController {
   async getMyOverProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyOverProject(userId);
+  }
+
+  // 유저 평가하기
+  @UseGuards(StrictGuard)
+  @Post('rate/')
+  async rateUser(
+    @Res({ passthrough: true }) res,
+    @Body(ValidationPipe) rateUserDto: RateUserDto,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.rateUser(userId, rateUserDto);
   }
 
   //

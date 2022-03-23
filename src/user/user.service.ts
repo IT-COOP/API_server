@@ -13,6 +13,7 @@ import { Users } from 'src/socialLogin/entity/Users';
 import { Repository } from 'typeorm';
 import * as AWS from 'aws-sdk';
 import { UserReputation } from './entities/UserReputation';
+import { RateUserDto } from './dto/rateUser.dto';
 
 @Injectable()
 export class UserService {
@@ -177,190 +178,240 @@ export class UserService {
     return post;
   }
 
-  //  // async createUserProfile(
-  //  //   folder: string,
-  //  //   userId: string,
-  //  //   file: Express.Multer.File,
-  //  //   createUserProfileDto: CreateUserProfileDTO,
-  //  // ) {
-  //  //   // 사진을 s3에 넣는 로직.. 먼저 DB profileImg 컬럼에 변수 key값을 넣는다.
-  //  //   try {
-  //  //     const key = `${folder}/${Date.now()}_${path.basename(
-  //  //       file.originalname,
-  //  //     )}`.replace(/ /g, '');
-  //  //     if (key) {
-  //  //       await this.userRepository
-  //  //         .createQueryBuilder('user')
-  //  //         .update(Users)
-  //  //         .set({
-  //  //           nickname: createUserProfileDto.nickname,
-  //  //           portfolioUrl: createUserProfileDto.portfolioUrl,
-  //  //           profileImgUrl: key,
-  //  //           selfIntroduction: createUserProfileDto.selfIntroduction,
-  //  //           technologyStack: createUserProfileDto.technologyStack,
-  //  //         })
-  //  //         .where('userId=:userId', { userId })
-  //  //         .execute();
-  //  //       await this.awsS3
-  //  //         .putObject({
-  //  //           Bucket: this.S3_BUCKET_NAME,
-  //  //           Key: key,
-  //  //           Body: file.buffer,
-  //  //           ACL: 'public-read',
-  //  //           ContentType: file.mimetype,
-  //  //         })
-  //  //         .promise();
-  //  //     }
-  //  //   } catch (e) {
-  //  //     throw new BadRequestException(`File upload failed : ${e}`);
-  //  //   }
-  //  // }
-  //
-  //  // async upsertMyProfiles(profile: User, userId?: string) {
-  //  //   await this.userRepository.upsert(profile, userId);
-  //  // }
-  //
-  //  // async readLovePosts(userId: string) {
-  //  //   const getUser = await this.userRepository.createQueryBuilder('U');
-  //  //   const lovePosts = getUser.leftJoinAndSelect(
-  //  //     'U.informationLoves',
-  //  //     'informationLoves',
-  //  //   );
-  //
-  //  //   const totalLovePosts = [];
-  //
-  //  //   const informationPostIdOfLoves = getUser
-  //  //     .select(['informationLoves.informationPostId'])
-  //  //     .leftJoinAndSelect(
-  //  //       'informationLoves.informationPosts',
-  //  //       'informationPosts',
-  //  //     )
-  //  //     .where('user.userId=:userId', { userId })
-  //  //     .getRawMany();
-  //
-  //  //   for (const id in informationPostIdOfLoves) {
-  //  //     totalLovePosts.push(
-  //  //       lovePosts
-  //  //         .select(['informationPosts.title', 'informationPosts.createdAt'])
-  //  //         .where('informationPosts.informationPostId=:informationPostId', {
-  //  //           informationPostId: id,
-  //  //         }),
-  //  //     );
-  //  //   }
-  //  //   return totalLovePosts;
-  //  // }
-  //
-  //  //킵 포스트
-  //  async readKeepPosts(userId: string) {
-  //    console.log('킵 포스트 서비스 도착');
-  //    // 먼저 recruitKeeps 테이블의 recruitPostId를 뽑아낸다. 그리고 그 값들을 반복문을 통해 where문 조건값에 넣는다.
-  //    const readMyKeepPosts = await this.userRepository
-  //      .createQueryBuilder('U')
-  //      .leftJoinAndSelect('U.recruitKeeps', 'K')
-  //      .leftJoinAndSelect('K.recruitPosts', 'P')
-  //      .where('U.userId=:userId', { userId })
-  //      .getOne();
-  //
-  //    return readMyKeepPosts;
-  //  }
-  //
-  //  //프로필 + 내 점수
-  //  async readMyProfile(userId: string) {
-  //    console.log('내 프로필 서비스 도착');
-  //    const profile = await this.userRepository.find({
-  //      where: {
-  //        userId,
-  //      },
-  //  select: [
-  //    'userId',
-  //    'nickname',
-  //    'profileImgUrl',
-  //    'technologyStack',
-  //    'activityPoint',
-  //    'selfIntroduction',
-  //    'portfolioUrl',
-  //  ],
-  //      relations: ['userReputations2'],
-  //    });
-  //    let ave = 0;
-  //    for (const prop in profile[0].userReputations2) {
-  //      ave += +profile[0].userReputations2[prop].userReputationPoint;
-  //    }
-  //    ave /= profile[0].userReputations2.length;
-  //    return { profile: profile[0], userReputationPoint: ave };
-  //  }
-  //
-  //  // 결과 확인 해보자
-  //  async readMyRecruit(userId: string) {
-  //    console.log('내 협업 서비스 도착');
-  //    const myRecruitPosts = await this.userRepository
-  //      .createQueryBuilder('U')
-  //      .leftJoinAndSelect('U.recruitApplies', 'A', 'A.isAccepted = 1')
-  //      .leftJoinAndSelect('A.recruitPost', 'P')
-  //      .where('U.userId = :userId', { userId })
-  //      .getOne();
-  //
-  //    return myRecruitPosts;
-  //  }
-  //
-  //  //업데이트 프로필
-  //  async updateMyProfile(
-  //    userId: string,
-  //    updateUserProfileDTO: UpdateUserProfileDTO,
-  //  ) {
-  //    console.log('업데이트 프로필 서비스 도착');
-  //    const result = await this.userRepository
-  //      .createQueryBuilder('U')
-  //      .update()
-  //      .set(updateUserProfileDTO)
-  //      .where('U.userId = :userId', { userId })
-  //      .execute();
-  //
-  //    if (!result.affected) {
-  //      throw new BadRequestException('Profile Update Failure');
-  //    }
-  //    return { success: true };
-  //  }
-  //
-  //  // 다른놈 프로필 훔쳐보기
-  //  async getAnotherUserProfile(anotherUserId) {
-  //    console.log('다른 사람 프로필 서비스 도착');
-  //    console.log(anotherUserId);
-  //    // const profile = await this.userRepository
-  //    //   .createQueryBuilder('U')
-  //    //   .leftJoinAndSelect('U.userReputations2', 'RR')
-  //    //   .addSelect('AVG(RR.userReputationPoint)', 'AVG')
-  //    //   .addSelect([
-  //    //     'U.nickname',
-  //    //     'U.profileImgUrl',
-  //    //     'U.technologyStack',
-  //    //     'U.activityPoint',
-  //    //     'U.selfIntroduction',
-  //    //     'U.portfolioUrl',
-  //    //   ])
-  //    //   .where('U.userId = :anotherUserId', { anotherUserId })
-  //    //   .getRawOne();
-  //
-  //    const profile = await this.userRepository.find({
-  //      where: {
-  //        userId: anotherUserId,
-  //      },
-  //      select: [
-  //        'userId',
-  //        'nickname',
-  //        'profileImgUrl',
-  //        'technologyStack',
-  //        'activityPoint',
-  //        'selfIntroduction',
-  //        'portfolioUrl',
-  //      ],
-  //      relations: ['userReputations2'],
-  //    });
-  //    let ave = 0;
-  //    for (const prop in profile[0].userReputations2) {
-  //      ave += +profile[0].userReputations2[prop].userReputationPoint;
-  //    }
-  //    ave /= profile[0].userReputations2.length;
-  //    return { profile: profile[0], userReputationPoint: ave };
-  //  }
+  async rateUser(userId: string, rateUserDto: RateUserDto) {
+    const { point, receiver, recruitPostId } = rateUserDto;
+    const isRated = await this.userReputationRepository
+      .createQueryBuilder('R')
+      .where('R.userReputationSender = :receiver', { receiver })
+      .andWhere('R.recruitPostId = :', { recruitPostId })
+      .getOne();
+    if (isRated) {
+      throw new BadRequestException("You Can't Rate A User Twice");
+    }
+
+    const offset = new Date().getTimezoneOffset(); // -5400으로 만들어야 함 얘가 -3000이 있다고 쳐, 그럼 나는 5400을 만들어야 하니까 2400을 더 빼야해
+    const now = new Date(-offset - 5400);
+    const post = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
+      .where('P.endAt != P.createdAt')
+      .andWhere('P.endAt < :now', { now })
+      .andWhere('M.member = :userId', { userId })
+      .andWhere('P.recruitPostId')
+      .getOne();
+
+    if (!post) {
+      throw new BadRequestException("You Can't Rate The User");
+    }
+    let isOk = false;
+    for (const members of post.chatRooms.chatMembers) {
+      isOk = members.member === receiver || isOk;
+    }
+
+    if (isOk) {
+      const result = await this.userReputationRepository.save(
+        this.userReputationRepository.create({
+          userReputationSender: userId,
+          userReputationReceiver: receiver,
+          userReputationPoint: Boolean(point),
+          recruitPostId,
+        }),
+      );
+      return result;
+      // 여기 평가 반영
+    }
+
+    throw new BadRequestException("You Can't Rate The User");
+  }
 }
+//  // async createUserProfile(
+//  //   folder: string,
+//  //   userId: string,
+//  //   file: Express.Multer.File,
+//  //   createUserProfileDto: CreateUserProfileDTO,
+//  // ) {
+//  //   // 사진을 s3에 넣는 로직.. 먼저 DB profileImg 컬럼에 변수 key값을 넣는다.
+//  //   try {
+//  //     const key = `${folder}/${Date.now()}_${path.basename(
+//  //       file.originalname,
+//  //     )}`.replace(/ /g, '');
+//  //     if (key) {
+//  //       await this.userRepository
+//  //         .createQueryBuilder('user')
+//  //         .update(Users)
+//  //         .set({
+//  //           nickname: createUserProfileDto.nickname,
+//  //           portfolioUrl: createUserProfileDto.portfolioUrl,
+//  //           profileImgUrl: key,
+//  //           selfIntroduction: createUserProfileDto.selfIntroduction,
+//  //           technologyStack: createUserProfileDto.technologyStack,
+//  //         })
+//  //         .where('userId=:userId', { userId })
+//  //         .execute();
+//  //       await this.awsS3
+//  //         .putObject({
+//  //           Bucket: this.S3_BUCKET_NAME,
+//  //           Key: key,
+//  //           Body: file.buffer,
+//  //           ACL: 'public-read',
+//  //           ContentType: file.mimetype,
+//  //         })
+//  //         .promise();
+//  //     }
+//  //   } catch (e) {
+//  //     throw new BadRequestException(`File upload failed : ${e}`);
+//  //   }
+//  // }
+//
+//  // async upsertMyProfiles(profile: User, userId?: string) {
+//  //   await this.userRepository.upsert(profile, userId);
+//  // }
+//
+//  // async readLovePosts(userId: string) {
+//  //   const getUser = await this.userRepository.createQueryBuilder('U');
+//  //   const lovePosts = getUser.leftJoinAndSelect(
+//  //     'U.informationLoves',
+//  //     'informationLoves',
+//  //   );
+//
+//  //   const totalLovePosts = [];
+//
+//  //   const informationPostIdOfLoves = getUser
+//  //     .select(['informationLoves.informationPostId'])
+//  //     .leftJoinAndSelect(
+//  //       'informationLoves.informationPosts',
+//  //       'informationPosts',
+//  //     )
+//  //     .where('user.userId=:userId', { userId })
+//  //     .getRawMany();
+//
+//  //   for (const id in informationPostIdOfLoves) {
+//  //     totalLovePosts.push(
+//  //       lovePosts
+//  //         .select(['informationPosts.title', 'informationPosts.createdAt'])
+//  //         .where('informationPosts.informationPostId=:informationPostId', {
+//  //           informationPostId: id,
+//  //         }),
+//  //     );
+//  //   }
+//  //   return totalLovePosts;
+//  // }
+//
+//  //킵 포스트
+//  async readKeepPosts(userId: string) {
+//    console.log('킵 포스트 서비스 도착');
+//    // 먼저 recruitKeeps 테이블의 recruitPostId를 뽑아낸다. 그리고 그 값들을 반복문을 통해 where문 조건값에 넣는다.
+//    const readMyKeepPosts = await this.userRepository
+//      .createQueryBuilder('U')
+//      .leftJoinAndSelect('U.recruitKeeps', 'K')
+//      .leftJoinAndSelect('K.recruitPosts', 'P')
+//      .where('U.userId=:userId', { userId })
+//      .getOne();
+//
+//    return readMyKeepPosts;
+//  }
+//
+//  //프로필 + 내 점수
+//  async readMyProfile(userId: string) {
+//    console.log('내 프로필 서비스 도착');
+//    const profile = await this.userRepository.find({
+//      where: {
+//        userId,
+//      },
+//  select: [
+//    'userId',
+//    'nickname',
+//    'profileImgUrl',
+//    'technologyStack',
+//    'activityPoint',
+//    'selfIntroduction',
+//    'portfolioUrl',
+//  ],
+//      relations: ['userReputations2'],
+//    });
+//    let ave = 0;
+//    for (const prop in profile[0].userReputations2) {
+//      ave += +profile[0].userReputations2[prop].userReputationPoint;
+//    }
+//    ave /= profile[0].userReputations2.length;
+//    return { profile: profile[0], userReputationPoint: ave };
+//  }
+//
+//  // 결과 확인 해보자
+//  async readMyRecruit(userId: string) {
+//    console.log('내 협업 서비스 도착');
+//    const myRecruitPosts = await this.userRepository
+//      .createQueryBuilder('U')
+//      .leftJoinAndSelect('U.recruitApplies', 'A', 'A.isAccepted = 1')
+//      .leftJoinAndSelect('A.recruitPost', 'P')
+//      .where('U.userId = :userId', { userId })
+//      .getOne();
+//
+//    return myRecruitPosts;
+//  }
+//
+//  //업데이트 프로필
+//  async updateMyProfile(
+//    userId: string,
+//    updateUserProfileDTO: UpdateUserProfileDTO,
+//  ) {
+//    console.log('업데이트 프로필 서비스 도착');
+//    const result = await this.userRepository
+//      .createQueryBuilder('U')
+//      .update()
+//      .set(updateUserProfileDTO)
+//      .where('U.userId = :userId', { userId })
+//      .execute();
+//
+//    if (!result.affected) {
+//      throw new BadRequestException('Profile Update Failure');
+//    }
+//    return { success: true };
+//  }
+//
+//  // 다른놈 프로필 훔쳐보기
+//  async getAnotherUserProfile(anotherUserId) {
+//    console.log('다른 사람 프로필 서비스 도착');
+//    console.log(anotherUserId);
+//    // const profile = await this.userRepository
+//    //   .createQueryBuilder('U')
+//    //   .leftJoinAndSelect('U.userReputations2', 'RR')
+//    //   .addSelect('AVG(RR.userReputationPoint)', 'AVG')
+//    //   .addSelect([
+//    //     'U.nickname',
+//    //     'U.profileImgUrl',
+//    //     'U.technologyStack',
+//    //     'U.activityPoint',
+//    //     'U.selfIntroduction',
+//    //     'U.portfolioUrl',
+//    //   ])
+//    //   .where('U.userId = :anotherUserId', { anotherUserId })
+//    //   .getRawOne();
+//
+//    const profile = await this.userRepository.find({
+//      where: {
+//        userId: anotherUserId,
+//      },
+//      select: [
+//        'userId',
+//        'nickname',
+//        'profileImgUrl',
+//        'technologyStack',
+//        'activityPoint',
+//        'selfIntroduction',
+//        'portfolioUrl',
+//      ],
+//      relations: ['userReputations2'],
+//    });
+//    let ave = 0;
+//    for (const prop in profile[0].userReputations2) {
+//      ave += +profile[0].userReputations2[prop].userReputationPoint;
+//    }
+//    ave /= profile[0].userReputations2.length;
+//    return { profile: profile[0], userReputationPoint: ave };
+//  }
