@@ -21,6 +21,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Repository } from 'typeorm';
 import { CreateNotificationDto } from './dto/createNotification.dto';
+import { EventType } from './enum/eventType.enum';
 
 /**
  * 목표 골조 : 최초에 모집이 완료되었을 때, 채팅방을 생성해준다.
@@ -269,7 +270,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         notificationId: 'DESC',
       },
     });
-    return notifications;
+    return { notifications, EventType };
   }
 
   @SubscribeMessage('notificationToServer') // 누군가가 뭔 짓을 하면 프론트에서 이런 이벤트를 emit시키라고 요구할 겁니다. << 이게 좀 아닌 것 같음..
