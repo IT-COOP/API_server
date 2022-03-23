@@ -38,7 +38,10 @@ export class SocialLoginController {
 
   @Get('validation')
   userValidation(@Headers('authorization') accessTokenBearer: string) {
-    console.log(accessTokenBearer);
+    console.log(
+      accessTokenBearer,
+      '--------------------------------------------------------',
+    );
     return this.socialLoginService.userValidation(accessTokenBearer);
   }
 
