@@ -244,6 +244,9 @@ export class SocialLoginService {
   // 클라이언트와 시작
   async userValidation(accessTokenBearer: string) {
     // access Token 혹은 refresh Token이 넘어온다.
+    if (!accessTokenBearer) {
+      throw new BadRequestException('Token Needed');
+    }
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
     const payload = {
@@ -294,6 +297,9 @@ export class SocialLoginService {
     const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
     if (!regex.test(completeFirstLoginDTO.nickname)) {
       throw new BadRequestException('Not Allowed Nickname Detected');
+    }
+    if (!accessTokenBearer) {
+      throw new BadRequestException('Token Needed');
     }
     const userQuery = this.userRepository.createQueryBuilder('user');
     const accessToken = accessTokenBearer.split(' ')[1];
@@ -413,7 +419,7 @@ export class SocialLoginService {
 
   async getUserInfoWithAccessToken(accessTokenBearer) {
     if (!accessTokenBearer) {
-      throw new BadRequestException('Need Access Token');
+      throw new BadRequestException('Token Needed');
     }
     const decrypted = this.authService.jwtVerification(
       accessTokenBearer.split(' ')[1],
