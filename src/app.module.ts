@@ -67,6 +67,7 @@ import { ImageModule } from './image/image.module';
             Chats,
           ],
           logging: true,
+          synchronize: true,
         };
       },
     }),
