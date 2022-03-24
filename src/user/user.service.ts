@@ -103,8 +103,6 @@ export class UserService {
 
   // 진행 중인 프로젝트
   async getMyRunningProject(userId: string) {
-    const offset = new Date().getTimezoneOffset();
-    const now = new Date(-offset - 540);
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
@@ -113,7 +111,7 @@ export class UserService {
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
-      .andWhere('P.endAt > :now', { now })
+      .andWhere('P.endAt > :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .getMany();
     return { posts };
@@ -152,9 +150,6 @@ export class UserService {
 
   // 진행 완료한 프로젝트
   async getMyOverProject(userId: string) {
-    const offset = new Date().getTimezoneOffset();
-    const now = new Date(-offset - 540);
-
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
@@ -164,7 +159,7 @@ export class UserService {
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
       .where('P.endAt != P.createdAt')
-      .andWhere('P.endAt < :now', { now })
+      .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .getMany();
     return { posts };
@@ -181,8 +176,6 @@ export class UserService {
       throw new BadRequestException("You Can't Rate A User Twice");
     }
 
-    const offset = new Date().getTimezoneOffset();
-    const now = new Date(-offset - 5400);
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
@@ -190,7 +183,7 @@ export class UserService {
       .leftJoin('P.User', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
-      .andWhere('P.endAt < :now', { now })
+      .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .andWhere('P.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
@@ -221,15 +214,13 @@ export class UserService {
 
   // 다른 사람 진행 중인 프로젝트
   async getOthersRunningProject(userId: string, anotherUserId: string) {
-    const offset = new Date().getTimezoneOffset();
-    const now = new Date(-offset - 540);
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.User', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .andWhere('P.endAt > :now', { now })
+      .andWhere('P.endAt > :now', { now: new Date() })
       .andWhere('M.member = :anotherUserId', { anotherUserId })
       .getMany();
 
@@ -238,8 +229,6 @@ export class UserService {
 
   // 다른 사람 완료한 프로젝트
   async getOthersOverProject(userId: string, anotherUserId: string) {
-    const offset = new Date().getTimezoneOffset();
-    const now = new Date(-offset - 540);
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
@@ -247,7 +236,7 @@ export class UserService {
       .leftJoin('P.User', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
-      .andWhere('P.endAt < :now', { now })
+      .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :anotherUserId', { anotherUserId })
       .getMany();
     return { posts };
