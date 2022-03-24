@@ -8,12 +8,10 @@ import {
   Param,
   Post,
   Query,
-  Req,
   Res,
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { Stacks, Tasks } from 'src/common/enums';
 
 @Controller('login')
 export class SocialLoginController {
@@ -77,15 +75,5 @@ export class SocialLoginController {
     return this.socialLoginService.getUserInfoWithAccessToken(
       accessTokenBearer,
     );
-  }
-
-  @Get('stacks')
-  stacksEnum() {
-    return Stacks;
-  }
-
-  @Get('tasks')
-  tasksEnum() {
-    return Tasks;
   }
 }

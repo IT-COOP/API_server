@@ -423,6 +423,8 @@ export class SocialLoginService {
       .getOne();
     if (!user) {
       throw new BadRequestException('There Is No Such User');
+    } else if (!user.nickname) {
+      throw new UnauthorizedException('Must Finish Tutorial First');
     }
     return { userInfo: user };
   }
