@@ -258,8 +258,6 @@ export class SocialLoginService {
       .where('userId = :userId', { userId: payload.sub })
       .select(requiredColumns)
       .getOne();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const novelAccessToken = this.authService.createAccessTokenWithUserId(
       payload.sub,
     );
@@ -271,9 +269,8 @@ export class SocialLoginService {
         success: true,
         data: {
           userInfo: targetUser,
-          authorization: `Bearer ${novelAccessToken}`,
-          expiresAt,
-          refreshToken: `Bearer ${refreshToken}`,
+          accessToken: novelAccessToken,
+          refreshToken: refreshToken,
         },
       };
     } else if (targetUser) {
@@ -281,8 +278,7 @@ export class SocialLoginService {
         success: true,
         data: {
           isProfileSet: false,
-          authorization: `Bearer ${novelAccessToken}`,
-          expiresAt,
+          accessToken: novelAccessToken,
         },
       };
     }
@@ -306,9 +302,6 @@ export class SocialLoginService {
     const decrypted = this.authService.jwtVerification(accessToken);
     const userId =
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     const novelAccessToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.ACCESS_TOKEN_DURATION,
     });
@@ -358,9 +351,9 @@ export class SocialLoginService {
 
     return {
       userInfo: userInfo,
-      authorization: `Bearer ${novelAccessToken}`,
-      expiresAt,
-      refreshToken: `Bearer ${refreshToken}`,
+      accessToken: novelAccessToken,
+
+      refreshToken: refreshToken,
     };
   }
 
@@ -404,14 +397,11 @@ export class SocialLoginService {
       refreshToken,
     );
     if (user) {
-      const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
       const accessToken = this.authService.createAccessTokenWithUserId(
         userIdFromAccessToken,
       );
       return {
-        authorization: `Bearer ${accessToken}`,
-        expiresAt,
+        accessToken: accessToken,
       };
     }
     throw new BadRequestException('Invalid Tokens Try Login Again');
