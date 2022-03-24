@@ -408,7 +408,7 @@ export class SocialLoginService {
   }
 
   async getUserInfoWithAccessToken(accessTokenBearer) {
-    if (!accessTokenBearer) {
+    if (!accessTokenBearer || !accessTokenBearer.split(' ')[1]) {
       throw new BadRequestException('Token Needed');
     }
     const decrypted = this.authService.jwtVerification(
