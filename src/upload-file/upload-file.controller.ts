@@ -21,6 +21,7 @@ const s3 = new AWS.S3({
 export class UploadFileController {
   constructor(private readonly uploadFileService: UploadFileService) {}
 
+  @UseGuards()
   @UseInterceptors(
     FileInterceptor('image', {
       storage: multerS3({
@@ -34,7 +35,40 @@ export class UploadFileController {
   )
   @Post('/recruit')
   async uploadRecruitImage(@UploadedFile() file: Express.MulterS3.File) {
+    return file.location;
+  }
 
+  @UseGuards()
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: multerS3({
+        s3: s3,
+        bucket: AWS_S3_BUCKET,
+        key: function (req, file, cb) {
+          cb(null, `original/${Date.now()}${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @Post('/recruit')
+  async uploadImage(@UploadedFile() file: Express.MulterS3.File) {
+    return file.location;
+  }
+
+  @UseGuards()
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: multerS3({
+        s3: s3,
+        bucket: AWS_S3_BUCKET,
+        key: function (req, file, cb) {
+          cb(null, `original/${Date.now()}${file.originalname}`);
+        },
+      }),
+    }),
+  )
+  @Post('/recruit')
+  async uploadProfileImage(@UploadedFile() file: Express.MulterS3.File) {
     return file.location;
   }
 }
