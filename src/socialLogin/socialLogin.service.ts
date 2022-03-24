@@ -421,7 +421,7 @@ export class SocialLoginService {
     const user = await this.userRepository
       .createQueryBuilder('users')
       .select(requiredColumns)
-      .where('U.userId = :userId', { userId })
+      .where('users.userId = :userId', { userId })
       .getOne();
     console.log(user);
     if (!user) {
