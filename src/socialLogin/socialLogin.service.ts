@@ -416,13 +416,14 @@ export class SocialLoginService {
     );
     const userId =
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-
+    console.log('dec', decrypted);
+    console.log('userId', userId);
     const user = this.userRepository
       .createQueryBuilder('users')
       .select(requiredColumns)
       .where('U.userId = :userId', { userId })
       .getOne();
-
+    console.log(user);
     if (!user) {
       throw new BadRequestException('There Is No Such User');
     }

@@ -73,6 +73,7 @@ export class SocialLoginController {
   getUserInfoWithAccessToken(
     @Headers('authorization') accessTokenBearer: string,
   ) {
+    console.log('acc', accessTokenBearer);
     return this.socialLoginService.getUserInfoWithAccessToken(
       accessTokenBearer,
     );
