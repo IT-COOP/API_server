@@ -266,8 +266,6 @@ export class SocialLoginService {
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
-      console.log('validation succeeded, 닉네임도 있음');
-      console.log(userInfo);
       return {
         success: true,
         data: {
@@ -277,8 +275,6 @@ export class SocialLoginService {
         },
       };
     } else if (targetUser) {
-      console.log('validation succeeded, 닉네임은 없음');
-      console.log(userInfo);
       return {
         success: true,
         data: {
@@ -287,7 +283,6 @@ export class SocialLoginService {
         },
       };
     }
-    console.log('validation 유저 찾기 실패!');
     throw new HttpException('There Is No Such User', HttpStatus.UNAUTHORIZED);
   }
 
@@ -421,19 +416,14 @@ export class SocialLoginService {
     );
     const userId =
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-    console.log('dec', decrypted);
-    console.log('userId', userId);
     const user = await this.userRepository
       .createQueryBuilder('users')
       .select(requiredColumns)
       .where('users.userId = :userId', { userId })
       .getOne();
-    console.log(user);
     if (!user) {
-      console.log('undefined user 유저가 없습니다.');
       throw new BadRequestException('There Is No Such User');
     }
-    console.log('got here 유저 정보 쾌척');
     return { userInfo: user };
   }
 
