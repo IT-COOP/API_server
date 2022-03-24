@@ -20,6 +20,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import { LoginType, AccessTokenErrorMessage } from './enum/enums';
 import { SHA3 } from 'sha3';
 import { v1 as uuid } from 'uuid';
+import { userInfo } from 'os';
 
 @Injectable()
 export class SocialLoginService {
@@ -265,6 +266,8 @@ export class SocialLoginService {
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
+      console.log('validation succeeded, 닉네임도 있음');
+      console.log(userInfo);
       return {
         success: true,
         data: {
@@ -274,6 +277,8 @@ export class SocialLoginService {
         },
       };
     } else if (targetUser) {
+      console.log('validation succeeded, 닉네임은 없음');
+      console.log(userInfo);
       return {
         success: true,
         data: {
@@ -282,6 +287,7 @@ export class SocialLoginService {
         },
       };
     }
+    console.log('validation 유저 찾기 실패!');
     throw new HttpException('There Is No Such User', HttpStatus.UNAUTHORIZED);
   }
 
@@ -352,7 +358,6 @@ export class SocialLoginService {
     return {
       userInfo: userInfo,
       accessToken: novelAccessToken,
-
       refreshToken: refreshToken,
     };
   }
@@ -425,9 +430,10 @@ export class SocialLoginService {
       .getOne();
     console.log(user);
     if (!user) {
+      console.log('undefined user 유저가 없습니다.');
       throw new BadRequestException('There Is No Such User');
     }
-    console.log('got here');
+    console.log('got here 유저 정보 쾌척');
     return { userInfo: user };
   }
 
