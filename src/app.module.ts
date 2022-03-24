@@ -15,7 +15,6 @@ import { UserModule } from './user/user.module';
 import { InformationComments } from './information-post/entities/InformationComments';
 import { InformationKeeps } from './information-post/entities/InformationKeeps';
 import { InformationLoves } from './information-post/entities/InformationLoves';
-import { InformationPostImages } from './information-post/entities/InformationPostImages';
 import { InformationPosts } from './information-post/entities/InformationPosts';
 import { RecruitApplies } from './recruit-post/entities/RecruitApplies';
 import { RecruitComments } from './recruit-post/entities/RecruitComments';
@@ -51,7 +50,6 @@ import { UploadFileModule } from './upload-file/upload-file.module';
             InformationComments,
             InformationKeeps,
             InformationLoves,
-            InformationPostImages,
             InformationPosts,
             RecruitApplies,
             RecruitComments,

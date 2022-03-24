@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -17,6 +18,7 @@ const s3 = new AWS.S3({
   region: process.env.AWS_S3_REGION,
 });
 
+@ApiTags('사진 업로드')
 @Controller('upload')
 export class UploadFileController {
   constructor(private readonly uploadFileService: UploadFileService) {}

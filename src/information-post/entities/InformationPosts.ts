@@ -10,7 +10,6 @@ import {
 import { InformationComments } from './InformationComments';
 import { InformationKeeps } from './InformationKeeps';
 import { InformationLoves } from './InformationLoves';
-import { InformationPostImages } from './InformationPostImages';
 import { Users } from '../../socialLogin/entity/Users';
 
 @Index('userId', ['author'], {})
@@ -31,6 +30,9 @@ export class InformationPosts {
 
   @Column('text', { name: 'informationContent' })
   informationContent: string;
+
+  @Column('varchar', { name: 'thumbImgUrl', nullable: true, length: 255 })
+  thumbImgUrl: string | null;
 
   @Column('int', {
     name: 'informationKeepCount',
@@ -87,12 +89,6 @@ export class InformationPosts {
     (informationLoves) => informationLoves.informationPost,
   )
   informationLoves: InformationLoves[];
-
-  @OneToMany(
-    () => InformationPostImages,
-    (informationPostImages) => informationPostImages.informationPost,
-  )
-  informationPostImages: InformationPostImages[];
 
   @ManyToOne(() => Users, (users) => users.informationPosts, {
     onDelete: 'CASCADE',
