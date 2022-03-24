@@ -26,7 +26,6 @@ export class UploadFileController {
     FileInterceptor('image', {
       storage: multerS3({
         s3: s3,
-        acl: 'public-read',
         bucket: AWS_S3_BUCKET,
         key: function (req, file, cb) {
           cb(null, `original/recruit/${Date.now()}${file.originalname}`);
