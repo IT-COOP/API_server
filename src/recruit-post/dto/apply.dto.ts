@@ -8,8 +8,8 @@ export class RecruitApplyDTO {
   public applyMessage: string;
 
   @ApiProperty({
-    example: '1',
-    description: '1번 댓글의 대댓글이면 댓글 그룹',
+    example: '200',
+    description: '직군에 대한 번호',
   })
   public task: number;
 }

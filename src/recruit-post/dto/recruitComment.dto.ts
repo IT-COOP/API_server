@@ -9,7 +9,7 @@ export class RecruitCommentDTO {
 
   @ApiProperty({
     example: 2,
-    description: '댓글 or 대댓글',
+    description: '댓글이면 0 대댓글이면 1',
   })
   public commentDepth: number;
 

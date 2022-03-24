@@ -1,40 +1,40 @@
-import { StrictGuard } from './../auth/auth.guard';
-import { Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { UploadFileService } from './upload-file.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as multerS3 from 'multer-s3';
+import * as AWS from 'aws-sdk';
+
+const AWS_S3_BUCKET = process.env.AWS_S3_BUCKET;
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
+  region: process.env.AWS_S3_REGION,
+});
 
 @Controller('upload')
 export class UploadFileController {
   constructor(private readonly uploadFileService: UploadFileService) {}
+
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: multerS3({
+        s3: s3,
+        bucket: AWS_S3_BUCKET,
+        key: function (req, file, cb) {
+          cb(null, `original/${Date.now()}${file.originalname}`);
+        },
+      }),
+    }),
+  )
   @Post('/recruit')
-  @UseGuards(StrictGuard)
-  async uploadRecruitImage(@Req() req, @Res() res) {
-    return await this.uploadFileService.uploadFile(
-      'recruit',
-      res.locals.user.userId,
-      req,
-      res,
-    );
-  }
+  async uploadRecruitImage(@UploadedFile() file: Express.MulterS3.File) {
 
-  @Post('/information')
-  @UseGuards(StrictGuard)
-  async uploadInformationImage(@Req() req, @Res() res) {
-    return await this.uploadFileService.uploadFile(
-      'information',
-      res.locals.user.userId,
-      req,
-      res,
-    );
-  }
-
-  @Post('/profile')
-  @UseGuards(StrictGuard)
-  async uploadProfileImage(@Req() req, @Res() res) {
-    return await this.uploadFileService.uploadFile(
-      'profile',
-      res.locals.user.userId,
-      req,
-      res,
-    );
+    return file.location;
   }
 }

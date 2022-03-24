@@ -50,7 +50,7 @@ export class UpdateDetailPostsDTO implements RecruitPostDTO {
   @ApiProperty({
     example: [
       {
-        recruitId: 1,
+        recruitTaskId: 1,
         recruitTask: 3,
         numberOfPeopleRequired: 3,
         numberOfPeopleSet: 0,
