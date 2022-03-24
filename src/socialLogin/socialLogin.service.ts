@@ -297,7 +297,7 @@ export class SocialLoginService {
     if (!accessTokenBearer) {
       throw new BadRequestException('Token Needed');
     }
-    const userQuery = this.userRepository.createQueryBuilder('user');
+    const userQuery = this.userRepository.createQueryBuilder('users');
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
     const userId =
