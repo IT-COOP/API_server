@@ -17,6 +17,10 @@ export class InformationPostController {
     private readonly informationPostService: InformationPostService,
   ) {}
 
+  // 글 전체 보기 - 최신순/좋아요순  //  필터(타입 4가지)
+  // 글 하나만 보기
+  // 글
+
   @Post()
   create(@Body() createInformationPostDto: CreateInformationPostDto) {
     return this.informationPostService.create(createInformationPostDto);

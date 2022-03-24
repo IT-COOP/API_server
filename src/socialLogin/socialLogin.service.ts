@@ -20,7 +20,6 @@ import { Repository, UpdateResult } from 'typeorm';
 import { LoginType, AccessTokenErrorMessage } from './enum/enums';
 import { SHA3 } from 'sha3';
 import { v1 as uuid } from 'uuid';
-import { userInfo } from 'os';
 
 @Injectable()
 export class SocialLoginService {

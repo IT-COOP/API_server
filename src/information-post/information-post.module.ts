@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InformationComments } from './entities/InformationComments';
 import { InformationKeeps } from './entities/InformationKeeps';
 import { InformationLoves } from './entities/InformationLoves';
-import { InformationPostImages } from './entities/InformationPostImages';
 import { InformationPosts } from './entities/InformationPosts';
 
 @Module({
@@ -14,7 +13,6 @@ import { InformationPosts } from './entities/InformationPosts';
       InformationComments,
       InformationKeeps,
       InformationLoves,
-      InformationPostImages,
       InformationPosts,
     ]),
   ],
