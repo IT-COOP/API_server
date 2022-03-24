@@ -61,6 +61,11 @@ export class RecruitPostController {
     required: false,
     description: 'lastId',
   })
+  @ApiQuery({
+    name: 'over',
+    required: false,
+    description: 'over',
+  })
   @Get('')
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
   @UseGuards(LooseGuard)
@@ -80,7 +85,7 @@ export class RecruitPostController {
     task = parseInt(task) || 0;
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
-
+    over = parseInt(over) || 0;
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
 
     const recruitPosts: RecruitPosts[] =
@@ -127,6 +132,7 @@ export class RecruitPostController {
   @UseGuards(LooseGuard)
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+    console.log(userId);
 
     const recruits: any = await this.recruitPostService.readRecruitCount(
       userId,

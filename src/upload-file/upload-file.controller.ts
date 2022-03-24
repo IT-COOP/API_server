@@ -26,9 +26,10 @@ export class UploadFileController {
     FileInterceptor('image', {
       storage: multerS3({
         s3: s3,
+        acl: 'public-read',
         bucket: AWS_S3_BUCKET,
         key: function (req, file, cb) {
-          cb(null, `original/${Date.now()}${file.originalname}`);
+          cb(null, `original/recruit/${Date.now()}${file.originalname}`);
         },
       }),
     }),
@@ -45,30 +46,13 @@ export class UploadFileController {
         s3: s3,
         bucket: AWS_S3_BUCKET,
         key: function (req, file, cb) {
-          cb(null, `original/${Date.now()}${file.originalname}`);
+          cb(null, `original/profile/${Date.now()}${file.originalname}`);
         },
       }),
     }),
   )
-  @Post('/recruit')
+  @Post('/profile')
   async uploadImage(@UploadedFile() file: Express.MulterS3.File) {
-    return file.location;
-  }
-
-  @UseGuards()
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: multerS3({
-        s3: s3,
-        bucket: AWS_S3_BUCKET,
-        key: function (req, file, cb) {
-          cb(null, `original/${Date.now()}${file.originalname}`);
-        },
-      }),
-    }),
-  )
-  @Post('/recruit')
-  async uploadProfileImage(@UploadedFile() file: Express.MulterS3.File) {
     return file.location;
   }
 }
