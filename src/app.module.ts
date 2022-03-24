@@ -28,7 +28,6 @@ import { UserReputation } from './user/entities/UserReputation';
 import { SocketModule } from './socket/socket.module';
 import { ChatModule } from './chat/chat.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
-import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -76,7 +75,6 @@ import { ImageModule } from './image/image.module';
     SocketModule,
     ChatModule,
     UploadFileModule,
-    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

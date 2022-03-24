@@ -20,6 +20,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import { LoginType, AccessTokenErrorMessage } from './enum/enums';
 import { SHA3 } from 'sha3';
 import { v1 as uuid } from 'uuid';
+import { userInfo } from 'os';
 
 @Injectable()
 export class SocialLoginService {
@@ -297,7 +298,7 @@ export class SocialLoginService {
     if (!accessTokenBearer) {
       throw new BadRequestException('Token Needed');
     }
-    const userQuery = this.userRepository.createQueryBuilder('user');
+    const userQuery = this.userRepository.createQueryBuilder('users');
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
     const userId =
@@ -352,7 +353,6 @@ export class SocialLoginService {
     return {
       userInfo: userInfo,
       accessToken: novelAccessToken,
-
       refreshToken: refreshToken,
     };
   }
@@ -408,7 +408,7 @@ export class SocialLoginService {
   }
 
   async getUserInfoWithAccessToken(accessTokenBearer) {
-    if (!accessTokenBearer) {
+    if (!accessTokenBearer || !accessTokenBearer.split(' ')[1]) {
       throw new BadRequestException('Token Needed');
     }
     const decrypted = this.authService.jwtVerification(
@@ -416,17 +416,16 @@ export class SocialLoginService {
     );
     const userId =
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-
-    const user = this.userRepository
-      .createQueryBuilder('user')
+    const user = await this.userRepository
+      .createQueryBuilder('users')
       .select(requiredColumns)
-      .where('U.userId = :userId', { userId })
+      .where('users.userId = :userId', { userId })
       .getOne();
-
     if (!user) {
       throw new BadRequestException('There Is No Such User');
+    } else if (!user.nickname) {
+      throw new UnauthorizedException('Must Finish Tutorial First');
     }
-
     return { userInfo: user };
   }
 
