@@ -7,13 +7,7 @@ import { Injectable } from '@nestjs/common';
 export class AppService {
   getHello(): string {
     const now = new Date();
-    console.log(
-      now.getMonth(),
-      now.getDate(),
-      now.getHours(),
-      now.getMinutes(),
-    );
-    return 'Hello World!';
+    return now.toLocaleString();
   }
 
   getNotificationEnum() {

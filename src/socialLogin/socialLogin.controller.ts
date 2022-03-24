@@ -12,7 +12,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('소셜 로그인')
 @Controller('login')
 export class SocialLoginController {
   constructor(private readonly socialLoginService: SocialLoginService) {}
