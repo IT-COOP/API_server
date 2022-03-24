@@ -418,7 +418,7 @@ export class SocialLoginService {
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
 
     const user = this.userRepository
-      .createQueryBuilder('user')
+      .createQueryBuilder('users')
       .select(requiredColumns)
       .where('U.userId = :userId', { userId })
       .getOne();
