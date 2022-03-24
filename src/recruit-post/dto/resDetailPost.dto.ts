@@ -1,3 +1,4 @@
+import { RecruitComments } from '../entities/RecruitComments';
 import { RecruitStacks } from '../entities/RecruitStacks';
 import { RecruitTasks } from '../entities/RecruitTasks';
 
@@ -15,6 +16,7 @@ export class ResDetailPostDTO {
   public endAt: string;
   public createdAt: string;
   public isKeeps: boolean;
+  public recruitComments: RecruitComments[];
   public recruitTasks: RecruitTasks[];
   public recruitStacks: RecruitStacks[];
 }

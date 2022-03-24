@@ -16,6 +16,8 @@ export class UploadFileService {
   });
 
   async uploadFile(path: string, userId: string, req: Request, res: Response) {
+    console.log(req);
+
     const upload = multer({
       storage: multerS3({
         s3: this.s3,
@@ -25,7 +27,7 @@ export class UploadFileService {
           cb(null, `${userId}/${path}/${Date.now().toString()}`);
         },
       }),
-    }).array('photo', 1);
+    }).single('upload');
 
     upload(req, res, (err) => {
       if (err) {
