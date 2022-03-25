@@ -42,7 +42,7 @@ export class StrictGuard implements CanActivate {
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
       return true;
-    } else if (!existUser.nickname) {
+    } else {
       throw new HttpException('No User Matches JWT', HttpStatus.FORBIDDEN);
     }
   }
@@ -55,7 +55,6 @@ export class LooseGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
-
     let userId: string;
     let existUser: Users | undefined;
     if (accessTokenBearer) {
@@ -80,7 +79,7 @@ export class LooseGuard implements CanActivate {
 
       return true;
     } else {
-      res.locals.user = '';
+      res.locals.user = { userId: null };
       return true;
     }
   }

@@ -79,6 +79,7 @@ export class RecruitPostController {
     @Query('over') over: any,
     @Res({ passthrough: true }) res: Response,
   ) {
+    console.log(res);
     order = parseInt(order) || 0;
     items = parseInt(items) || 12;
     location = parseInt(location) || 0;
@@ -86,7 +87,11 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
     over = parseInt(over) || 0;
+<<<<<<< HEAD
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+=======
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
+>>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
 
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
@@ -126,13 +131,19 @@ export class RecruitPostController {
     return recruits;
   }
 
-  @UseGuards(LooseGuard)
-  @Get('/check')
   @ApiOperation({ summary: '협업 게시물 체크' })
+<<<<<<< HEAD
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log(userId);
 
+=======
+  @UseGuards(LooseGuard)
+  @Get('/check')
+  async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
+    console.log(res);
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
+>>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
     if (!userId) {
       return;
     }
@@ -148,15 +159,26 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물',
   })
-  @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   @UseGuards(LooseGuard)
+  @Get('/:recruitPostId')
   async getDetailRecruit(
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
+<<<<<<< HEAD
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log('여기가 로그', userId);
+=======
+    for (const each in res) {
+      console.log(
+        '-------------------------------------------------------------',
+      );
+      console.log(each);
+    }
+    console.log(res);
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
+>>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
 
     try {
       this.recruitPostService.readRecruitCount(userId);
@@ -434,8 +456,8 @@ export class RecruitPostController {
     required: true,
     description: '킵잇 아이디',
   })
-  @UseGuards(StrictGuard)
   @ApiOperation({ summary: '협업 keep취소하기' })
+  @UseGuards(StrictGuard)
   @Delete('/:recruitPostId/:recruitKeepId')
   async removeKeepIt(
     @Param('recruitKeepId', ParseIntPipe) keepId: number,
