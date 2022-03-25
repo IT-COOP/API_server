@@ -86,7 +86,7 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
     over = parseInt(over) || 0;
-    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+    const { userId } = res.locals.user ? res.locals.user : null;
 
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
