@@ -151,6 +151,7 @@ export class AuthService {
   } {
     const [req, res] = context.getArgs();
     const headers: string[] = req.rawHeaders;
+    console.log(headers);
     const indexOfAccessTokenBearer = headers.indexOf('authorize');
     const indexOfRefreshTokenBearer = headers.indexOf('refreshToken');
     const accessTokenBearer =

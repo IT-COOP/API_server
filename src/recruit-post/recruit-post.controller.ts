@@ -79,7 +79,6 @@ export class RecruitPostController {
     @Query('over') over: any,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log(res);
     order = parseInt(order) || 0;
     items = parseInt(items) || 12;
     location = parseInt(location) || 0;
@@ -131,7 +130,6 @@ export class RecruitPostController {
   @UseGuards(LooseGuard)
   @Get('/check')
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
-    console.log(res);
     const { userId } = res.locals && res.locals.user ? res.locals.user : null;
     if (!userId) {
       return;
