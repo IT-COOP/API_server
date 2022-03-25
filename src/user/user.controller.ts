@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
   Body,
@@ -15,6 +15,7 @@ import { UserService } from './user.service';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
 import { RateUserDto } from './dto/rateUser.dto';
 
+@ApiTags('마이페이지')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

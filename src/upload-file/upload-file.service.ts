@@ -33,7 +33,13 @@ export class UploadFileService {
       if (err) {
         throw new InternalServerErrorException(`${err}`);
       }
-      return res.status(201).send(req.files[0].location);
+      try {
+        return res.status(201).send(req.files[0].location);
+      } catch (err) {
+        throw new InternalServerErrorException(
+          `File Upload Failure err: ${err.name} description: ${err.message}`,
+        );
+      }
     });
   }
 }
