@@ -330,24 +330,23 @@ export class SocialLoginService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    let result: UpdateResult;
+    let result: Users;
     try {
-      result = await this.userRepository
-        .createQueryBuilder()
-        .update(Users)
-        .set(mySet)
-        .where('userId = :userId', { userId })
-        .andWhere('nickname = :nickname', { nickname: '' })
-        .execute();
+      result = await this.userRepository.save(
+        this.userRepository.create({
+          userId,
+          nickname: completeFirstLoginDTO.nickname,
+          profileImgUrl: completeFirstLoginDTO.profileImgUrl,
+          portfolioUrl: completeFirstLoginDTO.profileImgUrl,
+          technologyStack: completeFirstLoginDTO.technologyStack,
+        }),
+      );
     } catch (err) {
       console.log('업뎃 실패', err);
       throw new InternalServerErrorException('Please Try Again');
     }
     console.log('result', result);
-
-    if (result && result.affected === 0) {
-      throw new HttpException('Not Valid Request', HttpStatus.BAD_REQUEST);
-    }
+    console.log(result);
     const userInfo = await this.userRepository.findOne({
       where: {
         userId,
