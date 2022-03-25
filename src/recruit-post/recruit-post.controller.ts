@@ -147,9 +147,9 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물',
   })
+  @UseGuards(LooseGuard)
   @Get('/:recruitPostId')
   @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
-  @UseGuards(LooseGuard)
   async getDetailRecruit(
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
@@ -433,8 +433,8 @@ export class RecruitPostController {
     required: true,
     description: '킵잇 아이디',
   })
-  @UseGuards(StrictGuard)
   @ApiOperation({ summary: '협업 keep취소하기' })
+  @UseGuards(StrictGuard)
   @Delete('/:recruitPostId/:recruitKeepId')
   async removeKeepIt(
     @Param('recruitKeepId', ParseIntPipe) keepId: number,
