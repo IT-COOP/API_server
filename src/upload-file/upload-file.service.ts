@@ -24,7 +24,6 @@ export class UploadFileService {
         bucket: this.AWS_S3_BUCKET,
         acl: 'public-read',
         key: (request, file, cb) => {
-          console.log(request);
           cb(null, `${userId}/${path}/${Date.now().toString()}`);
         },
       }),
