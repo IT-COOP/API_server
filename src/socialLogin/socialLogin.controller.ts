@@ -74,11 +74,10 @@ export class SocialLoginController {
   }
 
   @Get('me')
-  @ApiOperation({ summary: '내 프로필 보기' })
+  @ApiOperation({ summary: '내 정보 가져가기' })
   getUserInfoWithAccessToken(
     @Headers('authorization') accessTokenBearer: string,
   ) {
-    console.log('me acc', accessTokenBearer);
     return this.socialLoginService.getUserInfoWithAccessToken(
       accessTokenBearer,
     );
