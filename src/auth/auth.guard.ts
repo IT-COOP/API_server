@@ -78,7 +78,8 @@ export class LooseGuard implements CanActivate {
       res.locals.user = existUser;
       return true;
     } else {
-      res.locals.user = { userId: '' };
+      res.locals.user = { userId: null };
+      console.log(res.locals.user);
       return true;
     }
   }
