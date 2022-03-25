@@ -126,7 +126,7 @@ export class RecruitPostController {
     return recruits;
   }
 
-  @UseGuards(StrictGuard)
+  @UseGuards(LooseGuard)
   @Get('/check')
   @ApiOperation({ summary: '협업 게시물 체크' })
   @UseGuards(LooseGuard)
