@@ -308,15 +308,11 @@ export class SocialLoginService {
     const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.REFRESH_TOKEN_DURATION,
     });
-    const mySet: any = {};
-    for (const each in completeFirstLoginDTO) {
-      mySet[each] = completeFirstLoginDTO[each];
-    }
-    mySet.refreshToken = refreshToken;
-
     const existUser = await userQuery
       .select(requiredColumns)
-      .where('users.nickname = :nickname', { nickname: mySet.nickname })
+      .where('users.nickname = :nickname', {
+        nickname: completeFirstLoginDTO.nickname,
+      })
       .getOne();
 
     if (existUser) {
@@ -325,22 +321,21 @@ export class SocialLoginService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    let result: UpdateResult;
     try {
-      result = await this.userRepository
-        .createQueryBuilder()
-        .select('users')
-        .update(Users)
-        .set(mySet)
-        .where('userId = :userId', { userId })
-        .andWhere('nickname = :nickname', { nickname: '' })
-        .execute();
+      await this.userRepository.update(
+        userId,
+        this.userRepository.create({
+          nickname: completeFirstLoginDTO.nickname,
+          profileImgUrl: completeFirstLoginDTO.profileImgUrl,
+          portfolioUrl: completeFirstLoginDTO.profileImgUrl,
+          technologyStack: completeFirstLoginDTO.technologyStack,
+          refreshToken,
+        }),
+      );
     } catch (err) {
-      throw new InternalServerErrorException('Please Try Again');
-    }
-
-    if (result && result.affected === 0) {
-      throw new HttpException('Not Valid Request', HttpStatus.BAD_REQUEST);
+      throw new InternalServerErrorException(
+        'Please Try Again' + ` error: ${err}, errorDescription: ${err.message}`,
+      );
     }
     const userInfo = await this.userRepository.findOne({
       where: {
@@ -348,7 +343,6 @@ export class SocialLoginService {
       },
       select: ['userId', 'nickname', 'profileImgUrl', 'portfolioUrl'],
     });
-
     return {
       userInfo: userInfo,
       accessToken: novelAccessToken,

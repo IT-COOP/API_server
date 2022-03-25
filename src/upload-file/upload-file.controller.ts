@@ -1,4 +1,4 @@
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -36,6 +36,7 @@ export class UploadFileController {
     }),
   )
   @Post('/recruit')
+  @ApiOperation({ summary: '협업 게시물 사진 업로드' })
   async uploadRecruitImage(@UploadedFile() file: Express.MulterS3.File) {
     return file.location;
   }
@@ -53,6 +54,7 @@ export class UploadFileController {
     }),
   )
   @Post('/profile')
+  @ApiOperation({ summary: '프로필 사진 업로드' })
   async uploadImage(@UploadedFile() file: Express.MulterS3.File) {
     console.log(file);
 

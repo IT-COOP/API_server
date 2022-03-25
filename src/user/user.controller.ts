@@ -1,4 +1,4 @@
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
   Body,
@@ -23,6 +23,7 @@ export class UserController {
   // 내 프로필 보기
   @UseGuards(StrictGuard)
   @Get('profile')
+  @ApiOperation({ summary: '내 프로필 보기' })
   async getMyProfile(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyProfile(userId);
@@ -31,6 +32,7 @@ export class UserController {
   // 다른 프로필 보기
   @UseGuards(StrictGuard)
   @Get('profile/:id')
+  @ApiOperation({ summary: '다른 사람 프로필 보기' })
   async getOthersProfile(
     @Param('id') id: string,
     @Res({ passthrough: true }) res,
@@ -42,6 +44,7 @@ export class UserController {
   // 내 프로필 수정하기
   @UseGuards(StrictGuard)
   @Put('profile')
+  @ApiOperation({ summary: '내 프로필 수정하기' })
   async putMyProfile(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) updateUserProfileDTO: UpdateUserProfileDTO,
@@ -53,6 +56,7 @@ export class UserController {
   // 내가 keep한 게시물
   @UseGuards(StrictGuard)
   @Get('mykeep')
+  @ApiOperation({ summary: '내가 keep한 게시물 보기' })
   async getMyKeeps(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyKeeps(userId);
@@ -61,6 +65,7 @@ export class UserController {
   // 내가 love한 게시물
   @UseGuards(StrictGuard)
   @Get('mylove')
+  @ApiOperation({ summary: '내가 love한 게시물 보기 - not implemented error' })
   async getMyLoves(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyLoves(userId);
@@ -69,6 +74,7 @@ export class UserController {
   // 진행 중인 프로젝트
   @UseGuards(StrictGuard)
   @Get('running')
+  @ApiOperation({ summary: '내가 진행 중인 프로젝트 보기' })
   async getMyRunningProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyRunningProject(userId);
@@ -77,6 +83,7 @@ export class UserController {
   // 신청 중인 프로젝트
   @UseGuards(StrictGuard)
   @Get('applied')
+  @ApiOperation({ summary: '내가 신청한 프로젝트 보기' })
   async getMyAppliedProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyAppliedProject(userId);
@@ -85,6 +92,7 @@ export class UserController {
   // 모집 중인 프로젝트 - 신청자 목록
   @UseGuards(StrictGuard)
   @Get('recruiting')
+  @ApiOperation({ summary: '내가 모집 중인 프로젝트 보기' })
   async getMyRecruitingProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyRecruitingProject(userId);
@@ -93,6 +101,7 @@ export class UserController {
   // 진행 완료한 프로젝트
   @UseGuards(StrictGuard)
   @Get('over')
+  @ApiOperation({ summary: '내가 진행 완료한 프로젝트 보기' })
   async getMyOverProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyOverProject(userId);
@@ -101,6 +110,7 @@ export class UserController {
   // 유저 평가하기
   @UseGuards(StrictGuard)
   @Post('rate')
+  @ApiOperation({ summary: '다른 유저 평가하기' })
   async rateUser(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) rateUserDto: RateUserDto,
@@ -112,6 +122,7 @@ export class UserController {
   // 다른 사람 진행 중인 프로젝트
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/running')
+  @ApiOperation({ summary: '다른 사람이 진행 중인 프로젝트 보기' })
   async getOthersRunningProject(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId: string,
@@ -123,6 +134,7 @@ export class UserController {
   // 다른 사람 완료한 프로젝트
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/over')
+  @ApiOperation({ summary: '다른 사람이 진행 완료한 프로젝트 보기' })
   async getOthersOverProject(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId: string,

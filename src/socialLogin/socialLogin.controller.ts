@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('소셜 로그인')
 @Controller('login')
@@ -37,12 +37,14 @@ export class SocialLoginController {
   }
 
   @Get('validation')
+  @ApiOperation({ summary: '프로필 작성 완료 여부 판독' })
   userValidation(@Headers('authorization') accessTokenBearer: string) {
     return this.socialLoginService.userValidation(accessTokenBearer);
   }
 
   @Post('completion')
-  firstLogin(
+  @ApiOperation({ summary: '최초 프로필 작성하기' })
+  completeFirstLogin(
     @Headers('authorization') accessTokenBearer: string,
     @Body(ValidationPipe) completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
@@ -54,6 +56,7 @@ export class SocialLoginController {
   }
 
   @Get('refresh')
+  @ApiOperation({ summary: '엑세스 토큰 갱신하기' })
   refreshAccessToken(
     @Headers('authorization') accessTokenBearer: string,
     @Headers('refreshToken') refreshTokenBearer: string,
@@ -65,11 +68,13 @@ export class SocialLoginController {
   }
 
   @Get('duplicateCheck/nickname/:nickname')
+  @ApiOperation({ summary: '내 프로필 보기' })
   duplicationCheckByNickname(@Param('nickname') nickname: string) {
     return this.socialLoginService.duplicationCheckByNickname(nickname);
   }
 
   @Get('me')
+  @ApiOperation({ summary: '내 프로필 보기' })
   getUserInfoWithAccessToken(
     @Headers('authorization') accessTokenBearer: string,
   ) {
