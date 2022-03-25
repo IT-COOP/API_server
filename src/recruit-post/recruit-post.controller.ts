@@ -192,7 +192,10 @@ export class RecruitPostController {
 
       return details;
     } catch (error) {
-      throw new HttpException({ message: 'server error' }, 500);
+      throw new HttpException(
+        { message: 'server error' + `${error.name + error.message}` },
+        500,
+      );
     }
   }
 
