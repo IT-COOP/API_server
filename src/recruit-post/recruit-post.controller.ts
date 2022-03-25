@@ -86,7 +86,7 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
     over = parseInt(over) || 0;
-    const { userId } = res.locals.user ? res.locals.user : null;
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
@@ -129,11 +129,8 @@ export class RecruitPostController {
   @UseGuards(LooseGuard)
   @Get('/check')
   @ApiOperation({ summary: '협업 게시물 체크' })
-  @UseGuards(LooseGuard)
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
-    const { userId } = res.locals.user ? res.locals.user : null;
-    console.log(userId);
-
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
     if (!userId) {
       return;
     }
@@ -155,7 +152,7 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    const { userId } = res.locals.user;
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 
     try {
       this.checkRecruitCount(userId);
