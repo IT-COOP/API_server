@@ -1,10 +1,11 @@
-import { RecruitComments } from '../entities/RecruitComments';
 import { RecruitStacks } from '../entities/RecruitStacks';
 import { RecruitTasks } from '../entities/RecruitTasks';
 
 export class ResDetailPostDTO {
   public recruitPostId: number;
+  public userId: string;
   public nickname: string;
+  public userProfileImgUrl: string;
   public thumbImgUrl: string;
   public title: string;
   public recruitContent: string;
@@ -16,7 +17,7 @@ export class ResDetailPostDTO {
   public endAt: string;
   public createdAt: string;
   public isKeeps: boolean;
-  public recruitComments: RecruitComments[];
+  public recruitComments: object[];
   public recruitTasks: RecruitTasks[];
   public recruitStacks: RecruitStacks[];
 }

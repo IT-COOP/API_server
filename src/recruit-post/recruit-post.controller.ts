@@ -167,6 +167,8 @@ export class RecruitPostController {
       const details: ResDetailPostDTO = new ResDetailPostDTO();
       details.recruitPostId = recruitPost.recruitPostId;
       details.title = recruitPost.title;
+      details.userId = recruitPost.author;
+      details.userProfileImgUrl = recruitPost.author2.profileImgUrl;
       details.nickname = recruitPost.author2.nickname;
       details.thumbImgUrl = recruitPost.thumbImgUrl;
       details.recruitContent = recruitPost.recruitContent;
