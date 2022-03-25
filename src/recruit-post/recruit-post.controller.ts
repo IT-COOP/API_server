@@ -154,13 +154,6 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    for (const each in res) {
-      console.log(
-        '-------------------------------------------------------------',
-      );
-      console.log(each);
-    }
-    console.log(res);
     const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 
     try {
