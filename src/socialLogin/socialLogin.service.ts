@@ -429,11 +429,15 @@ export class SocialLoginService {
   }
 
   async duplicationCheckByNickname(nickname: string) {
-    const result = await this.userRepository
-      .createQueryBuilder('users')
-      .select('users.nickname')
-      .where('nickname = :nickname', { nickname })
-      .getOne();
-    return !result;
+    const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
+    if (regex.test(nickname) && 1 < nickname.length && nickname.length < 9) {
+      const result = await this.userRepository
+        .createQueryBuilder('users')
+        .select('users.nickname')
+        .where('nickname = :nickname', { nickname })
+        .getOne();
+      return !result;
+    }
+    return false;
   }
 }
