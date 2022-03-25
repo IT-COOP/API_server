@@ -56,8 +56,7 @@ export class UploadFileController {
   @Post('/profile')
   @ApiOperation({ summary: '프로필 사진 업로드' })
   async uploadImage(@UploadedFile() file: Express.MulterS3.File) {
-    console.log(file);
 
-    return file;
+    return file.location;
   }
 }
