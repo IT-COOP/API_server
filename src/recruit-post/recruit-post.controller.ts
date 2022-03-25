@@ -129,7 +129,6 @@ export class RecruitPostController {
   @ApiOperation({ summary: '협업 게시물 체크' })
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-    console.log(userId);
 
     if (!userId) {
       return;
