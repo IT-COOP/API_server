@@ -334,13 +334,13 @@ export class SocialLoginService {
     try {
       result = await this.userRepository
         .createQueryBuilder()
-        .select('users')
         .update(Users)
         .set(mySet)
         .where('userId = :userId', { userId })
         .andWhere('nickname = :nickname', { nickname: '' })
         .execute();
     } catch (err) {
+      console.log('업뎃 실패', err);
       throw new InternalServerErrorException('Please Try Again');
     }
     console.log('result', result);
