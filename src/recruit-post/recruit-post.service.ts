@@ -115,7 +115,7 @@ export class RecruitPostService {
   }
 
   //마무리
-  async ReadSpecificRecruits(recruitPostId: number, loginId) {
+  async ReadSpecificRecruits(recruitPostId: number, loginId: string) {
     if (!loginId) {
       const [recruitPost] = await Promise.all([
         this.recruitPostsRepository
