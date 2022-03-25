@@ -131,15 +131,14 @@ export class RecruitPostController {
   @ApiOperation({ summary: '협업 게시물 체크' })
   @UseGuards(LooseGuard)
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
-    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+    const { userId } = res.locals.user ? res.locals.user : null;
     console.log(userId);
 
     if (!userId) {
       return;
     }
-    const recruits: any = await this.recruitPostService.readRecruitCount(
-      userId,
-    );
+    const recruits: RecruitPosts =
+      await this.recruitPostService.readRecruitCount(userId);
 
     return recruits;
   }
