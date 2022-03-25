@@ -134,6 +134,9 @@ export class RecruitPostController {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log(userId);
 
+    if (!userId) {
+      return;
+    }
     const recruits: any = await this.recruitPostService.readRecruitCount(
       userId,
     );
