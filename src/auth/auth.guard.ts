@@ -42,7 +42,7 @@ export class StrictGuard implements CanActivate {
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
       return true;
-    } else if (!existUser.nickname) {
+    } else {
       throw new HttpException('No User Matches JWT', HttpStatus.FORBIDDEN);
     }
   }
@@ -78,7 +78,7 @@ export class LooseGuard implements CanActivate {
       res.locals.user = existUser;
       return true;
     } else {
-      res.locals.user = '';
+      res.locals.user = { userId: '' };
       return true;
     }
   }
