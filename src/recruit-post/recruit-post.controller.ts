@@ -147,9 +147,9 @@ export class RecruitPostController {
     required: true,
     description: '상세 협업 게시물',
   })
+  @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   @UseGuards(LooseGuard)
   @Get('/:recruitPostId')
-  @ApiOperation({ summary: '협업 상세 게시물 불러오기' })
   async getDetailRecruit(
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
