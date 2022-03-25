@@ -127,9 +127,9 @@ export class RecruitPostController {
     return recruits;
   }
 
+  @ApiOperation({ summary: '협업 게시물 체크' })
   @UseGuards(LooseGuard)
   @Get('/check')
-  @ApiOperation({ summary: '협업 게시물 체크' })
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     console.log(res);
     const { userId } = res.locals && res.locals.user ? res.locals.user : null;
@@ -154,6 +154,12 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
+    for (const each in res) {
+      console.log(
+        '-------------------------------------------------------------',
+      );
+      console.log(each);
+    }
     console.log(res);
     const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 

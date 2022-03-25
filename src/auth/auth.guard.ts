@@ -55,7 +55,6 @@ export class LooseGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { res, accessTokenBearer, refreshTokenBearer } =
       this.authService.getTokensFromContext(context);
-    console.log('acc', accessTokenBearer, '\n', refreshTokenBearer);
     let userId: string;
     let existUser: Users | undefined;
     if (accessTokenBearer) {
@@ -79,7 +78,6 @@ export class LooseGuard implements CanActivate {
       return true;
     } else {
       res.locals.user = { userId: null };
-      console.log(res.locals.user);
       return true;
     }
   }
