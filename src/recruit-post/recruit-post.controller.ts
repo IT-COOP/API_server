@@ -87,11 +87,7 @@ export class RecruitPostController {
     stack = parseInt(stack) || 0;
     lastId = parseInt(lastId) || 0;
     over = parseInt(over) || 0;
-<<<<<<< HEAD
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-=======
-    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
->>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
 
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
@@ -132,18 +128,10 @@ export class RecruitPostController {
   }
 
   @ApiOperation({ summary: '협업 게시물 체크' })
-<<<<<<< HEAD
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log(userId);
 
-=======
-  @UseGuards(LooseGuard)
-  @Get('/check')
-  async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
-    console.log(res);
-    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
->>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
     if (!userId) {
       return;
     }
@@ -166,19 +154,8 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-<<<<<<< HEAD
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
     console.log('여기가 로그', userId);
-=======
-    for (const each in res) {
-      console.log(
-        '-------------------------------------------------------------',
-      );
-      console.log(each);
-    }
-    console.log(res);
-    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
->>>>>>> 1c8ca0906b708929d4e2bf4500b1466707d484e5
 
     try {
       this.recruitPostService.readRecruitCount(userId);
