@@ -292,14 +292,11 @@ export class SocialLoginService {
   ) {
     const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
     if (!regex.test(completeFirstLoginDTO.nickname)) {
-      console.log('regex 실험 실패');
       throw new BadRequestException('Not Allowed Nickname Detected');
     }
     if (!accessTokenBearer) {
-      console.log('엑세스 토큰 없성');
       throw new BadRequestException('Token Needed');
     }
-    console.log('정상 시작');
     const userQuery = this.userRepository.createQueryBuilder('users');
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
@@ -311,49 +308,41 @@ export class SocialLoginService {
     const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.REFRESH_TOKEN_DURATION,
     });
-    const mySet: any = {};
-    for (const each in completeFirstLoginDTO) {
-      mySet[each] = completeFirstLoginDTO[each];
-    }
-    mySet.refreshToken = refreshToken;
-    console.log('mySet 완성!');
-    console.log(mySet);
     const existUser = await userQuery
       .select(requiredColumns)
-      .where('users.nickname = :nickname', { nickname: mySet.nickname })
+      .where('users.nickname = :nickname', {
+        nickname: completeFirstLoginDTO.nickname,
+      })
       .getOne();
 
-    console.log('existUser', existUser);
     if (existUser) {
       throw new HttpException(
         'No Duplicated Nickname allowed',
         HttpStatus.BAD_REQUEST,
       );
     }
-    let result: Users;
     try {
-      result = await this.userRepository.save(
+      await this.userRepository.update(
+        userId,
         this.userRepository.create({
-          userId,
           nickname: completeFirstLoginDTO.nickname,
           profileImgUrl: completeFirstLoginDTO.profileImgUrl,
           portfolioUrl: completeFirstLoginDTO.profileImgUrl,
           technologyStack: completeFirstLoginDTO.technologyStack,
+          refreshToken,
         }),
       );
     } catch (err) {
-      console.log('업뎃 실패', err);
-      throw new InternalServerErrorException('Please Try Again');
+      throw new InternalServerErrorException(
+        'Please Try Again' + ` error: ${err}, errorDescription: ${err.message}`,
+      );
     }
-    console.log('result', result);
-    console.log(result);
     const userInfo = await this.userRepository.findOne({
       where: {
         userId,
       },
       select: ['userId', 'nickname', 'profileImgUrl', 'portfolioUrl'],
     });
-    console.log('userInfo', userInfo);
     return {
       userInfo: userInfo,
       accessToken: novelAccessToken,
