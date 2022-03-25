@@ -116,6 +116,30 @@ export class RecruitPostService {
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number, loginId) {
+    if (!loginId) {
+      const [recruitPost] = await Promise.all([
+        this.recruitPostsRepository
+          .createQueryBuilder('P')
+          .leftJoinAndSelect('P.recruitKeeps', 'K')
+          .leftJoinAndSelect('P.recruitStacks', 'S')
+          .leftJoinAndSelect('P.recruitTasks', 'T')
+          .leftJoinAndSelect('P.recruitComments', 'C')
+          .leftJoin('P.author2', 'U')
+          .addSelect('U.nickname')
+          .where('P.recruitPostId = :id', { id: recruitPostId })
+          .orderBy('C.recruitCommentId', 'ASC')
+          .getOne(),
+        await this.recruitPostsRepository
+          .createQueryBuilder('P')
+          .update()
+          .set({ viewCount: () => 'viewCount + 1' })
+          .where('recruitPostId = :id', { id: recruitPostId })
+          .execute(),
+      ]);
+
+      return recruitPost;
+    }
+
     const [recruitPost] = await Promise.all([
       this.recruitPostsRepository
         .createQueryBuilder('P')
@@ -223,7 +247,7 @@ export class RecruitPostService {
         .getRepository(RecruitKeeps)
         .findOne(keepIt);
       if (returned.recruitKeepId)
-        throw new HttpException('이미 킵잇되있어용~', 400);
+        throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
       await queryRunner.manager
         .createQueryBuilder()
         .insert()
@@ -259,14 +283,17 @@ export class RecruitPostService {
       .getRawOne();
 
     if (+returned.postCount)
-      throw new HttpException('게시물은 하나만 쓸 수 있어요', 400);
+      throw new HttpException({ message: '게시물은 하나만 쓸 수 있어요' }, 400);
     if (
       +returned.projectCount +
       returned.projectCount +
       returned.projectCount
     ) {
       console.log(typeof returned.projectCount);
-      throw new HttpException(' 프로젝트 참여는 3개까지 가능해요', 400);
+      throw new HttpException(
+        { message: '프로젝트 참여는 3개까지 가능해요' },
+        400,
+      );
     }
     return returned;
   }
