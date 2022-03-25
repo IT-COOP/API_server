@@ -154,8 +154,7 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-    console.log('여기가 로그', userId);
+    const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 
     try {
       this.recruitPostService.readRecruitCount(userId);
@@ -186,7 +185,10 @@ export class RecruitPostController {
 
       return details;
     } catch (error) {
-      throw new HttpException({ message: 'server error' }, 500);
+      throw new HttpException(
+        { message: 'server error' + `${error.name + error.message}` },
+        500,
+      );
     }
   }
 
