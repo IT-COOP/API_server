@@ -269,7 +269,7 @@ export class RecruitPostService {
         .getRepository(RecruitKeeps)
         .findOne(keepIt);
       if (returned.recruitKeepId)
-        throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
+        throw new HttpException({ message: 'already have keep it' }, 400);
       await queryRunner.manager
         .createQueryBuilder()
         .insert()
@@ -305,14 +305,14 @@ export class RecruitPostService {
       .getRawOne();
 
     if (+returned.postCount)
-      throw new HttpException({ message: '게시물은 하나만 쓸 수 있어요' }, 400);
+      throw new HttpException({ message: 'You can only have one post.' }, 400);
     if (
       +returned.projectCount +
       returned.projectCount +
       returned.projectCount
     ) {
       throw new HttpException(
-        { message: '프로젝트 참여는 3개까지 가능해요' },
+        { message: 'You can participate in three projects.' },
         400,
       );
     }
