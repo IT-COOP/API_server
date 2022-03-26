@@ -1,13 +1,7 @@
 import { loginError } from './../common/error';
 import { AuthService } from './auth.service';
 import { Users } from './../socialLogin/entity/Users';
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class StrictGuard implements CanActivate {
@@ -31,8 +25,10 @@ export class StrictGuard implements CanActivate {
     if (existUser && existUser.nickname) {
       res.locals.user = existUser;
       return true;
+    } else if (existUser) {
+      throw loginError.TutorialRequiredError;
     } else {
-      throw new HttpException('No User Matches JWT', HttpStatus.FORBIDDEN);
+      throw loginError.MissingUserError;
     }
   }
 }
