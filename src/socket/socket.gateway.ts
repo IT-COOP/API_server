@@ -42,11 +42,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.createChatRoom)
-  async createChatRoom(
+  async handleCreateChatRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() createChatRoomDto: CreateChatRoomDto,
   ) {
-    return this.socketService.createChatRoom(
+    return this.socketService.handleCreateChatRoom(
       client,
       this.server,
       createChatRoomDto,

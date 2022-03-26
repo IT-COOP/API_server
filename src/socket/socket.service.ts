@@ -34,65 +34,22 @@ export class SocketService {
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
   ) {}
-  async handleSubmittedMessage(
-    client: Socket,
-    server: Server,
-    data: MsgToServerDto,
-  ) {
-    if (!client.rooms.has(String(data.chatRoomId))) {
-      return {
-        status: 'failure',
-        data: 'Bad Request Must Join The Chatroom First',
-      };
-    }
 
-    await this.chatRepository.save(
-      this.chatRepository.create({
-        chatRoomId: data.chatRoomId,
-        speaker: data.userId,
-        chat: data.chat,
-      }),
-    );
-    const user = await this.userRepository.findOne({
-      where: {
-        userId: data.userId,
-      },
-    });
-
-    const notifications = [];
-    const notification: CreateNotificationDto = {
-      notificationSender: data.userId,
-      notificationReceiver: '',
-      eventType: EventType.chat,
-      eventContent: data.chat.slice(0, 30),
-      targetId: data.chatRoomId,
-      isRead: false,
-    };
-
-    const crews = await this.chatMemberRepository.find({
-      where: { chatRoomId: data.chatRoomId },
-      select: ['member'],
-    });
-    for (const crew of crews) {
-      if (crew.member === data.userId) continue;
-      notification.notificationReceiver = crew.member;
-      server
-        .to(crew.member)
-        .emit(EventServerToClient.notificationToClient, notification);
-      notifications.push(notification);
-    }
-
-    await this.notificationRepository.insert(notifications);
-
-    server.to(String(data.chatRoomId)).emit(EventServerToClient.msgToClient, {
-      profileImgUrl: user.profileImgUrl,
-      nickname: user.nickname,
-      userId: data.userId,
-      chat: data.chat,
-    });
+  handleConnection(client: Socket) {
+    client
+      .to(client.id)
+      .emit(EventServerToClient.requestingNotificationConnect);
     return {
       status: 'success',
-      data,
+      data: 'connected',
+    };
+  }
+
+  handleDisconnect(client: Socket) {
+    client.rooms.clear();
+    return {
+      status: 'success',
+      data: 'disconnected',
     };
   }
 
@@ -139,7 +96,7 @@ export class SocketService {
     };
   }
 
-  async createChatRoom(
+  async handleCreateChatRoom(
     client: Socket,
     server: Server,
     enterChatRoomDto: CreateChatRoomDto,
@@ -217,21 +174,65 @@ export class SocketService {
     }
   }
 
-  handleConnection(client: Socket) {
-    client
-      .to(client.id)
-      .emit(EventServerToClient.requestingNotificationConnect);
-    return {
-      status: 'success',
-      data: 'connected',
-    };
-  }
+  async handleSubmittedMessage(
+    client: Socket,
+    server: Server,
+    data: MsgToServerDto,
+  ) {
+    if (!client.rooms.has(String(data.chatRoomId))) {
+      return {
+        status: 'failure',
+        data: 'Bad Request Must Join The Chatroom First',
+      };
+    }
 
-  handleDisconnect(client: Socket) {
-    client.rooms.clear();
+    await this.chatRepository.save(
+      this.chatRepository.create({
+        chatRoomId: data.chatRoomId,
+        speaker: data.userId,
+        chat: data.chat,
+      }),
+    );
+    const user = await this.userRepository.findOne({
+      where: {
+        userId: data.userId,
+      },
+    });
+
+    const notifications = [];
+    const notification: CreateNotificationDto = {
+      notificationSender: data.userId,
+      notificationReceiver: '',
+      eventType: EventType.chat,
+      eventContent: data.chat.slice(0, 30),
+      targetId: data.chatRoomId,
+      isRead: false,
+    };
+
+    const crews = await this.chatMemberRepository.find({
+      where: { chatRoomId: data.chatRoomId },
+      select: ['member'],
+    });
+    for (const crew of crews) {
+      if (crew.member === data.userId) continue;
+      notification.notificationReceiver = crew.member;
+      server
+        .to(crew.member)
+        .emit(EventServerToClient.notificationToClient, notification);
+      notifications.push(notification);
+    }
+
+    await this.notificationRepository.insert(notifications);
+
+    server.to(String(data.chatRoomId)).emit(EventServerToClient.msgToClient, {
+      profileImgUrl: user.profileImgUrl,
+      nickname: user.nickname,
+      userId: data.userId,
+      chat: data.chat,
+    });
     return {
       status: 'success',
-      data: 'disconnected',
+      data,
     };
   }
 
