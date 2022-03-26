@@ -7,6 +7,7 @@ export enum EventType {
   informationCommentReply = 6,
   recruitFulfilled = 7,
   chat = 8,
+  chatRoomCreation = 9,
 }
 /**
  * 가능한 사건
