@@ -8,7 +8,7 @@ export class RecruitCommentDTO {
   public recruitCommentContent: string;
 
   @ApiProperty({
-    example: 2,
+    example: 0,
     description: '댓글이면 0 대댓글이면 1',
   })
   public commentDepth: number;

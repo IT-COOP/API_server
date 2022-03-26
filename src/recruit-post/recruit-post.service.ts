@@ -124,7 +124,15 @@ export class RecruitPostService {
           .leftJoinAndSelect('P.recruitStacks', 'S')
           .leftJoinAndSelect('P.recruitTasks', 'T')
           .leftJoin('P.author2', 'U')
+          .leftJoin('P.recruitComments', 'C')
           .leftJoin('C.user', 'CU')
+          .addSelect([
+            'C.recruitCommentId',
+            'C.commentDepth',
+            'C.commentGroup',
+            'C.userId',
+            'C.recruitCommentContent',
+          ])
           .addSelect(['CU.nickname', 'CU.profileImgUrl'])
           .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -153,7 +161,15 @@ export class RecruitPostService {
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
         .leftJoin('P.author2', 'U')
+        .leftJoin('P.recruitComments', 'C')
         .leftJoin('C.user', 'CU')
+        .addSelect([
+          'C.recruitCommentId',
+          'C.commentDepth',
+          'C.commentGroup',
+          'C.userId',
+          'C.recruitCommentContent',
+        ])
         .addSelect(['CU.nickname', 'CU.profileImgUrl'])
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
