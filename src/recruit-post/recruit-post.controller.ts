@@ -127,6 +127,7 @@ export class RecruitPostController {
   }
 
   @ApiOperation({ summary: '협업 게시물 체크' })
+  @Get('check')
   async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
 
@@ -154,40 +155,31 @@ export class RecruitPostController {
   ) {
     const { userId } = res.locals && res.locals.user ? res.locals.user : null;
 
-    try {
-      this.recruitPostService.readRecruitCount(userId);
-      const recruitPost: RecruitPosts =
-        await this.recruitPostService.ReadSpecificRecruits(
-          recruitPostId,
-          userId,
-        );
+    const recruitPost: RecruitPosts =
+      await this.recruitPostService.ReadSpecificRecruits(recruitPostId, userId);
 
-      const details: ResDetailPostDTO = new ResDetailPostDTO();
-      details.recruitPostId = recruitPost.recruitPostId;
-      details.title = recruitPost.title;
-      details.nickname = recruitPost.author2.nickname;
-      details.thumbImgUrl = recruitPost.thumbImgUrl;
-      details.recruitContent = recruitPost.recruitContent;
-      details.recruitLocation = recruitPost.recruitLocation;
-      details.recruitKeepCount = recruitPost.recruitKeepCount;
-      details.viewCount = recruitPost.viewCount;
-      details.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+    const details: ResDetailPostDTO = new ResDetailPostDTO();
+    details.recruitPostId = recruitPost.recruitPostId;
+    details.title = recruitPost.title;
+    details.userId = recruitPost.author;
+    details.userProfileImgUrl = recruitPost.author2.profileImgUrl;
+    details.nickname = recruitPost.author2.nickname;
+    details.thumbImgUrl = recruitPost.thumbImgUrl;
+    details.recruitContent = recruitPost.recruitContent;
+    details.recruitLocation = recruitPost.recruitLocation;
+    details.recruitKeepCount = recruitPost.recruitKeepCount;
+    details.viewCount = recruitPost.viewCount;
+    details.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
 
-      details.createdAt = recruitPost.createdAt.toISOString();
+    details.createdAt = recruitPost.createdAt.toISOString();
 
-      details.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+    details.isKeeps = recruitPost.recruitKeeps.length ? true : false;
 
-      details.recruitTasks = recruitPost.recruitTasks;
-      details.recruitStacks = recruitPost.recruitStacks;
-      details.recruitComments = recruitPost.recruitComments;
+    details.recruitTasks = recruitPost.recruitTasks;
+    details.recruitStacks = recruitPost.recruitStacks;
+    details.recruitComments = recruitPost.recruitComments;
 
-      return details;
-    } catch (error) {
-      throw new HttpException(
-        { message: 'server error' + `${error.name + error.message}` },
-        500,
-      );
-    }
+    return details;
   }
 
   @UseGuards(StrictGuard)
@@ -213,8 +205,8 @@ export class RecruitPostController {
       recruitStacks,
     }: { recruitTasks: RecruitTasks[]; recruitStacks: RecruitStacks[] } = body;
 
+    await this.recruitPostService.readRecruitCount(userId);
     try {
-      await this.recruitPostService.readRecruitCount(userId);
       await this.recruitPostService.createRecruit(
         recruitPost,
         recruitStacks,

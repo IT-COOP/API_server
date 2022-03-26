@@ -123,9 +123,10 @@ export class RecruitPostService {
           .leftJoinAndSelect('P.recruitKeeps', 'K')
           .leftJoinAndSelect('P.recruitStacks', 'S')
           .leftJoinAndSelect('P.recruitTasks', 'T')
-          .leftJoinAndSelect('P.recruitComments', 'C')
           .leftJoin('P.author2', 'U')
-          .addSelect('U.nickname')
+          .leftJoin('C.user', 'CU')
+          .addSelect(['CU.nickname', 'CU.profileImgUrl'])
+          .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
           .orderBy('C.recruitCommentId', 'ASC')
           .getOne(),
@@ -136,6 +137,8 @@ export class RecruitPostService {
           .where('recruitPostId = :id', { id: recruitPostId })
           .execute(),
       ]);
+
+      console.log(recruitPost);
 
       return recruitPost;
     }
@@ -150,7 +153,9 @@ export class RecruitPostService {
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
         .leftJoin('P.author2', 'U')
-        .addSelect('U.nickname')
+        .leftJoin('C.user', 'CU')
+        .addSelect(['CU.nickname', 'CU.profileImgUrl'])
+        .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'ASC')
         .getOne(),
@@ -161,6 +166,7 @@ export class RecruitPostService {
         .where('recruitPostId = :id', { id: recruitPostId })
         .execute(),
     ]);
+    console.log(recruitPost);
 
     return recruitPost;
   }
@@ -289,7 +295,6 @@ export class RecruitPostService {
       returned.projectCount +
       returned.projectCount
     ) {
-      console.log(typeof returned.projectCount);
       throw new HttpException(
         { message: '프로젝트 참여는 3개까지 가능해요' },
         400,
