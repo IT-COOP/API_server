@@ -295,7 +295,6 @@ export class RecruitPostService {
       returned.projectCount +
       returned.projectCount
     ) {
-      console.log(typeof returned.projectCount);
       throw new HttpException(
         { message: '프로젝트 참여는 3개까지 가능해요' },
         400,
