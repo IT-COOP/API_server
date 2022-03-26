@@ -1,23 +1,16 @@
+import { loginError } from './../common/error';
 import { AuthService } from './../auth/auth.service';
-import { requiredColumns } from '../auth/jwt/jwt.secret';
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { Users } from './entity/Users';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
-import { LoginType, AccessTokenErrorMessage } from './enum/enums';
+import { Repository } from 'typeorm';
+import { LoginType } from './enum/enums';
 import { SHA3 } from 'sha3';
 import { v1 as uuid } from 'uuid';
 
@@ -39,6 +32,7 @@ export class SocialLoginService {
   REFRESH_TOKEN_DURATION = this.configService.get<string>(
     'REFRESH_TOKEN_DURATION',
   );
+  validNickname = /^[가-힣|a-z|A-Z|0-9|]+$/;
 
   async getKakaoToken(code: string, res: Response) {
     const clientId = this.configService.get<string>('KAKAO_REST_API_KEY');
@@ -192,12 +186,6 @@ export class SocialLoginService {
           key = String(userInfo.data.id);
           container.update(String(userInfo.data.id));
           break;
-
-        default:
-          throw new HttpException(
-            'error: Bad Request, errorDescription: Requested Social Login site Not Yet Ready.',
-            HttpStatus.BAD_REQUEST,
-          );
       }
     } catch (err) {
       throw new HttpException(
@@ -243,9 +231,9 @@ export class SocialLoginService {
 
   // 클라이언트와 시작
   async userValidation(accessTokenBearer: string) {
-    // access Token 혹은 refresh Token이 넘어온다.
+    // access Token이 넘어온다.
     if (!accessTokenBearer) {
-      throw new BadRequestException('Token Needed');
+      throw loginError.AccessTokenRequiredError;
     }
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
@@ -253,11 +241,10 @@ export class SocialLoginService {
       sub: this.authService.getUserIdFromDecryptedAccessToken(decrypted),
     };
 
-    const targetUser = await this.userRepository
-      .createQueryBuilder('users')
-      .where('userId = :userId', { userId: payload.sub })
-      .select(requiredColumns)
-      .getOne();
+    const targetUser = await this.userRepository.findOne({
+      where: { userId: payload.sub },
+      select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
+    });
     const novelAccessToken = this.authService.createAccessTokenWithUserId(
       payload.sub,
     );
@@ -265,6 +252,10 @@ export class SocialLoginService {
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
+      await this.userRepository.save({
+        userId: targetUser.userId,
+        refreshToken,
+      });
       return {
         success: true,
         data: {
@@ -282,7 +273,7 @@ export class SocialLoginService {
         },
       };
     }
-    throw new HttpException('There Is No Such User', HttpStatus.UNAUTHORIZED);
+    throw loginError.MissingUserError;
   }
 
   // 프로필
@@ -290,14 +281,12 @@ export class SocialLoginService {
     accessTokenBearer: string,
     completeFirstLoginDTO: CompleteFirstLoginDTO,
   ) {
-    const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
-    if (!regex.test(completeFirstLoginDTO.nickname)) {
-      throw new BadRequestException('Not Allowed Nickname Detected');
+    if (!this.validNickname.test(completeFirstLoginDTO.nickname)) {
+      throw loginError.NicknameError;
     }
-    if (!accessTokenBearer) {
-      throw new BadRequestException('Token Needed');
+    if (!accessTokenBearer || !accessTokenBearer.split(' ')[1]) {
+      throw loginError.AccessTokenRequiredError;
     }
-    const userQuery = this.userRepository.createQueryBuilder('users');
     const accessToken = accessTokenBearer.split(' ')[1];
     const decrypted = this.authService.jwtVerification(accessToken);
     const userId =
@@ -308,43 +297,35 @@ export class SocialLoginService {
     const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.REFRESH_TOKEN_DURATION,
     });
-    const existUser = await userQuery
-      .select(requiredColumns)
-      .where('users.nickname = :nickname', {
+    const existUser = await this.userRepository.findOne({
+      where: {
         nickname: completeFirstLoginDTO.nickname,
-      })
-      .getOne();
+      },
+    });
 
     if (existUser) {
-      throw new HttpException(
-        'No Duplicated Nickname allowed',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw loginError.DuplicatedNicknameError;
     }
-    try {
-      await this.userRepository.update(
-        userId,
-        this.userRepository.create({
-          nickname: completeFirstLoginDTO.nickname,
-          profileImgUrl: completeFirstLoginDTO.profileImgUrl,
-          portfolioUrl: completeFirstLoginDTO.profileImgUrl,
-          technologyStack: completeFirstLoginDTO.technologyStack,
-          refreshToken,
-        }),
-      );
-    } catch (err) {
-      throw new InternalServerErrorException(
-        'Please Try Again' + ` error: ${err}, errorDescription: ${err.message}`,
-      );
-    }
-    const userInfo = await this.userRepository.findOne({
+
+    const novelUser = await this.userRepository.findOne({
       where: {
         userId,
       },
-      select: ['userId', 'nickname', 'profileImgUrl', 'portfolioUrl'],
     });
+    if (!novelUser) {
+      throw loginError.MissingUserError;
+    }
+    const user = await this.userRepository.save({
+      userId,
+      nickname: completeFirstLoginDTO.nickname,
+      profileImgUrl: completeFirstLoginDTO.profileImgUrl,
+      portfolioUrl: completeFirstLoginDTO.profileImgUrl,
+      technologyStack: completeFirstLoginDTO.technologyStack,
+      refreshToken,
+    });
+
     return {
-      userInfo: userInfo,
+      userInfo: user,
       accessToken: novelAccessToken,
       refreshToken: refreshToken,
     };
@@ -352,79 +333,76 @@ export class SocialLoginService {
 
   async refreshAccessToken(accessTokenBearer, refreshTokenBearer) {
     if (!(accessTokenBearer && refreshTokenBearer)) {
-      throw new BadRequestException('Need Both Tokens');
+      throw loginError.MissingTokensError;
     }
-    const accessToken = accessTokenBearer.split(' ')[1];
-    const refreshToken = refreshTokenBearer.split(' ')[1];
-    const decryptedRefreshToken =
-      this.authService.jwtVerification(refreshToken);
-    const userIdFromRefreshToken =
-      this.authService.getUserIdFromDecryptedRefreshToken(
-        decryptedRefreshToken,
-      );
 
     let userIdFromAccessToken: string;
+    const accessToken = accessTokenBearer.split(' ')[1];
+    const refreshToken = refreshTokenBearer.split(' ')[1];
+
     try {
-      const decryptedAccessToken = jwt.verify(accessToken, this.MY_SECRET_KEY, {
+      const verified = jwt.verify(accessToken, this.MY_SECRET_KEY, {
         ignoreExpiration: true,
-      });
-      userIdFromAccessToken = decryptedAccessToken.sub as string;
+      }) as jwt.JwtPayload;
+      userIdFromAccessToken = verified.sub;
     } catch (err) {
-      if (err.message === 'invalid signature') {
-        throw new HttpException(
-          AccessTokenErrorMessage.tokenMalformed,
-          HttpStatus.FORBIDDEN,
-        );
-      }
+      throw loginError.AccessTokenVerificationError;
     }
+    const decrypted = this.authService.jwtVerification(refreshToken);
+    const userIdFromRefreshToken =
+      this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
 
     if (userIdFromAccessToken !== userIdFromRefreshToken) {
-      throw new HttpException(
-        'Invalid Tokens Try Login Again',
-        HttpStatus.FORBIDDEN,
-      );
+      throw loginError.TokensMismatchError;
     }
-
-    const user = await this.authService.findUserByUserIdAndRefreshToken(
+    const userInfo = await this.userRepository.findOne({
+      where: {
+        userId: userIdFromAccessToken,
+      },
+    });
+    if (!userInfo) {
+      throw loginError.MissingUserError;
+    }
+    if (userInfo.refreshToken !== refreshToken) {
+      throw loginError.RefreshTokenMismatchError;
+    }
+    const novelAccessToken = this.authService.createAccessTokenWithUserId(
       userIdFromAccessToken,
-      refreshToken,
     );
-    if (user) {
-      const accessToken = this.authService.createAccessTokenWithUserId(
-        userIdFromAccessToken,
-      );
-      return {
-        accessToken: accessToken,
-      };
-    }
-    throw new BadRequestException('Invalid Tokens Try Login Again');
+    return {
+      accessToken: novelAccessToken,
+    };
   }
 
-  async getUserInfoWithAccessToken(accessTokenBearer) {
-    if (!accessTokenBearer || !accessTokenBearer.split(' ')[1]) {
-      throw new BadRequestException('Token Needed');
+  async getUserInfoWithAccessToken(accessTokenBearer: string) {
+    if (!accessTokenBearer) {
+      throw loginError.AccessTokenRequiredError;
     }
     const decrypted = this.authService.jwtVerification(
       accessTokenBearer.split(' ')[1],
     );
     const userId =
       this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-    const user = await this.userRepository
-      .createQueryBuilder('users')
-      .select(requiredColumns)
-      .where('users.userId = :userId', { userId })
-      .getOne();
+    const user = await this.userRepository.findOne({
+      where: {
+        userId,
+      },
+      select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
+    });
     if (!user) {
-      throw new BadRequestException('There Is No Such User');
+      throw loginError.MissingUserError;
     } else if (!user.nickname) {
-      throw new UnauthorizedException('Must Finish Tutorial First');
+      throw loginError.TutorialRequiredError;
     }
     return { userInfo: user };
   }
 
   async duplicationCheckByNickname(nickname: string) {
-    const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]+$/;
-    if (regex.test(nickname) && 1 < nickname.length && nickname.length < 9) {
+    if (
+      this.validNickname.test(nickname) &&
+      1 < nickname.length &&
+      nickname.length < 9
+    ) {
       const result = await this.userRepository
         .createQueryBuilder('users')
         .select('users.nickname')

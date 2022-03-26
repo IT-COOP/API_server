@@ -288,7 +288,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // }
     const result = await this.notificationRepository.insert(data);
 
-    client.to(data.notificationReceiver).emit('notificationToClient', data);
+    this.server
+      .to(data.notificationReceiver)
+      .emit('notificationToClient', data);
     return result;
   }
 }

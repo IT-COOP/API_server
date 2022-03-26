@@ -29,5 +29,6 @@ import { Notification } from 'src/user/entities/Notification';
     UserModule,
     socialLoginModule,
   ],
+  exports: [SocketGateway],
 })
 export class SocketModule {}
