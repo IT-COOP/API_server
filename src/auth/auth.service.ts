@@ -1,20 +1,11 @@
-import {
-  InputJwtError,
-  RefreshTokenErrorMessage,
-  AccessTokenErrorMessage,
-} from './../socialLogin/enum/enums';
+import { loginError } from './../common/error';
+import { InputJwtError } from './../socialLogin/enum/enums';
 import { CheckUserIdInterface, JwtVerifyType } from './type/auth.type';
 import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import {
-  Injectable,
-  HttpStatus,
-  HttpException,
-  ExecutionContext,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { requiredColumns } from './jwt/jwt.secret';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 
@@ -41,12 +32,12 @@ export class AuthService {
     userId: string,
     refreshToken: string,
   ): Promise<Users | undefined> {
-    return await this.userRepository
-      .createQueryBuilder()
-      .select(requiredColumns)
-      .where('userId = :userId', { userId })
-      .andWhere('refreshToken = :refreshToken', { refreshToken })
-      .getOne();
+    return await this.userRepository.findOne({
+      where: {
+        userId,
+        refreshToken,
+      },
+    });
   }
 
   jwtVerification(token: string): JwtVerifyType {
@@ -102,21 +93,11 @@ export class AuthService {
   getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyType) {
     switch (decrypted.message) {
       case InputJwtError.tokenExpired:
-        throw new HttpException(
-          AccessTokenErrorMessage.tokenExpired,
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw loginError.AccessTokenExpiredError;
       case InputJwtError.tokenMalformed:
-        throw new HttpException(
-          AccessTokenErrorMessage.tokenMalformed,
-          HttpStatus.FORBIDDEN,
-        );
+        throw loginError.AccessTokenModifiedError;
       case InputJwtError.noJWT:
-        throw new HttpException(
-          AccessTokenErrorMessage.noJWT,
-          HttpStatus.BAD_REQUEST,
-        );
-
+        throw loginError.AccessTokenRequiredError;
       default:
         return decrypted.userId;
     }
@@ -125,20 +106,11 @@ export class AuthService {
   getUserIdFromDecryptedRefreshToken(decrypted: JwtVerifyType) {
     switch (decrypted.message) {
       case InputJwtError.tokenExpired:
-        throw new HttpException(
-          RefreshTokenErrorMessage.tokenExpired,
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw loginError.RefreshTokenExpiredError;
       case InputJwtError.tokenMalformed:
-        throw new HttpException(
-          RefreshTokenErrorMessage.tokenMalformed,
-          HttpStatus.FORBIDDEN,
-        );
+        throw loginError.RefreshTokenModifiedError;
       case InputJwtError.noJWT:
-        throw new HttpException(
-          RefreshTokenErrorMessage.noJWT,
-          HttpStatus.BAD_REQUEST,
-        );
+        throw loginError.RefreshTokenRequiredError;
       default:
         return decrypted.userId;
     }
@@ -147,24 +119,17 @@ export class AuthService {
   getTokensFromContext(context: ExecutionContext): {
     res: Response;
     accessTokenBearer: string;
-    refreshTokenBearer: string;
   } {
     const [req, res] = context.getArgs();
     const headers: string[] = req.rawHeaders;
     const indexOfAccessTokenBearer = headers.indexOf('authorization');
-    const indexOfRefreshTokenBearer = headers.indexOf('refreshToken');
     const accessTokenBearer =
       indexOfAccessTokenBearer !== -1
         ? headers[indexOfAccessTokenBearer + 1]
         : '';
-    const refreshTokenBearer =
-      indexOfRefreshTokenBearer !== -1
-        ? headers[indexOfRefreshTokenBearer + 1]
-        : '';
     return {
       res,
       accessTokenBearer,
-      refreshTokenBearer,
     };
   }
 }
