@@ -1,6 +1,6 @@
 import { loginError } from './../common/error';
 import { InputJwtError } from './../socialLogin/enum/enums';
-import { CheckUserIdInterface, JwtVerifyType } from './type/auth.type';
+import { JwtVerifyType } from './type/auth.type';
 import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -24,20 +24,8 @@ export class AuthService {
     'REFRESH_TOKEN_DURATION',
   );
 
-  async findUserByUserId(userId: string): Promise<Users | undefined> {
-    return await this.userRepository.findOne({ where: { userId } });
-  }
-
-  async findUserByUserIdAndRefreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<Users | undefined> {
-    return await this.userRepository.findOne({
-      where: {
-        userId,
-        refreshToken,
-      },
-    });
+  findUserByUserId(userId: string): Promise<Users | undefined> {
+    return this.userRepository.findOne({ where: { userId } });
   }
 
   jwtVerification(token: string): JwtVerifyType {
@@ -71,23 +59,6 @@ export class AuthService {
       expiresIn: this.REFRESH_TOKEN_DURATION,
     });
     return refreshToken;
-  }
-
-  async checkUserStatusByUserId(userId: string): Promise<CheckUserIdInterface> {
-    const targetUser = await this.userRepository.findOne({
-      where: userId,
-    });
-    const validation = {
-      isValid: true,
-      isProfileSet: true,
-    };
-    if (!targetUser) {
-      validation.isValid = false;
-      validation.isProfileSet = false;
-    } else if (targetUser.nickname === '') {
-      validation.isProfileSet = true;
-    }
-    return validation;
   }
 
   getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyType) {
