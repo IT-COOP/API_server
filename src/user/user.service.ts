@@ -165,6 +165,22 @@ export class UserService {
     return { posts };
   }
 
+  async getMyLevel(userId: string) {
+    const level = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
+      .where('P.endAt != P.createdAt')
+      .andWhere('P.endAt < :now', { now: new Date() })
+      .andWhere('M.member = :userId', { userId })
+      .getCount();
+    return { level };
+  }
+
   async rateUser(userId: string, rateUserDto: RateUserDto) {
     const { point, receiver, recruitPostId } = rateUserDto;
     const isRated = await this.userReputationRepository
@@ -240,6 +256,20 @@ export class UserService {
       .andWhere('M.member = :anotherUserId', { anotherUserId })
       .getMany();
     return { posts };
+  }
+
+  async getOthersLevel(userId: string, anotherUserId: string) {
+    const level = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoin('P.User', 'U')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .where('P.endAt != P.createdAt')
+      .andWhere('P.endAt < :now', { now: new Date() })
+      .andWhere('M.member = :anotherUserId', { anotherUserId })
+      .getCount();
+    return { level };
   }
 }
 //  // async createUserProfile(

@@ -107,6 +107,15 @@ export class UserController {
     return this.userService.getMyOverProject(userId);
   }
 
+  // 내 협업 점수
+  @UseGuards(StrictGuard)
+  @Get('level')
+  @ApiOperation({ summary: '내가 지금가지 완료한 프로젝트 갯수' })
+  async getMyLevel(@Res({ passthrough: true }) res) {
+    const userId = res.locals.user.userId;
+    return this.userService.getMyLevel(userId);
+  }
+
   // 유저 평가하기
   @UseGuards(StrictGuard)
   @Post('rate')
@@ -141,6 +150,18 @@ export class UserController {
   ) {
     const userId = res.locals.user.userId;
     return this.userService.getOthersOverProject(userId, anotherUserId);
+  }
+
+  // 다른 사람 협업 점수
+  @UseGuards(StrictGuard)
+  @Get('level/:anotherUserId')
+  @ApiOperation({ summary: '다른사람이 지금까지 완료한 프로젝트 갯수' })
+  async getOthersLevel(
+    @Res({ passthrough: true }) res,
+    @Param('anotherUserId') anotherUserId,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getOthersLevel(userId, anotherUserId);
   }
   //
   //  //내 프로필 가져오기
