@@ -1,13 +1,13 @@
-export const EventClientToServer = {
-  msgToServer: 'msgToServer',
-  enterChatRoom: 'enterChatRoom',
-  createChatRoom: 'createChatRoom',
-  notificationConnect: 'notificationConnect',
-  notificationToServer: 'notificationToServer',
-};
+export enum EventClientToServer {
+  msgToServer = 'msgToServer',
+  enterChatRoom = 'enterChatRoom',
+  createChatRoom = 'createChatRoom',
+  notificationConnect = 'notificationConnect',
+  notificationToServer = 'notificationToServer',
+}
 
-export const EventServerToClient = {
-  notificationToClient: 'notificationToClient',
-  msgToClient: 'msgToClient',
-  requestingNotificationConnect: 'requestingNotificationConnect',
-};
+export enum EventServerToClient {
+  notificationToClient = 'notificationToClient',
+  msgToClient = 'msgToClient',
+  requestingNotificationConnect = 'requestingNotificationConnect',
+}
