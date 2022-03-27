@@ -107,12 +107,12 @@ export class UserService {
   async getMyRunningProject(userId: string) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'CR')
+      .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'C')
+      .leftJoin('P.recruitComments', 'CM')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('C.recruitCommentId')
+      .addSelect('CM.recruitCommentId')
       .andWhere('P.endAt > :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
       .getMany();
@@ -154,12 +154,12 @@ export class UserService {
   async getMyOverProject(userId: string) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'CR')
+      .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'C')
+      .leftJoin('P.recruitComments', 'CM')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('C.recruitCommentId')
+      .addSelect('CM.recruitCommentId')
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
@@ -171,12 +171,12 @@ export class UserService {
   async getMyLevel(userId: string) {
     const level = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'CR')
+      .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'C')
+      .leftJoin('P.recruitComments', 'CM')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('C.recruitCommentId')
+      .addSelect('CM.recruitCommentId')
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
