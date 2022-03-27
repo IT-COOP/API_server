@@ -109,7 +109,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
@@ -124,7 +124,7 @@ export class UserService {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.recruitApplies', 'A')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
@@ -139,7 +139,7 @@ export class UserService {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.recruitApplies', 'A')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
