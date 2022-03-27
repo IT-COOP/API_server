@@ -93,6 +93,7 @@ export class UserService {
       .leftJoin('P.recruitComments', 'C')
       .addSelect('C.recruitCommentId')
       .where('K.userId = :userId', { userId })
+      .orderBy('P.recruitPostId', 'DESC')
       .getMany();
     return { posts };
   }
@@ -144,6 +145,7 @@ export class UserService {
       .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })
       .andWhere('P.endAt = P.createdAt')
+      .andWhere('A.isAccepted = 0')
       .getMany();
     return { posts };
   }
