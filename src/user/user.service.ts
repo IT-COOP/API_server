@@ -145,7 +145,6 @@ export class UserService {
       .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })
       .andWhere('P.endAt = P.createdAt')
-      .andWhere('A.isAccepted = 0')
       .getMany();
     return { posts };
   }
