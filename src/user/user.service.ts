@@ -107,7 +107,7 @@ export class UserService {
   async getMyRunningProject(userId: string) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('P.chatRooms', 'CR')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
@@ -154,9 +154,9 @@ export class UserService {
   async getMyOverProject(userId: string) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('P.chatRooms', 'CR')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
@@ -171,9 +171,9 @@ export class UserService {
   async getMyLevel(userId: string) {
     const level = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'C')
+      .leftJoinAndSelect('P.chatRooms', 'CR')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
@@ -200,7 +200,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
@@ -235,7 +235,7 @@ export class UserService {
   async getOthersRecruitingProject(userId, anotherUserId) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
@@ -251,7 +251,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .andWhere('P.endAt > :now', { now: new Date() })
       .andWhere('M.member = :anotherUserId', { anotherUserId })
@@ -266,7 +266,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
@@ -281,7 +281,7 @@ export class UserService {
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
-      .leftJoin('P.User', 'U')
+      .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
