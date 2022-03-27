@@ -128,6 +128,18 @@ export class UserController {
     return this.userService.rateUser(userId, rateUserDto);
   }
 
+  // 다른 사람 모집 중인 프로젝트
+  @UseGuards(StrictGuard)
+  @Get('profile/:anotherUserId/recruiting')
+  @ApiOperation({ summary: '다른 사람이 모집 중인 프로젝트 보기' })
+  async getOthersRecruitingProject(
+    @Res({ passthrough: true }) res,
+    @Param('anotherUserId') anotherUserId: string,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getOthersRecruitingProject(userId, anotherUserId);
+  }
+
   // 다른 사람 진행 중인 프로젝트
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/running')

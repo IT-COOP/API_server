@@ -42,6 +42,8 @@ export class UserService {
       ],
       relations: ['userReputations2'],
     });
+
+    profile.technologyStack.split(',').map((each) => parseInt(each));
     return { profile };
   }
 
@@ -88,7 +90,6 @@ export class UserService {
       .leftJoinAndSelect('K.recruitPost', 'P')
       .leftJoinAndSelect('P.recruitStacks', 'S')
       .leftJoinAndSelect('P.recruitTasks', 'T')
-      .leftJoinAndSelect('P.recruitComments', 'C')
       .leftJoin('P.recruitComments', 'C')
       .addSelect('C.recruitCommentId')
       .where('K.userId = :userId', { userId })
@@ -124,7 +125,6 @@ export class UserService {
       .leftJoinAndSelect('P.recruitApplies', 'A')
       .leftJoin('P.User', 'U')
       .leftJoin('P.recruitComments', 'C')
-
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
       .where('A.isAccepted = 0')
@@ -165,6 +165,7 @@ export class UserService {
     return { posts };
   }
 
+  // 내가 완료한 프로젝트 갯수 보기
   async getMyLevel(userId: string) {
     const level = await this.recruitPostRepository
       .createQueryBuilder('P')
@@ -181,6 +182,7 @@ export class UserService {
     return { level };
   }
 
+  // 유저 평가하기
   async rateUser(userId: string, rateUserDto: RateUserDto) {
     const { point, receiver, recruitPostId } = rateUserDto;
     const isRated = await this.userReputationRepository
@@ -228,6 +230,19 @@ export class UserService {
     throw new BadRequestException("You Can't Rate The User");
   }
 
+  async getOthersRecruitingProject(userId, anotherUserId) {
+    const posts = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoin('P.User', 'U')
+      .leftJoin('P.recruitComments', 'C')
+      .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('C.recruitCommentId')
+      .where('P.author = :anotherUserId', { anotherUserId })
+      .andWhere('P.endAt = P.createdAt')
+      .getMany();
+    return { posts };
+  }
+
   // 다른 사람 진행 중인 프로젝트
   async getOthersRunningProject(userId: string, anotherUserId: string) {
     const posts = await this.recruitPostRepository
@@ -258,6 +273,7 @@ export class UserService {
     return { posts };
   }
 
+  // 다른 사람 완료한 프로젝트 갯수 보기
   async getOthersLevel(userId: string, anotherUserId: string) {
     const level = await this.recruitPostRepository
       .createQueryBuilder('P')
