@@ -1,3 +1,4 @@
+import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
@@ -128,7 +129,6 @@ export class UserService {
       .leftJoin('P.recruitComments', 'C')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
-      .where('A.isAccepted = 0')
       .andWhere('A.applicant = :userId', { userId })
       .getMany();
     return { posts };
@@ -145,7 +145,6 @@ export class UserService {
       .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })
       .andWhere('P.endAt = P.createdAt')
-      .andWhere('A.isAccepted = 0')
       .getMany();
     return { posts };
   }
