@@ -1,3 +1,4 @@
+import { ParseUUIDPipe, ValidationPipe } from '@nestjs/common';
 import { EventClientToServer } from './../common/socket.event';
 import { SocketService } from './socket.service';
 import { CreateChatRoomDto } from './dto/createChatRoom.dto';
@@ -24,7 +25,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.msgToServer)
   async handleSubmittedMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() mstToServerDto: MsgToServerDto,
+    @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     return this.socketService.handleSubmittedMessage(
       client,
@@ -36,7 +37,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.enterChatRoom)
   async handleChatRoomEntrance(
     @ConnectedSocket() client: Socket,
-    @MessageBody() enterChatRoomDto: EnterChatRoomDto,
+    @MessageBody(ValidationPipe) enterChatRoomDto: EnterChatRoomDto,
   ) {
     return this.socketService.handleChatRoomEntrance(client, enterChatRoomDto);
   }
@@ -44,7 +45,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.createChatRoom)
   async handleCreateChatRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createChatRoomDto: CreateChatRoomDto,
+    @MessageBody(ValidationPipe) createChatRoomDto: CreateChatRoomDto,
   ) {
     return this.socketService.handleCreateChatRoom(
       client,
@@ -69,10 +70,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return this.socketService.handleNotificationConnect(client, userId);
   }
 
-  @SubscribeMessage(EventClientToServer.notificationToServer) // 누군가가 뭔 짓을 하면 프론트에서 이런 이벤트를 emit시키라고 요구할 겁니다. << 이게 좀 아닌 것 같음..
+  @SubscribeMessage(EventClientToServer.notificationToServer)
   async handleNotification(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createNotificationDto: CreateNotificationDto,
+    @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
     return this.socketService.handleNotification(
       client,
