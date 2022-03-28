@@ -138,9 +138,18 @@ export class UserService {
   async getMyRecruitingProject(userId: string) {
     const posts = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitApplies', 'A')
+      .leftJoin('P.recruitApplies', 'A')
       .leftJoin('P.author2', 'U')
       .leftJoin('P.recruitComments', 'C')
+      .leftJoin('A.applicant2', 'AP')
+      .addSelect([
+        'A.applicant',
+        'A.task',
+        'A.applyMessage',
+        'A.isAccepted',
+        'A.createdAt',
+      ])
+      .addSelect('AP.nickname, AP.profileImgUrl')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })
