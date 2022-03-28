@@ -394,7 +394,24 @@ export class SocialLoginService {
     } else if (!user.nickname) {
       throw loginError.TutorialRequiredError;
     }
-    return { userInfo: user };
+    const counts = await this.userRepository
+      .createQueryBuilder('U')
+      .leftJoin('U.recruitPosts', 'P')
+      .leftJoin('U.chatMembers', 'M')
+      .leftJoin('U.recruitApplies', 'A')
+      .select('U.userId')
+      .addSelect('COUNT(P.author)', 'postCount')
+      .addSelect('COUNT(M.member)', 'projectCount')
+      .addSelect('COUNT(A.applicant)', 'applyCount')
+      .where('U.userId = :userId', { userId })
+      .getRawOne();
+
+    return {
+      userInfo: user,
+      postCount: parseInt(counts.postCount),
+      projectCount: parseInt(counts.projectCount),
+      applyCount: parseInt(counts.applyCount1),
+    };
   }
 
   async duplicationCheckByNickname(nickname: string) {
