@@ -13,7 +13,7 @@ export class CompleteFirstLoginDTO {
     description: '사용자 닉네임',
   })
   @IsString()
-  @MaxLength(8)
+  @MaxLength(6)
   @MinLength(2)
   nickname: string;
 

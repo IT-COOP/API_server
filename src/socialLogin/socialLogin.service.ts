@@ -232,10 +232,12 @@ export class SocialLoginService {
   // 클라이언트와 시작
   async userValidation(accessTokenBearer: string) {
     // access Token이 넘어온다.
+    console.log(accessTokenBearer);
     if (!accessTokenBearer) {
       throw loginError.AccessTokenRequiredError;
     }
     const accessToken = accessTokenBearer.split(' ')[1];
+    console.log(accessToken);
     const decrypted = this.authService.jwtVerification(accessToken);
     const payload = {
       sub: this.authService.getUserIdFromDecryptedAccessToken(decrypted),
@@ -245,6 +247,7 @@ export class SocialLoginService {
       where: { userId: payload.sub },
       select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
     });
+    console.log('targetUser', targetUser);
     const novelAccessToken = this.authService.createAccessTokenWithUserId(
       payload.sub,
     );
