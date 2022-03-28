@@ -276,7 +276,7 @@ export class SocialLoginService {
     throw loginError.MissingUserError;
   }
 
-  // 프로필
+  // 프로필 완성하기
   async completeFirstLogin(
     accessTokenBearer: string,
     completeFirstLoginDTO: CompleteFirstLoginDTO,
@@ -331,6 +331,7 @@ export class SocialLoginService {
     };
   }
 
+  // 엑세스 토큰 새로 발급받기
   async refreshAccessToken(accessTokenBearer, refreshTokenBearer) {
     if (!(accessTokenBearer && refreshTokenBearer)) {
       throw loginError.MissingTokensError;

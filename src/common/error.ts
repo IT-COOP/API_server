@@ -30,6 +30,7 @@ export const loginError = {
   TutorialRequiredError: new UnauthorizedException(
     'Must Finish Tutorial First',
   ),
+  // 리프레시 토큰 에러
   RefreshTokenExpiredError: new UnauthorizedException('Refresh Token Expired.'),
   RefreshTokenMismatchError: new ForbiddenException('Refresh Token Mismatch.'),
   RefreshTokenModifiedError: new ForbiddenException(
