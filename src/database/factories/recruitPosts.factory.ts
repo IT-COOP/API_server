@@ -16,10 +16,12 @@ define(RecruitPosts, (faker: typeof Faker) => {
   recruitPosts.recruitKeepCount = 0;
   recruitPosts.recruitCommentCount = 0;
   recruitPosts.recruitLocation = faker.random.arrayElement([
-    100, 200, 300, 400,
+    101, 102, 103, 104, 105, 106, 107, 108, 109,
   ]);
   recruitPosts.viewCount = 0;
-  recruitPosts.recruitDurationDays = faker.random.arrayElement([7, 14, 21, 28]);
+  recruitPosts.recruitDurationDays = faker.random.arrayElement([
+    7, 14, 21, 28, 35, 42,
+  ]);
   recruitPosts.recruitApplies = factory(RecruitApplies)() as any;
   recruitPosts.recruitStacks = factory(RecruitStacks)() as any;
   recruitPosts.recruitTasks = factory(RecruitTasks)() as any;
