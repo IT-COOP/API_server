@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsObject, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsString } from 'class-validator';
 import { Region } from 'src/common/enums';
 import { RecruitStacks } from '../entities/RecruitStacks';
 import { RecruitTasks } from '../entities/RecruitTasks';
@@ -21,7 +21,7 @@ export class RecruitPostDTO {
   public recruitContent: string;
 
   @ApiProperty({
-    example: 1,
+    example: 101,
     description: '지역에 대한 번호',
   })
   @IsEnum(Region)
@@ -44,22 +44,22 @@ export class RecruitPostDTO {
   @ApiProperty({
     example: [
       {
-        recruitStack: 300,
+        recruitStack: 301,
         numberOfPeopleRequired: 3,
         numberOfPeopleSet: 0,
       },
     ],
     description: '프로젝트 사용 기술',
   })
-  @IsObject()
+  @IsArray()
   public recruitStacks: RecruitStacks[];
 
   @ApiProperty({
     example: [
-      { recruitTask: 3, numberOfPeopleRequired: 3, numberOfPeopleSet: 0 },
+      { recruitTask: 300, numberOfPeopleRequired: 3, numberOfPeopleSet: 0 },
     ],
     description: '직무별 필요 인원',
   })
-  @IsObject()
+  @IsArray()
   public recruitTasks: RecruitTasks[];
 }

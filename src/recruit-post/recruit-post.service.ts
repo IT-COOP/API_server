@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/socialLogin/entity/Users';
 import { Connection, Repository } from 'typeorm';
@@ -34,7 +34,7 @@ export class RecruitPostService {
     task: number, // 직군 필터링
     stack: number, //직무 필터링 직군과 동시에 있으면 직무 우선 or 가능
     lastId: number, // 커서 기반 페이지네이션을 위함
-    over: number,
+    over: number, //
   ) {
     let cursorPost;
     if (lastId) {
@@ -46,26 +46,21 @@ export class RecruitPostService {
         throw new HttpException('잘못된 접근입니다', 400); //잘못되있으면 커서아이디가  리턴
       }
     }
-    let recruitQuery;
+    let recruitQuery = this.recruitPostsRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.recruitTasks', 'T')
+      .leftJoinAndSelect('P.recruitStacks', 'S')
+      .leftJoinAndSelect('P.author2', 'U')
+      .leftJoinAndSelect('P.recruitComments', 'C');
     if (!loginId) {
-      recruitQuery = this.recruitPostsRepository
-        .createQueryBuilder('P')
+      recruitQuery = recruitQuery
         .leftJoinAndSelect('P.recruitKeeps', 'K')
-        .leftJoinAndSelect('P.recruitTasks', 'T')
-        .leftJoinAndSelect('P.recruitStacks', 'S')
-        .leftJoinAndSelect('P.author2', 'U')
-        .leftJoinAndSelect('P.recruitComments', 'C')
         .where('P.recruitPostId > 0');
     } else {
-      recruitQuery = this.recruitPostsRepository
-        .createQueryBuilder('P')
+      recruitQuery = recruitQuery
         .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author = :id', {
           id: loginId,
         })
-        .leftJoinAndSelect('P.recruitTasks', 'T')
-        .leftJoinAndSelect('P.recruitStacks', 'S')
-        .leftJoinAndSelect('P.author2', 'U')
-        .leftJoinAndSelect('P.recruitComments', 'C')
         .where('P.recruitPostId > 0');
     }
 
@@ -120,19 +115,12 @@ export class RecruitPostService {
       const [recruitPost] = await Promise.all([
         this.recruitPostsRepository
           .createQueryBuilder('P')
-          .leftJoinAndSelect('P.recruitKeeps', 'K')
           .leftJoinAndSelect('P.recruitStacks', 'S')
           .leftJoinAndSelect('P.recruitTasks', 'T')
+          .leftJoinAndSelect('P.recruitComments', 'C')
           .leftJoin('P.author2', 'U')
-          .leftJoin('P.recruitComments', 'C')
           .leftJoin('C.user', 'CU')
-          .addSelect([
-            'C.recruitCommentId',
-            'C.commentDepth',
-            'C.commentGroup',
-            'C.userId',
-            'C.recruitCommentContent',
-          ])
+          .leftJoinAndSelect('P.recruitKeeps', 'K')
           .addSelect(['CU.nickname', 'CU.profileImgUrl'])
           .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -146,30 +134,20 @@ export class RecruitPostService {
           .execute(),
       ]);
 
-      console.log(recruitPost);
-
       return recruitPost;
     }
 
     const [recruitPost] = await Promise.all([
       this.recruitPostsRepository
         .createQueryBuilder('P')
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
-          loginId,
-        })
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
         .leftJoin('P.author2', 'U')
-        .leftJoin('P.recruitComments', 'C')
         .leftJoin('C.user', 'CU')
-        .addSelect([
-          'C.recruitCommentId',
-          'C.commentDepth',
-          'C.commentGroup',
-          'C.userId',
-          'C.recruitCommentContent',
-        ])
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
+          loginId,
+        })
         .addSelect(['CU.nickname', 'CU.profileImgUrl'])
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -205,25 +183,29 @@ export class RecruitPostService {
       const recruitStacks = this.mappingStacks(stacks, recruitPostId);
       const recruitTasks = this.mappingTasks(tasks, recruitPostId);
 
-      await queryRunner.manager
-        .getRepository(RecruitStacks)
-        .createQueryBuilder()
-        .insert()
-        .into(RecruitStacks)
-        .values(recruitStacks)
-        .execute();
-      await queryRunner.manager
-        .getRepository(RecruitTasks)
-        .createQueryBuilder()
-        .insert()
-        .into(RecruitTasks)
-        .values(recruitTasks)
-        .execute();
+      if (recruitStacks.length) {
+        await queryRunner.manager
+          .getRepository(RecruitStacks)
+          .createQueryBuilder()
+          .insert()
+          .into(RecruitStacks)
+          .values(recruitStacks)
+          .execute();
+      }
+
+      if (recruitTasks.length) {
+        await queryRunner.manager
+          .getRepository(RecruitTasks)
+          .createQueryBuilder()
+          .insert()
+          .into(RecruitTasks)
+          .values(recruitTasks)
+          .execute();
+      }
       await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new HttpException({ message: 'Try again' }, 500);
     } finally {
       await queryRunner.release();
     }
@@ -269,7 +251,7 @@ export class RecruitPostService {
         .getRepository(RecruitKeeps)
         .findOne(keepIt);
       if (returned.recruitKeepId)
-        throw new HttpException({ message: 'already have keep it' }, 400);
+        throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
       await queryRunner.manager
         .createQueryBuilder()
         .insert()
@@ -305,16 +287,12 @@ export class RecruitPostService {
       .getRawOne();
 
     if (+returned.postCount)
-      throw new HttpException({ message: 'You can only have one post.' }, 400);
+      throw new BadRequestException('You can write only one post');
     if (
-      +returned.projectCount +
-      returned.projectCount +
-      returned.projectCount
+      +returned.projectCount + returned.projectCount + returned.projectCount >=
+      3
     ) {
-      throw new HttpException(
-        { message: 'You can participate in three projects.' },
-        400,
-      );
+      throw new BadRequestException(' You can only apply for three projects.');
     }
     return returned;
   }
