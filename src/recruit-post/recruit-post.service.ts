@@ -65,14 +65,16 @@ export class RecruitPostService {
     }
 
     let paginationQuery = recruitQuery;
-    if (lastId && sort) {
+    if (lastId && sort === 1) {
       const cursorKeepCount = cursorPost.recruitKeepCount;
-      paginationQuery = paginationQuery.andWhere(
-        'P.recruitKeepCount < :cursorKeepCount',
-        { cursorKeepCount },
-      );
+      paginationQuery = paginationQuery
+        .andWhere('P.recruitKeepCount < :cursorKeepCount', { cursorKeepCount })
+        .orWhere(
+          'P.recruitKeepCount = :cursorKeepCount AND P.recruitPostId < :lastId',
+          { cursorKeepCount, lastId },
+        );
     }
-    if (lastId) {
+    if (lastId && sort === 0) {
       paginationQuery = paginationQuery.andWhere('P.recruitPostId < :lastId', {
         lastId,
       });
