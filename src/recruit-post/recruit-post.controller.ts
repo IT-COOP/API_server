@@ -205,17 +205,13 @@ export class RecruitPostController {
       recruitStacks,
     }: { recruitTasks: RecruitTasks[]; recruitStacks: RecruitStacks[] } = body;
 
-    await this.recruitPostService.readRecruitCount(userId);
-    try {
-      await this.recruitPostService.createRecruit(
-        recruitPost,
-        recruitStacks,
-        recruitTasks,
-      );
-      return { success: true };
-    } catch (e) {
-      throw new HttpException({ message: 'server error' }, 500);
-    }
+    // await this.recruitPostService.readRecruitCount(userId);
+    await this.recruitPostService.createRecruit(
+      recruitPost,
+      recruitStacks,
+      recruitTasks,
+    );
+    return { success: true };
   }
 
   @ApiParam({

@@ -40,3 +40,7 @@ export const loginError = {
     'RefreshToken Invalid Signature',
   ),
 };
+
+export const recruitError = {
+  //
+};

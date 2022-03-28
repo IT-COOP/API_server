@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/socialLogin/entity/Users';
 import { Connection, Repository } from 'typeorm';
@@ -199,9 +199,8 @@ export class RecruitPostService {
         .execute();
       await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new HttpException({ message: 'Try again' }, 500);
     } finally {
       await queryRunner.release();
     }
@@ -283,16 +282,12 @@ export class RecruitPostService {
       .getRawOne();
 
     if (+returned.postCount)
-      throw new HttpException({ message: '게시물은 하나만 쓸 수 있어요' }, 400);
+      throw new BadRequestException('You can write only one post');
     if (
-      +returned.projectCount +
-      returned.projectCount +
-      returned.projectCount
+      +returned.projectCount + returned.projectCount + returned.projectCount >=
+      3
     ) {
-      throw new HttpException(
-        { message: '프로젝트 참여는 3개까지 가능해요' },
-        400,
-      );
+      throw new BadRequestException(' You can only apply for three projects.');
     }
     return returned;
   }
