@@ -248,10 +248,10 @@ export class SocialLoginService {
       select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
     });
     console.log('targetUser', targetUser);
-    const novelAccessToken = this.authService.createAccessTokenWithUserId(
-      payload.sub,
-    );
     if (targetUser && targetUser.nickname) {
+      const novelAccessToken = this.authService.createAccessTokenWithUserId(
+        payload.sub,
+      );
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
@@ -268,6 +268,8 @@ export class SocialLoginService {
         },
       };
     } else if (targetUser) {
+      const novelAccessToken =
+        this.authService.createAccessTokenWithUserIdForProfileSet(payload.sub);
       return {
         success: true,
         data: {

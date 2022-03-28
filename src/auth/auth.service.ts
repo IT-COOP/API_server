@@ -17,6 +17,9 @@ export class AuthService {
     private userRepository: Repository<Users>,
   ) {}
   MY_SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  ACCESS_TOKEN_DURATION_FOR_PROFILE = this.configService.get<string>(
+    'ACCESS_TOKEN_DURATION_FOR_PROFILE',
+  );
   ACCESS_TOKEN_DURATION = this.configService.get<string>(
     'ACCESS_TOKEN_DURATION',
   );
@@ -50,6 +53,13 @@ export class AuthService {
   createAccessTokenWithUserId(userId: string): string {
     const accessToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.ACCESS_TOKEN_DURATION,
+    });
+    return accessToken;
+  }
+
+  createAccessTokenWithUserIdForProfileSet(userId: string): string {
+    const accessToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
+      expiresIn: this.ACCESS_TOKEN_DURATION_FOR_PROFILE,
     });
     return accessToken;
   }
