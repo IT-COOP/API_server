@@ -232,10 +232,12 @@ export class SocialLoginService {
   // 클라이언트와 시작
   async userValidation(accessTokenBearer: string) {
     // access Token이 넘어온다.
+    console.log(accessTokenBearer);
     if (!accessTokenBearer) {
       throw loginError.AccessTokenRequiredError;
     }
     const accessToken = accessTokenBearer.split(' ')[1];
+    console.log(accessToken);
     const decrypted = this.authService.jwtVerification(accessToken);
     const payload = {
       sub: this.authService.getUserIdFromDecryptedAccessToken(decrypted),
@@ -245,10 +247,11 @@ export class SocialLoginService {
       where: { userId: payload.sub },
       select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
     });
-    const novelAccessToken = this.authService.createAccessTokenWithUserId(
-      payload.sub,
-    );
+    console.log('targetUser', targetUser);
     if (targetUser && targetUser.nickname) {
+      const novelAccessToken = this.authService.createAccessTokenWithUserId(
+        payload.sub,
+      );
       const refreshToken = this.authService.createRefreshTokenWithUserId(
         payload.sub,
       );
@@ -265,6 +268,8 @@ export class SocialLoginService {
         },
       };
     } else if (targetUser) {
+      const novelAccessToken =
+        this.authService.createAccessTokenWithUserIdForProfileSet(payload.sub);
       return {
         success: true,
         data: {
@@ -276,7 +281,7 @@ export class SocialLoginService {
     throw loginError.MissingUserError;
   }
 
-  // 프로필
+  // 프로필 완성하기
   async completeFirstLogin(
     accessTokenBearer: string,
     completeFirstLoginDTO: CompleteFirstLoginDTO,
@@ -331,6 +336,7 @@ export class SocialLoginService {
     };
   }
 
+  // 엑세스 토큰 새로 발급받기
   async refreshAccessToken(accessTokenBearer, refreshTokenBearer) {
     if (!(accessTokenBearer && refreshTokenBearer)) {
       throw loginError.MissingTokensError;
@@ -394,7 +400,24 @@ export class SocialLoginService {
     } else if (!user.nickname) {
       throw loginError.TutorialRequiredError;
     }
-    return { userInfo: user };
+    const counts = await this.userRepository
+      .createQueryBuilder('U')
+      .leftJoin('U.recruitPosts', 'P')
+      .leftJoin('U.chatMembers', 'M')
+      .leftJoin('U.recruitApplies', 'A')
+      .select('U.userId')
+      .addSelect('COUNT(P.author)', 'postCount')
+      .addSelect('COUNT(M.member)', 'projectCount')
+      .addSelect('COUNT(A.applicant)', 'applyCount')
+      .where('U.userId = :userId', { userId })
+      .getRawOne();
+
+    return {
+      userInfo: user,
+      postCount: parseInt(counts.postCount),
+      projectCount: parseInt(counts.projectCount),
+      applyCount: parseInt(counts.applyCount1),
+    };
   }
 
   async duplicationCheckByNickname(nickname: string) {

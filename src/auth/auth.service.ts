@@ -1,6 +1,6 @@
 import { loginError } from './../common/error';
 import { InputJwtError } from './../socialLogin/enum/enums';
-import { CheckUserIdInterface, JwtVerifyType } from './type/auth.type';
+import { JwtVerifyType } from './type/auth.type';
 import { Users } from './../socialLogin/entity/Users';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +17,9 @@ export class AuthService {
     private userRepository: Repository<Users>,
   ) {}
   MY_SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  ACCESS_TOKEN_DURATION_FOR_PROFILE = this.configService.get<string>(
+    'ACCESS_TOKEN_DURATION_FOR_PROFILE',
+  );
   ACCESS_TOKEN_DURATION = this.configService.get<string>(
     'ACCESS_TOKEN_DURATION',
   );
@@ -24,20 +27,8 @@ export class AuthService {
     'REFRESH_TOKEN_DURATION',
   );
 
-  async findUserByUserId(userId: string): Promise<Users | undefined> {
-    return await this.userRepository.findOne({ where: { userId } });
-  }
-
-  async findUserByUserIdAndRefreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<Users | undefined> {
-    return await this.userRepository.findOne({
-      where: {
-        userId,
-        refreshToken,
-      },
-    });
+  findUserByUserId(userId: string): Promise<Users | undefined> {
+    return this.userRepository.findOne({ where: { userId } });
   }
 
   jwtVerification(token: string): JwtVerifyType {
@@ -66,28 +57,18 @@ export class AuthService {
     return accessToken;
   }
 
+  createAccessTokenWithUserIdForProfileSet(userId: string): string {
+    const accessToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
+      expiresIn: this.ACCESS_TOKEN_DURATION_FOR_PROFILE,
+    });
+    return accessToken;
+  }
+
   createRefreshTokenWithUserId(userId: string): string {
     const refreshToken = jwt.sign({ sub: userId }, this.MY_SECRET_KEY, {
       expiresIn: this.REFRESH_TOKEN_DURATION,
     });
     return refreshToken;
-  }
-
-  async checkUserStatusByUserId(userId: string): Promise<CheckUserIdInterface> {
-    const targetUser = await this.userRepository.findOne({
-      where: userId,
-    });
-    const validation = {
-      isValid: true,
-      isProfileSet: true,
-    };
-    if (!targetUser) {
-      validation.isValid = false;
-      validation.isProfileSet = false;
-    } else if (targetUser.nickname === '') {
-      validation.isProfileSet = true;
-    }
-    return validation;
   }
 
   getUserIdFromDecryptedAccessToken(decrypted: JwtVerifyType) {

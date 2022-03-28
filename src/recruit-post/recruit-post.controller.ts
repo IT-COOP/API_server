@@ -1,5 +1,6 @@
 import { LooseGuard, StrictGuard } from './../auth/auth.guard';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -36,34 +37,39 @@ export class RecruitPostController {
   constructor(private readonly recruitPostService: RecruitPostService) {}
 
   @ApiQuery({
-    name: 'task',
+    name: 'loc',
     required: false,
-    description: 'task',
+    description: '장소 정보',
   })
   @ApiQuery({
     name: 'sort',
     required: false,
-    description: 'order',
+    description: '정렬 정보',
   })
   @ApiQuery({
     name: 'items',
     required: false,
-    description: 'items',
+    description: '가져올 아이템 갯수',
+  })
+  @ApiQuery({
+    name: 'task',
+    required: false,
+    description: '직군 번호',
   })
   @ApiQuery({
     name: 'stack',
     required: false,
-    description: 'stack',
+    description: '스텍 번호',
   })
   @ApiQuery({
-    name: 'lastId',
+    name: 'cur',
     required: false,
-    description: 'lastId',
+    description: '마지막으로 가져온 포스트 아이디',
   })
   @ApiQuery({
     name: 'over',
     required: false,
-    description: 'over',
+    description: '모집중인 글만 보기 0이면 전체 1이면 모집중인 글만 보기',
   })
   @Get('')
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
@@ -74,7 +80,7 @@ export class RecruitPostController {
     @Query('loc') location: any,
     @Query('task') task: any,
     @Query('stack') stack: any,
-    @Query('lastId') lastId: any,
+    @Query('cur') lastId: any,
     @Query('over') over: any,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -87,6 +93,9 @@ export class RecruitPostController {
     over = parseInt(over) || 0;
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
 
+    if (items > 12) {
+      throw new BadRequestException('You can import up to 12 posts.');
+    }
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
         userId,

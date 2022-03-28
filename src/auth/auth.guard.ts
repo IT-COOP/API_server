@@ -43,7 +43,7 @@ export class LooseGuard implements CanActivate {
     let userId: string;
     let existUser: Users | undefined;
     if (accessTokenBearer) {
-      const decrypted = await this.authService.jwtVerification(
+      const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
       userId = decrypted.userId ? decrypted.userId : '';
