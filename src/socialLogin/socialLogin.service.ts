@@ -358,6 +358,8 @@ export class SocialLoginService {
     const userIdFromRefreshToken =
       this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
 
+    console.log(userIdFromRefreshToken);
+    console.log(userIdFromAccessToken);
     if (userIdFromAccessToken !== userIdFromRefreshToken) {
       throw loginError.TokensMismatchError;
     }
