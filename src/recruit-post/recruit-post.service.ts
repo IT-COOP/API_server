@@ -183,20 +183,25 @@ export class RecruitPostService {
       const recruitStacks = this.mappingStacks(stacks, recruitPostId);
       const recruitTasks = this.mappingTasks(tasks, recruitPostId);
 
-      await queryRunner.manager
-        .getRepository(RecruitStacks)
-        .createQueryBuilder()
-        .insert()
-        .into(RecruitStacks)
-        .values(recruitStacks)
-        .execute();
-      await queryRunner.manager
-        .getRepository(RecruitTasks)
-        .createQueryBuilder()
-        .insert()
-        .into(RecruitTasks)
-        .values(recruitTasks)
-        .execute();
+      if (recruitStacks.length) {
+        await queryRunner.manager
+          .getRepository(RecruitStacks)
+          .createQueryBuilder()
+          .insert()
+          .into(RecruitStacks)
+          .values(recruitStacks)
+          .execute();
+      }
+
+      if (recruitTasks.length) {
+        await queryRunner.manager
+          .getRepository(RecruitTasks)
+          .createQueryBuilder()
+          .insert()
+          .into(RecruitTasks)
+          .values(recruitTasks)
+          .execute();
+      }
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
