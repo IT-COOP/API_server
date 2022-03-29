@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './../socialLogin/entity/Users';
 import { Connection, Repository } from 'typeorm';
@@ -8,6 +8,9 @@ import { RecruitKeeps } from './entities/RecruitKeeps';
 import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
+import { recruitError } from './../common/error';
+import { SocketGateway } from 'src/socket/socket.gateway';
+import { CreateNotificationDto } from 'src/socket/dto/createNotification.dto';
 
 @Injectable()
 export class RecruitPostService {
@@ -23,6 +26,7 @@ export class RecruitPostService {
     @InjectRepository(Users)
     private usersRepository: Repository<Users>,
     private connection: Connection,
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   //해봐야 알듯?
@@ -37,78 +41,90 @@ export class RecruitPostService {
     over: number, //
   ) {
     let cursorPost;
-    if (lastId) {
-      cursorPost = await this.connection
-        .getRepository(RecruitPosts)
-        .findOne(lastId);
-      console.log(cursorPost);
-      if (!cursorPost.recruitPostId) {
-        throw new HttpException('잘못된 접근입니다', 400); //잘못되있으면 커서아이디가  리턴
+    try {
+      if (lastId) {
+        cursorPost = await this.connection
+          .getRepository(RecruitPosts)
+          .findOneOrFail(lastId);
       }
-    }
-    let recruitQuery = this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitTasks', 'T')
-      .leftJoinAndSelect('P.recruitStacks', 'S')
-      .leftJoinAndSelect('P.author2', 'U')
-      .leftJoinAndSelect('P.recruitComments', 'C');
-    if (!loginId) {
-      recruitQuery = recruitQuery
-        .leftJoinAndSelect('P.recruitKeeps', 'K')
-        .where('P.recruitPostId > 0');
-    } else {
-      recruitQuery = recruitQuery
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author = :id', {
-          id: loginId,
-        })
-        .where('P.recruitPostId > 0');
+    } catch (e) {
+      throw recruitError.WrongRequiredError;
     }
 
-    let paginationQuery = recruitQuery;
-    if (lastId && sort === 1) {
-      const cursorKeepCount = cursorPost.recruitKeepCount;
-      paginationQuery = paginationQuery
-        .andWhere('P.recruitKeepCount < :cursorKeepCount', { cursorKeepCount })
-        .orWhere(
-          'P.recruitKeepCount = :cursorKeepCount AND P.recruitPostId < :lastId',
-          { cursorKeepCount, lastId },
+    try {
+      let recruitQuery = this.recruitPostsRepository
+        .createQueryBuilder('P')
+        .leftJoinAndSelect('P.recruitTasks', 'T')
+        .leftJoinAndSelect('P.recruitStacks', 'S')
+        .leftJoinAndSelect('P.author2', 'U')
+        .leftJoinAndSelect('P.recruitComments', 'C');
+      if (!loginId) {
+        recruitQuery = recruitQuery
+          .leftJoinAndSelect('P.recruitKeeps', 'K')
+          .where('P.recruitPostId > 0');
+      } else {
+        recruitQuery = recruitQuery
+          .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author = :id', {
+            id: loginId,
+          })
+          .where('P.recruitPostId > 0');
+      }
+
+      let paginationQuery = recruitQuery;
+      if (lastId && sort === 1) {
+        const cursorKeepCount = cursorPost.recruitKeepCount;
+        paginationQuery = paginationQuery
+          .andWhere('P.recruitKeepCount < :cursorKeepCount', {
+            cursorKeepCount,
+          })
+          .orWhere(
+            'P.recruitKeepCount = :cursorKeepCount AND P.recruitPostId < :lastId',
+            { cursorKeepCount, lastId },
+          );
+      }
+      if (lastId && sort === 0) {
+        paginationQuery = paginationQuery.andWhere(
+          'P.recruitPostId < :lastId',
+          {
+            lastId,
+          },
         );
-    }
-    if (lastId && sort === 0) {
-      paginationQuery = paginationQuery.andWhere('P.recruitPostId < :lastId', {
-        lastId,
-      });
-    }
+      }
 
-    let filterQuery = paginationQuery;
+      let filterQuery = paginationQuery;
 
-    if (over) {
-      filterQuery = filterQuery.andWhere('P.endAt = P.createdAt');
-    }
-    if (location) {
-      filterQuery = filterQuery.andWhere('P.recruitLocation = :location', {
-        location,
-      });
-    }
-    if (stack) {
-      filterQuery = recruitQuery.andWhere('S.recruitStack = :stack', { stack });
-    } else if (task) {
-      filterQuery = filterQuery.andWhere('T.recruitTask = :task', { task });
-    }
+      if (over) {
+        filterQuery = filterQuery.andWhere('P.endAt = P.createdAt');
+      }
+      if (location) {
+        filterQuery = filterQuery.andWhere('P.recruitLocation = :location', {
+          location,
+        });
+      }
+      if (stack) {
+        filterQuery = recruitQuery.andWhere('S.recruitStack = :stack', {
+          stack,
+        });
+      } else if (task) {
+        filterQuery = filterQuery.andWhere('T.recruitTask = :task', { task });
+      }
 
-    // 0 최신순 1 keepIt 순
-    let sortQuery = filterQuery;
-    if (!sort) {
-      sortQuery = sortQuery.orderBy('P.recruitPostId', 'DESC');
-    } else if (sort) {
-      sortQuery = sortQuery
-        .orderBy('P.recruitKeepCount', 'DESC')
-        .addOrderBy('P.recruitPostId', 'DESC');
+      // 0 최신순 1 keepIt 순
+      let sortQuery = filterQuery;
+      if (!sort) {
+        sortQuery = sortQuery.orderBy('P.recruitPostId', 'DESC');
+      } else if (sort) {
+        sortQuery = sortQuery
+          .orderBy('P.recruitKeepCount', 'DESC')
+          .addOrderBy('P.recruitPostId', 'DESC');
+      }
+
+      const endQuery = await sortQuery.take(items).getMany();
+
+      return endQuery;
+    } catch (e) {
+      throw recruitError.DBqueryError;
     }
-
-    const endQuery = await sortQuery.take(items).getMany();
-
-    return endQuery;
   }
 
   //마무리
@@ -134,7 +150,6 @@ export class RecruitPostService {
           .where('recruitPostId = :id', { id: recruitPostId })
           .execute(),
       ]);
-      console.log(recruitPost);
       return recruitPost;
     }
 
@@ -164,8 +179,7 @@ export class RecruitPostService {
         .where('recruitPostId = :id', { id: recruitPostId })
         .execute(),
     ]);
-    console.log(recruitPost);
-    
+
     return recruitPost;
   }
 
@@ -209,14 +223,14 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new HttpException({ message: 'Try again' }, 500);
+      throw recruitError.DBqueryError;
     } finally {
       await queryRunner.release();
     }
   }
 
   //마무리
-  async createComment(recruitPostId: number, comment: RecruitComments) {
+  async createComment(comment: RecruitComments) {
     try {
       await this.recruitCommentsRepository
         .createQueryBuilder()
@@ -225,7 +239,20 @@ export class RecruitPostService {
         .values(comment)
         .execute();
     } catch (error) {
-      throw new HttpException({ message: 'Try again' }, 500);
+      throw recruitError.DBqueryError;
+    }
+    const returned = await this.recruitPostsRepository.findOne(
+      comment.recruitPostId,
+    );
+
+    const notification = new CreateNotificationDto();
+    notification.notificationReceiver = returned.author; //글 주인
+    notification.notificationSender = comment.userId; //댓글 쓴 사람
+    notification.eventType = comment.commentDepth ? 2 : 1; //
+    notification.eventContent = '님이 댓글을 남겼습니다.'; //
+    notification.targetId = comment.recruitPostId; //어디서
+    if (notification.notificationReceiver != notification.notificationSender) {
+      this.socketGateway.sendNotification(notification);
     }
   }
 
@@ -235,7 +262,7 @@ export class RecruitPostService {
       recruitPostId,
     });
     if (returned[1]) {
-      throw new HttpException({ message: '이미 신청했어요' }, 400);
+      throw recruitError.DuplicateOneRecruitKeep;
     }
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -256,7 +283,7 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new HttpException({ message: 'Try again' }, 500);
+      throw recruitError.DBqueryError;
     } finally {
       await queryRunner.release();
     }
@@ -277,10 +304,7 @@ export class RecruitPostService {
       +returned.projectCount + returned.projectCount + returned.projectCount >
       3
     ) {
-      throw new HttpException(
-        { message: ' You can only apply for three projects.' },
-        400,
-      );
+      throw recruitError.MaxProgressProjectError;
     }
     return returned;
   }
@@ -290,7 +314,7 @@ export class RecruitPostService {
       recruitPostId,
     });
     if (returned[1]) {
-      throw new HttpException({ message: '이미 신청했어요' }, 400);
+      throw recruitError.DuplicateOneRecruitApply;
     }
 
     await this.recruitAppliesRepository
@@ -329,7 +353,7 @@ export class RecruitPostService {
     } catch (error) {
       console.error(error);
       await queryRunner.rollbackTransaction();
-      throw new HttpException({ message: '서버 에러' }, 500);
+      throw recruitError.DBqueryError;
     } finally {
       await queryRunner.release();
     }
@@ -349,7 +373,7 @@ export class RecruitPostService {
     try {
       await this.recruitPostsRepository.delete(postId);
     } catch (e) {
-      throw new HttpException('요청이 올바르지 않습니다', 500);
+      throw recruitError.WrongRequiredError;
     }
   }
 
@@ -366,31 +390,35 @@ export class RecruitPostService {
         .where('recruitCommentId = :commentId', { commentId })
         .getOneOrFail();
     } catch (e) {
-      throw new HttpException('지울 데이터가 없어요', 400);
+      throw recruitError.WrongRequiredError;
     }
 
     try {
       await this.recruitCommentsRepository.delete(commentId);
     } catch (e) {
-      throw new HttpException('다시 시도해주세요', 500);
+      throw recruitError.DBqueryError;
     }
   }
 
   //트렌젝션 걸어야함
-  async deleteKeepIt(recruitPostId: number, keepId: number) {
+  async deleteKeepIt(recruitPostId: number, keepId: number, userId: string) {
     /*
     1, KeepIt post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, 있으면 지우고 없으면 error를 띄움 apply 카운트를 낮추고 저장
-    age: () => "age + 1"
     */
+
     try {
-      await this.recruitKeepsRepository
+      const returned = await this.recruitKeepsRepository
         .createQueryBuilder('K')
         .where('K.recruitKeepId = :keepId', { keepId })
         .getOneOrFail();
+      if (returned.userId != userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
-      throw new HttpException('잘못된 요청입니다.', 400);
+      throw recruitError.WrongRequiredError;
     }
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -406,7 +434,7 @@ export class RecruitPostService {
     } catch (error) {
       console.error(error);
       await queryRunner.rollbackTransaction();
-      throw new HttpException('다시 시도해주세요', 400);
+      throw recruitError.DBqueryError;
     } finally {
       await queryRunner.release();
     }
@@ -423,7 +451,7 @@ export class RecruitPostService {
     try {
       isExist = await this.recruitAppliesRepository.findOneOrFail(applyId);
     } catch (e) {
-      throw new HttpException({ message: '잘못된 요청입니다' }, 400);
+      throw recruitError.WrongRequiredError;
     }
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();

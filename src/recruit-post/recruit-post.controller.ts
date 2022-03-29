@@ -296,7 +296,7 @@ export class RecruitPostController {
     comment.commentGroup = body.commentGroup;
     comment.recruitCommentContent = body.recruitCommentContent;
 
-    await this.recruitPostService.createComment(recruitPostId, comment);
+    await this.recruitPostService.createComment(comment);
 
     return { success: true };
   }
@@ -453,7 +453,7 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { userId } = res.locals.user;
-    await this.recruitPostService.deleteKeepIt(postId, keepId);
+    await this.recruitPostService.deleteKeepIt(postId, keepId, userId);
 
     return { success: true };
   }
