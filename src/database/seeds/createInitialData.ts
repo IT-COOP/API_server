@@ -1,7 +1,7 @@
-import { Users } from 'src/socialLogin/entity/Users';
+import { Users } from './../../socialLogin/entity/Users';
 import { Factory, Seeder } from 'typeorm-seeding';
 import { Connection } from 'typeorm';
-import { RecruitPosts } from 'src/recruit-post/entities/RecruitPosts';
+import { RecruitPosts } from './../../recruit-post/entities/RecruitPosts';
 
 export default class CreateInitialData implements Seeder {
   public async run(factory: Factory, connection: Connection): Promise<any> {

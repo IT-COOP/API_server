@@ -8,7 +8,7 @@ import { UserController } from './user.controller';
 import { Notification } from './entities/Notification';
 import { UserReputation } from './entities/UserReputation';
 import { ConfigModule } from '@nestjs/config';
-import { Users } from 'src/socialLogin/entity/Users';
+import { Users } from './../socialLogin/entity/Users';
 
 @Module({
   imports: [

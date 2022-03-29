@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumberString } from 'class-validator';
-import { Region, Stacks, Tasks } from 'src/common/enums';
+import { Region, Stacks, Tasks } from './../../common/enums';
 import { over, sort } from '../enums/recruit.enums';
 
 export class GetRecruitsDTO {

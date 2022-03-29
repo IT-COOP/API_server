@@ -1,7 +1,7 @@
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
-import { Chats } from 'src/socket/entities/Chats';
+import { Chats } from './../socket/entities/Chats';
 import { ChatRooms } from './entities/ChatRooms';
-import { ChatMembers } from 'src/socket/entities/ChatMembers';
+import { ChatMembers } from './../socket/entities/ChatMembers';
 import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { Users } from './../socialLogin/entity/Users';
 import { socialLoginModule } from './../socialLogin/socialLogin.module';
@@ -10,8 +10,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { SocketService } from './socket.service';
 import { SocketGateway } from './socket.gateway';
-import { RecruitPostModule } from 'src/recruit-post/recruit-post.module';
-import { Notification } from 'src/user/entities/Notification';
+import { RecruitPostModule } from './../recruit-post/recruit-post.module';
+import { Notification } from './../user/entities/Notification';
 
 @Module({
   providers: [SocketGateway, SocketService],

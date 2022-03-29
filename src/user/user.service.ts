@@ -1,4 +1,3 @@
-import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
@@ -10,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from 'src/socialLogin/entity/Users';
+import { Users } from './../socialLogin/entity/Users';
 import { Repository } from 'typeorm';
 import { UserReputation } from './entities/UserReputation';
 import { RateUserDto } from './dto/rateUser.dto';

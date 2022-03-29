@@ -10,7 +10,7 @@ import { RecruitKeeps } from './entities/RecruitKeeps';
 import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
-import { Users } from 'src/socialLogin/entity/Users';
+import { Users } from './../socialLogin/entity/Users';
 
 @Module({
   imports: [
