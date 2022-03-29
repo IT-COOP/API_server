@@ -7,7 +7,7 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
   @UseGuards(StrictGuard)
   @Get()
-  getAllChatRooms(@Res() res) {
+  getAllChatRooms(@Res({ passthrough: true }) res) {
     const { userId } = res.locals.user;
     return this.chatService.getAllChatRooms(userId);
   }
