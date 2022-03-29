@@ -66,6 +66,7 @@ import { UploadFileModule } from './upload-file/upload-file.module';
           seeds: ['./database/seeds/**/*{.ts,.js}'],
           factories: ['./database/factories/**/*{.ts,.js}'],
           logging: true,
+          synchronize: true,
         };
       },
     }),
