@@ -245,10 +245,6 @@ export class RecruitPostService {
 
   //마무리
   async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
-    const returned = await this.recruitKeepsRepository.findOne(recruitPostId);
-    console.log(returned);
-    if (returned)
-      throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -369,7 +365,11 @@ export class RecruitPostService {
   }
 
   async deleteRecruitPost(postId: number) {
-    await this.recruitPostsRepository.delete(postId);
+    try {
+      await this.recruitPostsRepository.delete(postId);
+    } catch (e) {
+      throw new HttpException('요청이 올바르지 않습니다', 500);
+    }
   }
 
   //마무리
@@ -379,67 +379,43 @@ export class RecruitPostService {
     2, 있으면 지우고 없으면 error를 띄움 post에 comment 카운트를 낮추고 저장
     3, 
     */
-    const returnedComments = await this.recruitCommentsRepository
-      .createQueryBuilder('C')
-      .where('commentId = :commentId', { commentId })
-      .getOne();
-
-    if (!returnedComments.recruitCommentId) {
+    try {
+      await this.recruitCommentsRepository
+        .createQueryBuilder('C')
+        .where('recruitCommentId = :commentId', { commentId })
+        .getOneOrFail();
+    } catch (e) {
       throw new HttpException('지울 데이터가 없어요', 400);
     }
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+
     try {
-      if (returnedComments.recruitCommentId) {
-        await queryRunner.manager
-          .getRepository(RecruitComments)
-          .createQueryBuilder()
-          .update(RecruitComments)
-          .set({ recruitCommentContent: null })
-          .where('recruitCommentId = :commentId', { commentId })
-          .execute();
-        await queryRunner.manager
-          .getRepository(RecruitPosts)
-          .createQueryBuilder()
-          .update()
-          .set({ recruitCommentCount: () => 'recruitCommentCount - 1' })
-          .where('P.recruitPostId = :recruitPostId', { recruitPostId })
-          .execute();
-      }
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      console.error(error);
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+      await this.recruitCommentsRepository.delete(commentId);
+    } catch (e) {
+      throw new HttpException('다시 시도해주세요', 500);
     }
   }
 
   //트렌젝션 걸어야함
-  async deleteKeepIt(recruitPostId: number, recruitKeepId: number) {
+  async deleteKeepIt(recruitPostId: number, userId: number) {
     /*
     1, KeepIt post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, 있으면 지우고 없으면 error를 띄움 apply 카운트를 낮추고 저장
     age: () => "age + 1"
     */
-    const isExist = await this.recruitKeepsRepository
-      .createQueryBuilder('K')
-      .where('K.recruitKeepId = :recruitKeepId', { recruitKeepId })
-      .getOne();
-
-    if (isExist.recruitPostId != recruitPostId) {
+    try {
+      await this.recruitKeepsRepository
+        .createQueryBuilder('K')
+        .where('K.recruitPostId = :recruitPostId', { recruitPostId })
+        .andWhere('K.userId = :userId', { userId })
+        .getOneOrFail();
+    } catch (e) {
       throw new HttpException('잘못된 요청입니다.', 400);
-    }
-    if (!isExist.recruitKeepId) {
-      throw new HttpException('지울 데이터가 없어요', 400);
     }
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      await this.recruitKeepsRepository.delete(recruitKeepId);
+      await this.recruitKeepsRepository.delete(recruitPostId);
       await this.recruitPostsRepository
         .createQueryBuilder()
         .update(RecruitPosts)
@@ -450,7 +426,7 @@ export class RecruitPostService {
     } catch (error) {
       console.error(error);
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new HttpException('다시 시도해주세요', 400);
     } finally {
       await queryRunner.release();
     }
@@ -463,20 +439,15 @@ export class RecruitPostService {
     3, apply가 false 이면 apply를 삭제
     */
 
-    const isExist: RecruitApplies = await this.recruitAppliesRepository.findOne(
-      applyId,
-    );
-
-    if (!isExist.recruitApplyId) {
-      throw new HttpException({ message: '지울 데이터가 없어요' }, 400);
-    }
-    if (isExist.recruitPostId != recruitPostId) {
-      throw new HttpException({ message: '잘못된 요청입니다.' }, 400);
+    let isExist;
+    try {
+      isExist = await this.recruitAppliesRepository.findOneOrFail(applyId);
+    } catch (e) {
+      throw new HttpException({ message: '잘못된 요청입니다' }, 400);
     }
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
       if (isExist.isAccepted) {
         await queryRunner.manager.getRepository(RecruitApplies).delete({

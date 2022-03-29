@@ -384,12 +384,12 @@ export class RecruitPostController {
     description: '댓글 아이디',
   })
   @ApiOperation({ summary: '협업 댓글 삭제하기' })
-  @Delete('/:recruitPostId/:recruitCommentId')
+  @Delete('/:recruitPostId/comment/:recruitCommentId')
   async removeComment(
     @Param('recruitCommentId', ParseIntPipe) commentId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
   ) {
-    this.recruitPostService.deleteComment(postId, commentId);
+    await this.recruitPostService.deleteComment(postId, commentId);
     return { success: true };
   }
 
@@ -410,7 +410,7 @@ export class RecruitPostController {
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
   ) {
-    this.recruitPostService.deleteApply(postId, applyId);
+    await this.recruitPostService.deleteApply(postId, applyId);
 
     return { success: true };
   }
@@ -420,19 +420,16 @@ export class RecruitPostController {
     required: true,
     description: '포스트 아이디',
   })
-  @ApiParam({
-    name: 'recruitKeepId',
-    required: true,
-    description: '킵잇 아이디',
-  })
   @ApiOperation({ summary: '협업 keep취소하기' })
+  @Delete('/:recruitPostId/keepIt')
   @UseGuards(StrictGuard)
-  @Delete('/:recruitPostId/:recruitKeepId')
   async removeKeepIt(
-    @Param('recruitKeepId', ParseIntPipe) keepId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    this.recruitPostService.deleteKeepIt(postId, keepId);
+    const { userId } = res.locals.user;
+    console.log(userId);
+    await this.recruitPostService.deleteKeepIt(postId, userId);
 
     return { success: true };
   }
