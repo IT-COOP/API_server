@@ -16,7 +16,8 @@ export class ResDetailPostDTO {
   public recruitDurationWeeks: number;
   public endAt: string;
   public createdAt: string;
-  public isKeeps: boolean;
+  public applyId: number;
+  public keepId: number;
   public recruitComments: object[];
   public recruitTasks: RecruitTasks[];
   public recruitStacks: RecruitStacks[];

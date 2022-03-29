@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './../socialLogin/entity/Users';
 import { Connection, Repository } from 'typeorm';
@@ -122,7 +122,6 @@ export class RecruitPostService {
           .leftJoinAndSelect('P.recruitComments', 'C')
           .leftJoin('P.author2', 'U')
           .leftJoin('C.user', 'CU')
-          .leftJoinAndSelect('P.recruitKeeps', 'K')
           .addSelect(['CU.nickname', 'CU.profileImgUrl'])
           .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -135,7 +134,7 @@ export class RecruitPostService {
           .where('recruitPostId = :id', { id: recruitPostId })
           .execute(),
       ]);
-
+      console.log(recruitPost);
       return recruitPost;
     }
 
@@ -145,6 +144,9 @@ export class RecruitPostService {
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
+        .leftJoinAndSelect('P.recruitApplies', 'A', 'P.author =:loginId', {
+          loginId,
+        })
         .leftJoin('P.author2', 'U')
         .leftJoin('C.user', 'CU')
         .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
@@ -163,7 +165,7 @@ export class RecruitPostService {
         .execute(),
     ]);
     console.log(recruitPost);
-
+    
     return recruitPost;
   }
 
@@ -215,36 +217,26 @@ export class RecruitPostService {
 
   //마무리
   async createComment(recruitPostId: number, comment: RecruitComments) {
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
-      await queryRunner.manager
-        .getRepository(RecruitComments)
+      await this.recruitCommentsRepository
         .createQueryBuilder()
         .insert()
         .into(RecruitComments)
         .values(comment)
         .execute();
-      await queryRunner.manager
-        .getRepository(RecruitComments)
-        .createQueryBuilder()
-        .update(RecruitPosts)
-        .set({ recruitCommentCount: () => 'recruitCommentCount + 1' })
-        .where('recruitPostId = :recruitPostId', { recruitPostId })
-        .execute();
-      await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
-      await queryRunner.rollbackTransaction();
-      throw new HttpException({ message: '서버 에러' }, 500);
-    } finally {
-      await queryRunner.release();
+      throw new HttpException({ message: 'Try again' }, 500);
     }
   }
 
   //마무리
   async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
+    const returned = await this.recruitKeepsRepository.findAndCount({
+      recruitPostId,
+    });
+    if (returned[1]) {
+      throw new HttpException({ message: '이미 신청했어요' }, 400);
+    }
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -264,7 +256,7 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new HttpException({ message: '롤백되었습니다' }, 500);
+      throw new HttpException({ message: 'Try again' }, 500);
     } finally {
       await queryRunner.release();
     }
@@ -281,43 +273,32 @@ export class RecruitPostService {
       .addSelect('COUNT(A.applicant)', 'applyCount')
       .where('U.userId = :userId', { userId })
       .getRawOne();
-
-    if (+returned.postCount)
-      throw new BadRequestException('You can write only one post');
     if (
-      +returned.projectCount + returned.projectCount + returned.projectCount >=
+      +returned.projectCount + returned.projectCount + returned.projectCount >
       3
     ) {
-      throw new BadRequestException(' You can only apply for three projects.');
+      throw new HttpException(
+        { message: ' You can only apply for three projects.' },
+        400,
+      );
     }
     return returned;
   }
 
   async createApply(recruitPostId: number, apply: RecruitApplies) {
-    const returned = await this.recruitAppliesRepository.findOne(recruitPostId);
-    if (returned.recruitApplyId) {
+    const returned = await this.recruitAppliesRepository.findAndCount({
+      recruitPostId,
+    });
+    if (returned[1]) {
       throw new HttpException({ message: '이미 신청했어요' }, 400);
     }
 
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      await queryRunner.manager
-        .getRepository(RecruitApplies)
-        .createQueryBuilder('A')
-        .insert()
-        .into('A')
-        .values(apply)
-        .execute();
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      console.error(error);
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    await this.recruitAppliesRepository
+      .createQueryBuilder()
+      .insert()
+      .into(RecruitApplies)
+      .values(apply)
+      .execute();
   }
 
   //
@@ -396,7 +377,7 @@ export class RecruitPostService {
   }
 
   //트렌젝션 걸어야함
-  async deleteKeepIt(recruitPostId: number, userId: number) {
+  async deleteKeepIt(recruitPostId: number, keepId: number) {
     /*
     1, KeepIt post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, 있으면 지우고 없으면 error를 띄움 apply 카운트를 낮추고 저장
@@ -405,8 +386,7 @@ export class RecruitPostService {
     try {
       await this.recruitKeepsRepository
         .createQueryBuilder('K')
-        .where('K.recruitPostId = :recruitPostId', { recruitPostId })
-        .andWhere('K.userId = :userId', { userId })
+        .where('K.recruitKeepId = :keepId', { keepId })
         .getOneOrFail();
     } catch (e) {
       throw new HttpException('잘못된 요청입니다.', 400);
