@@ -1,18 +1,6 @@
-import {
-  IsOptional,
-  IsString,
-  IsUrl,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateUserProfileDTO {
-  @IsOptional()
-  @MaxLength(8)
-  @MinLength(2)
-  @IsString()
-  nickname: string;
-
   @IsOptional()
   @IsString()
   technologyStack: string;
