@@ -94,7 +94,7 @@ export class UserService {
       .leftJoin('P.recruitComments', 'C')
       .addSelect('C.recruitCommentId')
       .where('K.userId = :userId', { userId })
-      .andWhere('P.recruitPostId < lastId')
+      .andWhere('P.recruitPostId < :lastId', { lastId })
       .orderBy('P.recruitPostId', 'DESC')
       .take(items)
       .getMany();
