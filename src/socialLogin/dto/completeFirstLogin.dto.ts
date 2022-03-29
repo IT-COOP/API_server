@@ -23,7 +23,6 @@ export class CompleteFirstLoginDTO {
   })
   @IsOptional()
   @IsString()
-  @IsUrl()
   profileImgUrl: string;
 
   @ApiProperty({

@@ -1,14 +1,17 @@
+import { StrictGuard } from './../auth/auth.guard';
 import { CompleteFirstLoginDTO } from './dto/completeFirstLogin.dto';
 import { SocialLoginService } from './socialLogin.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
   Post,
   Query,
   Res,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -81,5 +84,13 @@ export class SocialLoginController {
     return this.socialLoginService.getUserInfoWithAccessToken(
       accessTokenBearer,
     );
+  }
+
+  @UseGuards(StrictGuard)
+  @Delete('me')
+  @ApiOperation({ summary: '회원 탈퇴' })
+  deleteUserInfo(@Res({ passthrough: true }) res) {
+    const userId = res.locals.user.userId;
+    return this.socialLoginService.deleteUserInfo(userId);
   }
 }

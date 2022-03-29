@@ -85,16 +85,18 @@ export class UserService {
   }
 
   // 내가 keep한 게시물
-  async getMyKeeps(userId: string) {
-    const posts = await this.recruitKeepRepository
-      .createQueryBuilder('K')
-      .leftJoinAndSelect('K.recruitPost', 'P')
+  async getMyKeeps(userId: string, lastId: number, items: number) {
+    const posts = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.recruitKeeps', 'K')
       .leftJoinAndSelect('P.recruitStacks', 'S')
       .leftJoinAndSelect('P.recruitTasks', 'T')
       .leftJoin('P.recruitComments', 'C')
       .addSelect('C.recruitCommentId')
       .where('K.userId = :userId', { userId })
+      .andWhere('P.recruitPostId < :lastId', { lastId })
       .orderBy('P.recruitPostId', 'DESC')
+      .take(items)
       .getMany();
     return { posts };
   }

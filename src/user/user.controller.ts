@@ -1,4 +1,4 @@
-import { ApiOperation, ApiTags, ApiHeader } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
   Body,
@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Res,
   UseGuards,
   ValidationPipe,
@@ -61,10 +62,27 @@ export class UserController {
   // 내가 keep한 게시물
   @UseGuards(StrictGuard)
   @Get('mykeep')
+  @ApiParam({
+    name: 'items',
+    required: false,
+    description:
+      '받을 게시물의 갯수를 의미합니다. input이 주어지지 않을 경우, default는 12입니다.',
+  })
+  @ApiParam({
+    name: 'cur',
+    required: false,
+    description:
+      '마지막으로 주어진 게시물의 postId를 말합니다. input이 주어지지 않을 경우, 최신 게시물을 기준으로 합니다.',
+  })
   @ApiOperation({ summary: '내가 keep한 게시물 보기' })
-  async getMyKeeps(@Res({ passthrough: true }) res) {
+  async getMyKeeps(
+    @Res({ passthrough: true }) res,
+    @Query('cur') lastId,
+    @Query('items') items,
+  ) {
+    (lastId = parseInt(lastId) || 100000000), (items = parseInt(items) || 12);
     const userId = res.locals.user.userId;
-    return this.userService.getMyKeeps(userId);
+    return this.userService.getMyKeeps(userId, lastId, items);
   }
 
   // 내가 love한 게시물
