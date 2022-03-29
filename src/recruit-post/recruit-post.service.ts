@@ -400,7 +400,7 @@ export class RecruitPostService {
         .createQueryBuilder()
         .update(RecruitPosts)
         .set({ recruitKeepCount: () => 'recruitKeepCount - 1' })
-        .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+        .where('recruitPostId = :recruitPostId', { recruitPostId })
         .execute();
       await queryRunner.commitTransaction();
     } catch (error) {

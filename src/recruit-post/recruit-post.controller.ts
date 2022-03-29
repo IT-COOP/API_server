@@ -191,8 +191,12 @@ export class RecruitPostController {
     details.createdAt = recruitPost.createdAt.toISOString();
 
     if (userId) {
-      details.keepId = recruitPost.recruitKeeps[0].recruitKeepId;
-      details.applyId = recruitPost.recruitApplies[0].recruitApplyId;
+      details.keepId = recruitPost.recruitKeeps.length
+        ? recruitPost.recruitKeeps[0].recruitKeepId
+        : 0;
+      details.applyId = recruitPost.recruitApplies.length
+        ? recruitPost.recruitApplies[0].recruitApplyId
+        : 0;
     } else {
       details.keepId = 0;
       details.applyId = 0;
