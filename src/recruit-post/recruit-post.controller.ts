@@ -30,7 +30,6 @@ import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { ResRecruitPostsDTO } from './dto/resRecruitPosts.dto';
 import { ResDetailPostDTO } from './dto/resDetailPost.dto';
-import { GetRecruitsDTO } from './dto/getRecruits.dto';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
@@ -144,6 +143,21 @@ export class RecruitPostController {
     return recruits;
   }
 
+  @ApiOperation({ summary: '협업 게시물 체크' })
+  @Get('check/apply')
+  async checkApplyCount(@Res({ passthrough: true }) res: Response) {
+    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
+
+    if (!userId) {
+      return;
+    }
+    const recruits: any = await this.recruitPostService.readRecruitCount(
+      userId,
+    );
+
+    return recruits;
+  }
+
   @ApiParam({
     name: 'recruitPostId',
     required: true,
@@ -176,7 +190,17 @@ export class RecruitPostController {
 
     details.createdAt = recruitPost.createdAt.toISOString();
 
-    details.isKeeps = recruitPost.recruitKeeps.length ? true : false;
+    if (userId) {
+      details.keepId = recruitPost.recruitKeeps.length
+        ? recruitPost.recruitKeeps[0].recruitKeepId
+        : 0;
+      details.applyId = recruitPost.recruitApplies.length
+        ? recruitPost.recruitApplies[0].recruitApplyId
+        : 0;
+    } else {
+      details.keepId = 0;
+      details.applyId = 0;
+    }
 
     details.recruitTasks = recruitPost.recruitTasks;
     details.recruitStacks = recruitPost.recruitStacks;
@@ -330,7 +354,7 @@ export class RecruitPostController {
     apply.task = body.task;
     apply.isAccepted = false;
 
-    await this.recruitPostService.readRecruitCount(userId);
+    // await this.recruitPostService.readRecruitCount(userId);
     await this.recruitPostService.createApply(postId, apply);
 
     return { success: true };
@@ -343,7 +367,7 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 keep하기' })
   @UseGuards(StrictGuard)
-  @Post('/:recruitPostId/keepIt')
+  @Post('/:recruitPostId/keep')
   async postKeepIt(
     @Param('recruitPostId', ParseIntPipe) postId: number,
     @Res({ passthrough: true }) res: Response,
@@ -384,12 +408,12 @@ export class RecruitPostController {
     description: '댓글 아이디',
   })
   @ApiOperation({ summary: '협업 댓글 삭제하기' })
-  @Delete('/:recruitPostId/:recruitCommentId')
+  @Delete('/:recruitPostId/comment/:recruitCommentId')
   async removeComment(
     @Param('recruitCommentId', ParseIntPipe) commentId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
   ) {
-    this.recruitPostService.deleteComment(postId, commentId);
+    await this.recruitPostService.deleteComment(postId, commentId);
     return { success: true };
   }
 
@@ -405,12 +429,12 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 신청 취소하기' })
   @UseGuards(StrictGuard)
-  @Delete('/:recruitPostId/:applyId')
+  @Delete('/:recruitPostId/apply/:applyId')
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
   ) {
-    this.recruitPostService.deleteApply(postId, applyId);
+    await this.recruitPostService.deleteApply(postId, applyId);
 
     return { success: true };
   }
@@ -420,19 +444,16 @@ export class RecruitPostController {
     required: true,
     description: '포스트 아이디',
   })
-  @ApiParam({
-    name: 'recruitKeepId',
-    required: true,
-    description: '킵잇 아이디',
-  })
   @ApiOperation({ summary: '협업 keep취소하기' })
+  @Delete('/:recruitPostId/keep/:keepId')
   @UseGuards(StrictGuard)
-  @Delete('/:recruitPostId/:recruitKeepId')
   async removeKeepIt(
-    @Param('recruitKeepId', ParseIntPipe) keepId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Param('keepId', ParseIntPipe) keepId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    this.recruitPostService.deleteKeepIt(postId, keepId);
+    const { userId } = res.locals.user;
+    await this.recruitPostService.deleteKeepIt(postId, keepId);
 
     return { success: true };
   }
