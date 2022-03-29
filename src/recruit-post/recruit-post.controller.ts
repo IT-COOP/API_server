@@ -30,6 +30,7 @@ import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { ResRecruitPostsDTO } from './dto/resRecruitPosts.dto';
 import { ResDetailPostDTO } from './dto/resDetailPost.dto';
+import { GetRecruitsDTO } from './dto/getRecruits.dto';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
@@ -75,22 +76,16 @@ export class RecruitPostController {
   @ApiOperation({ summary: '협업 게시물 전체 불러오기' })
   @UseGuards(LooseGuard)
   async getAllRecruits(
-    @Query('sort') order: any,
-    @Query('items') items: any,
-    @Query('loc') location: any,
-    @Query('task') task: any,
-    @Query('stack') stack: any,
-    @Query('cur') lastId: any,
-    @Query('over') over: any,
+    @Query() conditions,
     @Res({ passthrough: true }) res: Response,
   ) {
-    order = parseInt(order) || 0;
-    items = parseInt(items) || 12;
-    location = parseInt(location) || 0;
-    task = parseInt(task) || 0;
-    stack = parseInt(stack) || 0;
-    lastId = parseInt(lastId) || 0;
-    over = parseInt(over) || 0;
+    const order = parseInt(conditions.sort) || 0;
+    const items = parseInt(conditions.items) || 12;
+    const location = parseInt(conditions.loc) || 0;
+    const task = parseInt(conditions.task) || 0;
+    const stack = parseInt(conditions.stack) || 0;
+    const cur = parseInt(conditions.cur) || 0;
+    const over = parseInt(conditions.over) || 0;
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
 
     if (items > 12) {
@@ -104,7 +99,7 @@ export class RecruitPostController {
         location,
         task,
         stack,
-        lastId,
+        cur,
         over,
       );
 
@@ -358,7 +353,8 @@ export class RecruitPostController {
     recruitKeepIt.userId = userId;
     recruitKeepIt.recruitPostId = postId;
 
-    this.recruitPostService.createKeepIt(postId, recruitKeepIt);
+    console.log(recruitKeepIt, postId);
+    await this.recruitPostService.createKeepIt(postId, recruitKeepIt);
 
     return { success: true };
   }

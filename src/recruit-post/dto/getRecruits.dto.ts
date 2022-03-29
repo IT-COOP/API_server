@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumberString } from 'class-validator';
-import { Region, Stacks, Tasks } from './../../common/enums';
+import { Location, Stacks, Tasks } from './../../common/enums';
 import { over, sort } from '../enums/recruit.enums';
 
 export class GetRecruitsDTO {
@@ -20,10 +20,10 @@ export class GetRecruitsDTO {
 
   @ApiProperty({
     example: '101',
-    description: 'rog',
+    description: 'loc',
   })
-  @IsNumberString(Region)
-  public rog: string;
+  @IsNumberString(Location)
+  public loc: string;
 
   @ApiProperty({
     example: '300',
@@ -44,7 +44,7 @@ export class GetRecruitsDTO {
     description: '아이디',
   })
   @IsNumberString()
-  public cor: string;
+  public cur: string;
 
   @ApiProperty({
     example: '0',
