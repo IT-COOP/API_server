@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsNumber, IsString } from 'class-validator';
-import { Region } from 'src/common/enums';
+import { Location } from 'src/common/enums';
 import { RecruitStacks } from '../entities/RecruitStacks';
 import { RecruitTasks } from '../entities/RecruitTasks';
 
@@ -21,10 +21,10 @@ export class RecruitPostDTO {
   public recruitContent: string;
 
   @ApiProperty({
-    example: 101,
+    example: 100,
     description: '지역에 대한 번호',
   })
-  @IsEnum(Region)
+  @IsEnum(Location)
   public recruitLocation: number;
 
   @ApiProperty({

@@ -245,15 +245,14 @@ export class RecruitPostService {
 
   //마무리
   async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
+    const returned = await this.recruitKeepsRepository.findOne(recruitPostId);
+    console.log(returned);
+    if (returned)
+      throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const returned = await queryRunner.manager
-        .getRepository(RecruitKeeps)
-        .findOne(keepIt);
-      if (returned.recruitKeepId)
-        throw new HttpException({ message: '이미 킵잇된 게시물입니다.' }, 400);
       await queryRunner.manager
         .createQueryBuilder()
         .insert()
@@ -268,9 +267,8 @@ export class RecruitPostService {
         .execute();
       await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new HttpException({ message: '롤백되었습니다' }, 500);
     } finally {
       await queryRunner.release();
     }

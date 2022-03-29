@@ -63,6 +63,8 @@ import { UploadFileModule } from './upload-file/upload-file.module';
             ChatMembers,
             Chats,
           ],
+          seeds: ['src/seeds/**/*{.ts,.js}'],
+          factories: ['src/factories/**/*{.ts,.js}'],
           logging: true,
         };
       },

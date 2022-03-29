@@ -1,7 +1,7 @@
 import { CreateNotificationDto } from './socket/dto/createNotification.dto';
 import { EventType } from './socket/enum/eventType.enum';
 import { Injectable } from '@nestjs/common';
-import { Stacks, Region, Tasks } from './common/enums';
+import { Stacks, Location, Tasks } from './common/enums';
 @Injectable()
 export class AppService {
   getHello(): string {
@@ -13,7 +13,7 @@ export class AppService {
     return { EventType, notification: CreateNotificationDto };
   }
   getLocationEnum() {
-    return { Region };
+    return { Location };
   }
   getStackEnum() {
     return { Stacks };

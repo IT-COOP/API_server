@@ -35,10 +35,15 @@ export class UpdateDetailPostsDTO implements RecruitPostDTO {
   public imgUrl: string;
 
   @ApiProperty({
+    example: 'recruitStackId[]',
+    description: '스텍에 대한 id값 배열',
+  })
+  1;
+  public recruitStackId: number[];
+  @ApiProperty({
     example: [
       {
-        recruitStackId: 1,
-        recruitStack: 300,
+        recruitStack: 301,
         numberOfPeopleRequired: 3,
         numberOfPeopleSet: 0,
       },
@@ -48,10 +53,14 @@ export class UpdateDetailPostsDTO implements RecruitPostDTO {
   public recruitStacks: RecruitStacks[];
 
   @ApiProperty({
+    example: 'recruitTaskId[]',
+    description: '직무에 대한 id값 배열',
+  })
+  public recruitTaskId: number[];
+  @ApiProperty({
     example: [
       {
-        recruitTaskId: 1,
-        recruitTask: 3,
+        recruitTask: 300,
         numberOfPeopleRequired: 3,
         numberOfPeopleSet: 0,
       },
