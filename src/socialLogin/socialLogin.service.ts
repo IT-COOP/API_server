@@ -437,4 +437,9 @@ export class SocialLoginService {
     }
     return false;
   }
+
+  async deleteUserInfo(userId: string) {
+    const result = await this.userRepository.delete(userId);
+    return result;
+  }
 }
