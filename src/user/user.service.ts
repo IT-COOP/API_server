@@ -79,8 +79,8 @@ export class UserService {
     for (const each in updateUserProfileDTO) {
       profile[each] = updateUserProfileDTO[each];
     }
-    const result = await this.userRepository.save(profile);
-    return { result };
+    await this.userRepository.save(profile);
+    return { profile };
   }
 
   // 내가 keep한 게시물
