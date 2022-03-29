@@ -1,7 +1,7 @@
 import { AuthModule } from './../auth/auth.module';
 import { ChatRooms } from './../socket/entities/ChatRooms';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { RecruitPostService } from './recruit-post.service';
 import { RecruitPostController } from './recruit-post.controller';
 import { RecruitApplies } from './entities/RecruitApplies';
@@ -11,6 +11,7 @@ import { RecruitPosts } from './entities/RecruitPosts';
 import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { Users } from './../socialLogin/entity/Users';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Users } from './../socialLogin/entity/Users';
       ChatRooms,
     ]),
     AuthModule,
+    forwardRef(() => SocketModule),
   ],
   controllers: [RecruitPostController],
   providers: [RecruitPostService],

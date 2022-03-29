@@ -7,7 +7,7 @@ import { Users } from './../socialLogin/entity/Users';
 import { socialLoginModule } from './../socialLogin/socialLogin.module';
 import { UserModule } from './../user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SocketService } from './socket.service';
 import { SocketGateway } from './socket.gateway';
 import { RecruitPostModule } from './../recruit-post/recruit-post.module';
@@ -25,7 +25,7 @@ import { Notification } from './../user/entities/Notification';
       Users,
       RecruitApplies,
     ]),
-    RecruitPostModule,
+    forwardRef(() => RecruitPostModule),
     UserModule,
     socialLoginModule,
   ],

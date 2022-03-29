@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -43,5 +44,22 @@ export const loginError = {
 };
 
 export const recruitError = {
-  //
+  //잘못된 요청을 보낼 때 에러
+  WrongRequiredError: new HttpException(
+    { message: 'You sent the wrong request.' },
+    400,
+  ),
+  DBqueryError: new HttpException({ message: 'Try again' }, 500),
+  DuplicateOneRecruitApply: new HttpException(
+    { message: 'You have already applied.' },
+    400,
+  ),
+  MaxProgressProjectError: new HttpException(
+    { message: ' You can only apply for three projects.' },
+    400,
+  ),
+  DuplicateOneRecruitKeep: new HttpException(
+    { message: 'You have already kept.' },
+    400,
+  ),
 };
