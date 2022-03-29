@@ -75,6 +75,13 @@ export class UserService {
   ) {
     const profile = await this.userRepository.findOne({
       where: { userId },
+      select: [
+        'userId',
+        'nickname',
+        'profileImgUrl',
+        'portfolioUrl',
+        'selfIntroduction',
+      ],
     });
     for (const each in updateUserProfileDTO) {
       profile[each] = updateUserProfileDTO[each];
@@ -150,7 +157,7 @@ export class UserService {
         'A.isAccepted',
         'A.createdAt',
       ])
-      .addSelect('AP.nickname, AP.profileImgUrl')
+      .addSelect(['AP.nickname', 'AP.profileImgUrl'])
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .addSelect('C.recruitCommentId')
       .where('P.author = :userId', { userId })

@@ -30,7 +30,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('profile')
   @ApiOperation({ summary: '내 프로필 보기' })
-  async getMyProfile(@Res({ passthrough: true }) res) {
+  getMyProfile(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyProfile(userId);
   }
@@ -39,10 +39,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('profile/:id')
   @ApiOperation({ summary: '다른 사람 프로필 보기' })
-  async getOthersProfile(
-    @Param('id') id: string,
-    @Res({ passthrough: true }) res,
-  ) {
+  getOthersProfile(@Param('id') id: string, @Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getOthersProfile(id, userId);
   }
@@ -51,7 +48,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Put('profile')
   @ApiOperation({ summary: '내 프로필 수정하기' })
-  async putMyProfile(
+  putMyProfile(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) updateUserProfileDTO: UpdateUserProfileDTO,
   ) {
@@ -75,7 +72,7 @@ export class UserController {
       '마지막으로 주어진 게시물의 postId를 말합니다. input이 주어지지 않을 경우, 최신 게시물을 기준으로 합니다.',
   })
   @ApiOperation({ summary: '내가 keep한 게시물 보기' })
-  async getMyKeeps(
+  getMyKeeps(
     @Res({ passthrough: true }) res,
     @Query('cur') lastId,
     @Query('items') items,
@@ -89,7 +86,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('mylove')
   @ApiOperation({ summary: '내가 love한 게시물 보기 - not implemented error' })
-  async getMyLoves(@Res({ passthrough: true }) res) {
+  getMyLoves(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyLoves(userId);
   }
@@ -98,7 +95,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('running')
   @ApiOperation({ summary: '내가 진행 중인 프로젝트 보기' })
-  async getMyRunningProject(@Res({ passthrough: true }) res) {
+  getMyRunningProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyRunningProject(userId);
   }
@@ -107,7 +104,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('applied')
   @ApiOperation({ summary: '내가 신청한 프로젝트 보기' })
-  async getMyAppliedProject(@Res({ passthrough: true }) res) {
+  getMyAppliedProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyAppliedProject(userId);
   }
@@ -116,7 +113,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('recruiting')
   @ApiOperation({ summary: '내가 모집 중인 프로젝트 보기' })
-  async getMyRecruitingProject(@Res({ passthrough: true }) res) {
+  getMyRecruitingProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyRecruitingProject(userId);
   }
@@ -125,7 +122,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('over')
   @ApiOperation({ summary: '내가 진행 완료한 프로젝트 보기' })
-  async getMyOverProject(@Res({ passthrough: true }) res) {
+  getMyOverProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyOverProject(userId);
   }
@@ -134,7 +131,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('level')
   @ApiOperation({ summary: '내가 지금가지 완료한 프로젝트 갯수' })
-  async getMyLevel(@Res({ passthrough: true }) res) {
+  getMyLevel(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyLevel(userId);
   }
@@ -143,7 +140,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Post('rate')
   @ApiOperation({ summary: '다른 유저 평가하기' })
-  async rateUser(
+  rateUser(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) rateUserDto: RateUserDto,
   ) {
@@ -155,7 +152,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/recruiting')
   @ApiOperation({ summary: '다른 사람이 모집 중인 프로젝트 보기' })
-  async getOthersRecruitingProject(
+  getOthersRecruitingProject(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId: string,
   ) {
@@ -167,7 +164,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/running')
   @ApiOperation({ summary: '다른 사람이 진행 중인 프로젝트 보기' })
-  async getOthersRunningProject(
+  getOthersRunningProject(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId: string,
   ) {
@@ -179,7 +176,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('profile/:anotherUserId/over')
   @ApiOperation({ summary: '다른 사람이 진행 완료한 프로젝트 보기' })
-  async getOthersOverProject(
+  getOthersOverProject(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId: string,
   ) {
@@ -191,7 +188,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('level/:anotherUserId')
   @ApiOperation({ summary: '다른사람이 지금까지 완료한 프로젝트 갯수' })
-  async getOthersLevel(
+  getOthersLevel(
     @Res({ passthrough: true }) res,
     @Param('anotherUserId') anotherUserId,
   ) {
