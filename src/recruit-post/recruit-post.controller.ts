@@ -174,6 +174,7 @@ export class RecruitPostController {
 
     const recruitPost: RecruitPosts =
       await this.recruitPostService.ReadSpecificRecruits(recruitPostId, userId);
+    console.log(recruitPost);    
 
     const details: ResDetailPostDTO = new ResDetailPostDTO();
     details.recruitPostId = recruitPost.recruitPostId;
@@ -379,7 +380,7 @@ export class RecruitPostController {
 
     console.log(recruitKeepIt, postId);
     await this.recruitPostService.createKeepIt(postId, recruitKeepIt);
-
+    console.log('저장 성공 후 서비스 빠져나옴');
     return { success: true };
   }
 
