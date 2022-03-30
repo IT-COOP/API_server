@@ -194,9 +194,6 @@ export class SocialLoginService {
       );
     }
     const indigenousKey = String(container.digest('hex'));
-    console.log(indigenousKey, '해시한 것.');
-    console.log(key, '해시 안한 것.');
-    console.log(userInfo.data);
     return this.internalTokenCreation(key, loginType, res);
   }
 
@@ -231,13 +228,10 @@ export class SocialLoginService {
 
   // 클라이언트와 시작
   async userValidation(accessTokenBearer: string) {
-    // access Token이 넘어온다.
-    console.log(accessTokenBearer);
     if (!accessTokenBearer) {
       throw loginError.AccessTokenRequiredError;
     }
     const accessToken = accessTokenBearer.split(' ')[1];
-    console.log(accessToken);
     const decrypted = this.authService.jwtVerification(accessToken);
     const payload = {
       sub: this.authService.getUserIdFromDecryptedAccessToken(decrypted),
@@ -247,7 +241,6 @@ export class SocialLoginService {
       where: { userId: payload.sub },
       select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
     });
-    console.log('targetUser', targetUser);
     if (targetUser && targetUser.nickname) {
       const novelAccessToken = this.authService.createAccessTokenWithUserId(
         payload.sub,
@@ -358,8 +351,6 @@ export class SocialLoginService {
     const userIdFromRefreshToken =
       this.authService.getUserIdFromDecryptedRefreshToken(decrypted);
 
-    console.log(userIdFromRefreshToken);
-    console.log(userIdFromAccessToken);
     if (userIdFromAccessToken !== userIdFromRefreshToken) {
       throw loginError.TokensMismatchError;
     }
