@@ -384,7 +384,17 @@ export class RecruitPostService {
   }
 
   //마무리
-  async updateComment(commentId: number, comment: object) {
+  async updateComment(commentId: number, comment: RecruitComments) {
+    try {
+      const returned = await this.recruitCommentsRepository.findOne({
+        recruitCommentId: commentId,
+      });
+      if (returned.userId !== comment.userId) {
+        throw recruitError.WrongRequiredError;
+      }
+    } catch (e) {
+      throw recruitError.WrongRequiredError;
+    }
     await this.recruitCommentsRepository
       .createQueryBuilder()
       .update(RecruitComments)

@@ -323,6 +323,7 @@ export class RecruitPostController {
 
     const comment = new RecruitComments();
     comment.userId = userId;
+    comment.recruitPostId = recruitPostId;
     comment.commentDepth = body.commentDepth;
     comment.commentGroup = body.commentGroup;
     comment.recruitCommentContent = body.recruitCommentContent;
@@ -385,6 +386,7 @@ export class RecruitPostController {
     required: true,
     description: '포스트 아이디',
   })
+  @UseGuards(StrictGuard)
   @Delete('/:recruitPostId')
   async removeRecruitPost(
     @Param('recruitPostId', ParseIntPipe) postId: number,
@@ -404,6 +406,7 @@ export class RecruitPostController {
     required: true,
     description: '댓글 아이디',
   })
+  @UseGuards(StrictGuard)
   @ApiOperation({ summary: '협업 댓글 삭제하기' })
   @Delete('/:recruitPostId/comment/:recruitCommentId')
   async removeComment(
