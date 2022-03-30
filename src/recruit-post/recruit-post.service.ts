@@ -314,9 +314,11 @@ export class RecruitPostService {
   }
 
   async createApply(recruitPostId: number, apply: RecruitApplies) {
-    const returned = await this.recruitAppliesRepository.findAndCount({
-      recruitPostId,
-    });
+    const returned = await this.recruitAppliesRepository
+      .createQueryBuilder()
+      .where('recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('userId = :userId', { userId: keepIt.userId })
+      .getManyAndCount();
     if (returned[1]) {
       throw recruitError.DuplicateOneRecruitApply;
     }
