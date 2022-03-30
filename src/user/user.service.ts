@@ -212,6 +212,7 @@ export class UserService {
       throw new BadRequestException("You Can't Rate A User Twice");
     }
 
+    // 이거 orwhere하고 직접 뒤져보는 로직으로 조금 수정해야 할듯 함.
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.chatRooms', 'C')
@@ -221,6 +222,7 @@ export class UserService {
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
+      .orWhere('M.member = :receiver', { receiver })
       .andWhere('P.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
 

@@ -5,8 +5,8 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Query,
   Res,
   UseGuards,
@@ -46,7 +46,7 @@ export class UserController {
 
   // 내 프로필 수정하기
   @UseGuards(StrictGuard)
-  @Put('profile')
+  @Patch('profile')
   @ApiOperation({ summary: '내 프로필 수정하기' })
   putMyProfile(
     @Res({ passthrough: true }) res,
