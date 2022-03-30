@@ -284,7 +284,6 @@ export class RecruitPostService {
         .where('recruitPostId = :recruitPostId', { recruitPostId })
         .execute();
       await queryRunner.commitTransaction();
-      console.log('저장 성공');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;
