@@ -255,20 +255,16 @@ export class UserService {
   // 모집 중인 프로젝트 - 신청자 목록?
   async getMyRecruitingProject(userId: string, loginId: string) {
     console.log(userId, loginId);
-    let commonJoin = this.recruitPostRepository
-      .createQueryBuilder('P')
-      .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'C');
-    if (loginId === userId) {
-      commonJoin = commonJoin
+    let posts: RecruitPosts[];
+    if (userId === loginId) {
+      posts = await this.recruitPostRepository
+        .createQueryBuilder('P')
+        .leftJoin('P.author2', 'U')
+        .leftJoin('P.recruitComments', 'C')
         .leftJoin('P.recruitApplies', 'A')
-        .leftJoin('A.applicant2', 'AP');
-    }
-    let commonSelect = commonJoin
-      .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('C.recruitCommentId');
-    if (loginId === userId) {
-      commonSelect = commonSelect
+        .leftJoin('A.applicant2', 'AP')
+        .addSelect(['U.nickname', 'U.profileImgUrl'])
+        .addSelect('C.recruitCommentId')
         .addSelect([
           'A.applicant',
           'A.task',
@@ -276,14 +272,23 @@ export class UserService {
           'A.isAccepted',
           'A.createdAt',
         ])
-        .addSelect(['AP.nickname', 'AP.profileImgUrl']);
+        .addSelect(['AP.nickname', 'AP.profileImgUrl'])
+        .where('A.author = :loginId', { loginId })
+        .andWhere('P.endAt = P.createdAt')
+        .getMany();
+      return { posts };
+    } else {
+      posts = await this.recruitPostRepository
+        .createQueryBuilder('P')
+        .leftJoin('P.author2', 'U')
+        .leftJoin('P.recruitComments', 'C')
+        .addSelect(['U.nickname', 'U.profileImgUrl'])
+        .addSelect('C.recruitCommentId')
+        .where('A.author = :loginId', { loginId })
+        .andWhere('P.endAt = P.createdAt')
+        .getMany();
+      return { posts };
     }
-    const posts = commonSelect
-      .where('A.author = :loginId', { loginId })
-      .andWhere('P.endAt = P.createdAt')
-      .getMany();
-
-    return { posts };
   }
 
   // 진행 완료한 프로젝트
