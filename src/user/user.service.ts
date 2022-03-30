@@ -273,7 +273,7 @@ export class UserService {
           'A.createdAt',
         ])
         .addSelect(['AP.nickname', 'AP.profileImgUrl'])
-        .where('A.author = :loginId', { loginId })
+        .where('P.author = :loginId', { loginId })
         .andWhere('P.endAt = P.createdAt')
         .getMany();
       return { posts };
@@ -284,7 +284,7 @@ export class UserService {
         .leftJoin('P.recruitComments', 'C')
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .addSelect('C.recruitCommentId')
-        .where('A.author = :loginId', { loginId })
+        .where('P.author = :loginId', { loginId })
         .andWhere('P.endAt = P.createdAt')
         .getMany();
       return { posts };
