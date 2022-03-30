@@ -32,26 +32,26 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // 내 프로필 보기
+  @ApiOperation({ summary: '내 프로필 보기' })
   @UseGuards(StrictGuard)
   @Get('profile')
-  @ApiOperation({ summary: '내 프로필 보기' })
   getMyProfile(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyProfile(userId);
   }
 
   // 다른 프로필 보기
+  @ApiOperation({ summary: '다른 사람 프로필 보기' })
   @UseGuards(StrictGuard)
   @Get('profile/:userId')
-  @ApiOperation({ summary: '다른 사람 프로필 보기' })
   getOthersProfile(@Param('userId') userId: string) {
     return this.userService.getOthersProfile(userId);
   }
 
   // 내 프로필 수정하기
+  @ApiOperation({ summary: '내 프로필 수정하기' })
   @UseGuards(StrictGuard)
   @Patch('profile')
-  @ApiOperation({ summary: '내 프로필 수정하기' })
   putMyProfile(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) updateUserProfileDTO: UpdateUserProfileDTO,
@@ -61,8 +61,7 @@ export class UserController {
   }
 
   // 내가 keep한 게시물
-  @UseGuards(StrictGuard)
-  @Get('keep')
+
   @ApiParam({
     name: 'items',
     required: false,
@@ -76,6 +75,8 @@ export class UserController {
       '마지막으로 주어진 게시물의 postId를 말합니다. input이 주어지지 않을 경우, 최신 게시물을 기준으로 합니다.',
   })
   @ApiOperation({ summary: '내가 keep한 게시물 보기' })
+  @UseGuards(StrictGuard)
+  @Get('keep')
   getMyKeeps(
     @Res({ passthrough: true }) res,
     @Query('cur') lastId,
@@ -87,29 +88,29 @@ export class UserController {
   }
 
   // 진행 중인 프로젝트
+  @ApiOperation({ summary: '진행 중인 프로젝트 보기' })
   @UseGuards(StrictGuard)
   @Get('running/:userId')
-  @ApiOperation({ summary: '내가 진행 중인 프로젝트 보기' })
   getMyRunningProject(@Param('userId') userId: string) {
     return this.userService.getMyRunningProject(userId);
   }
 
   // 내가 신청 중인 프로젝트
+  @ApiOperation({ summary: '내가 신청 중인 프로젝트 보기' })
   @UseGuards(StrictGuard)
   @Get('applied')
-  @ApiOperation({ summary: '내가 신청한 프로젝트 보기' })
   getMyAppliedProject(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
     return this.userService.getMyAppliedProject(userId);
   }
 
   // 모집 중인 프로젝트 - 신청자 목록은 분기처리
-  @UseGuards(StrictGuard)
-  @Get('recruiting/:userId')
   @ApiOperation({
     summary:
       '모집 중인 프로젝트 보기 - 내가 신청한 프로젝트일 경우, 신청자 목록',
   })
+  @UseGuards(StrictGuard)
+  @Get('recruiting/:userId')
   getMyRecruitingProject(
     @Param('userId') userId: string,
     @Res({ passthrough: true }) res,
@@ -119,17 +120,17 @@ export class UserController {
   }
 
   // 진행 완료한 프로젝트
+  @ApiOperation({ summary: '진행 완료한 프로젝트 보기' })
   @UseGuards(StrictGuard)
   @Get('over/:userId')
-  @ApiOperation({ summary: '내가 진행 완료한 프로젝트 보기' })
   getMyOverProject(@Param('userId') userId: string) {
     return this.userService.getMyOverProject(userId);
   }
 
   // 협업 점수
+  @ApiOperation({ summary: '지금까지 완료한 프로젝트 갯수' })
   @UseGuards(StrictGuard)
   @Get('level/:userId')
-  @ApiOperation({ summary: '내가 지금가지 완료한 프로젝트 갯수' })
   getMyLevel(@Param('userId') userId: string) {
     return this.userService.getMyLevel(userId);
   }
