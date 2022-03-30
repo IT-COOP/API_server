@@ -382,46 +382,6 @@ export class SocialLoginService {
     };
   }
 
-  async getUserInfoWithAccessToken(accessTokenBearer: string) {
-    if (!accessTokenBearer) {
-      throw loginError.AccessTokenRequiredError;
-    }
-    const decrypted = this.authService.jwtVerification(
-      accessTokenBearer.split(' ')[1],
-    );
-    const userId =
-      this.authService.getUserIdFromDecryptedAccessToken(decrypted);
-    const user = await this.userRepository.findOne({
-      where: {
-        userId,
-      },
-      select: ['userId', 'profileImgUrl', 'activityPoint', 'nickname'],
-    });
-    if (!user) {
-      throw loginError.MissingUserError;
-    } else if (!user.nickname) {
-      throw loginError.TutorialRequiredError;
-    }
-    const counts = await this.userRepository
-      .createQueryBuilder('U')
-      .leftJoin('U.recruitPosts', 'P')
-      .leftJoin('U.chatMembers', 'M')
-      .leftJoin('U.recruitApplies', 'A')
-      .select('U.userId')
-      .addSelect('COUNT(P.author)', 'postCount')
-      .addSelect('COUNT(M.member)', 'projectCount')
-      .addSelect('COUNT(A.applicant)', 'applyCount')
-      .where('U.userId = :userId', { userId })
-      .getRawOne();
-
-    return {
-      userInfo: user,
-      postCount: parseInt(counts.postCount),
-      projectCount: parseInt(counts.projectCount),
-      applyCount: parseInt(counts.applyCount1),
-    };
-  }
-
   async duplicationCheckByNickname(nickname: string) {
     if (
       this.validNickname.test(nickname) &&

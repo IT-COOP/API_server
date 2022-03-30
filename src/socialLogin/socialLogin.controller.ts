@@ -76,16 +76,6 @@ export class SocialLoginController {
     return this.socialLoginService.duplicationCheckByNickname(nickname);
   }
 
-  @Get('me')
-  @ApiOperation({ summary: '내 정보 가져가기' })
-  getUserInfoWithAccessToken(
-    @Headers('authorization') accessTokenBearer: string,
-  ) {
-    return this.socialLoginService.getUserInfoWithAccessToken(
-      accessTokenBearer,
-    );
-  }
-
   @UseGuards(StrictGuard)
   @Delete('me')
   @ApiOperation({ summary: '회원 탈퇴' })
