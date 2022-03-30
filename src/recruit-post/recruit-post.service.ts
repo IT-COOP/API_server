@@ -157,14 +157,14 @@ export class RecruitPostService {
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
-        .leftJoinAndSelect('P.recruitApplies', 'A', 'P.author =:loginId', {
+        .leftJoinAndSelect('P.recruitApplies', 'A', 'A.applicant =:loginId', {
+          loginId,
+        })
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId =:loginId', {
           loginId,
         })
         .leftJoin('P.author2', 'U')
         .leftJoin('C.user', 'CU')
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
-          loginId,
-        })
         .addSelect(['CU.nickname', 'CU.profileImgUrl'])
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -258,9 +258,12 @@ export class RecruitPostService {
 
   //마무리
   async createKeepIt(recruitPostId: number, keepIt: RecruitKeeps) {
-    const returned = await this.recruitKeepsRepository.findAndCount({
-      recruitPostId,
-    });
+    const returned = await this.recruitKeepsRepository
+      .createQueryBuilder()
+      .where('recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('userId = :userId', { userId: keepIt.userId })
+      .getManyAndCount();
+
     if (returned[1]) {
       throw recruitError.DuplicateOneRecruitKeep;
     }
