@@ -317,7 +317,7 @@ export class RecruitPostService {
     const returned = await this.recruitAppliesRepository
       .createQueryBuilder()
       .where('recruitPostId = :recruitPostId', { recruitPostId })
-      .andWhere('userId = :userId', { userId: keepIt.userId })
+      .andWhere('userId = :userId', { userId: apply.applicant })
       .getManyAndCount();
     if (returned[1]) {
       throw recruitError.DuplicateOneRecruitApply;
@@ -384,17 +384,24 @@ export class RecruitPostService {
   }
 
   //마무리
-  async deleteComment(recruitPostId: number, commentId: number) {
+  async deleteComment(
+    recruitPostId: number,
+    commentId: number,
+    userId: string,
+  ) {
     /*
     1, KeepIt post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, 있으면 지우고 없으면 error를 띄움 post에 comment 카운트를 낮추고 저장
     3, 
     */
     try {
-      await this.recruitCommentsRepository
+      const returned = await this.recruitCommentsRepository
         .createQueryBuilder('C')
         .where('recruitCommentId = :commentId', { commentId })
         .getOneOrFail();
+      if (returned.userId !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
       throw recruitError.WrongRequiredError;
     }
@@ -429,8 +436,11 @@ export class RecruitPostService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      await this.recruitKeepsRepository.delete(recruitPostId);
-      await this.recruitPostsRepository
+      await queryRunner.manager
+        .getRepository(RecruitKeeps)
+        .delete({ recruitPostId });
+      await queryRunner.manager
+        .getRepository(RecruitKeeps)
         .createQueryBuilder()
         .update(RecruitPosts)
         .set({ recruitKeepCount: () => 'recruitKeepCount - 1' })

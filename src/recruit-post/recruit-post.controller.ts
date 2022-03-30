@@ -413,7 +413,9 @@ export class RecruitPostController {
   async removeComment(
     @Param('recruitCommentId', ParseIntPipe) commentId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
+    const { userId } = res.locals.user;
     await this.recruitPostService.deleteComment(postId, commentId);
     return { success: true };
   }
