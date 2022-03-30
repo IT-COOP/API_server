@@ -284,7 +284,7 @@ export class UserService {
         .leftJoin('P.recruitComments', 'C')
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .addSelect('C.recruitCommentId')
-        .where('P.author = :loginId', { loginId })
+        .where('P.author = :userId', { userId })
         .andWhere('P.endAt = P.createdAt')
         .getMany();
       return { posts };
