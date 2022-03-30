@@ -129,14 +129,42 @@ export class RecruitPostService {
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number, loginId: string) {
-    if (!loginId) {
+    try {
+      if (!loginId) {
+        const recruitPost = await this.recruitPostsRepository
+          .createQueryBuilder('P')
+          .leftJoinAndSelect('P.recruitStacks', 'S')
+          .leftJoinAndSelect('P.recruitTasks', 'T')
+          .leftJoinAndSelect('P.recruitComments', 'C')
+          .leftJoin('P.author2', 'U')
+          .leftJoin('C.user', 'CU')
+          .addSelect(['CU.nickname', 'CU.profileImgUrl'])
+          .addSelect(['U.nickname', 'U.profileImgUrl'])
+          .where('P.recruitPostId = :id', { id: recruitPostId })
+          .orderBy('C.recruitCommentId', 'ASC')
+          .getOne();
+        await this.recruitPostsRepository
+          .createQueryBuilder('P')
+          .update()
+          .set({ viewCount: () => 'viewCount + 1' })
+          .where('recruitPostId = :id', { id: recruitPostId })
+          .execute();
+        return recruitPost;
+      }
+
       const recruitPost = await this.recruitPostsRepository
         .createQueryBuilder('P')
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
         .leftJoinAndSelect('P.recruitComments', 'C')
+        .leftJoinAndSelect('P.recruitApplies', 'A', 'P.author =:loginId', {
+          loginId,
+        })
         .leftJoin('P.author2', 'U')
         .leftJoin('C.user', 'CU')
+        .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
+          loginId,
+        })
         .addSelect(['CU.nickname', 'CU.profileImgUrl'])
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
@@ -148,35 +176,11 @@ export class RecruitPostService {
         .set({ viewCount: () => 'viewCount + 1' })
         .where('recruitPostId = :id', { id: recruitPostId })
         .execute();
+
       return recruitPost;
+    } catch (e) {
+      throw recruitError.DBqueryError;
     }
-
-    const recruitPost = await this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitStacks', 'S')
-      .leftJoinAndSelect('P.recruitTasks', 'T')
-      .leftJoinAndSelect('P.recruitComments', 'C')
-      .leftJoinAndSelect('P.recruitApplies', 'A', 'P.author =:loginId', {
-        loginId,
-      })
-      .leftJoin('P.author2', 'U')
-      .leftJoin('C.user', 'CU')
-      .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author =:loginId', {
-        loginId,
-      })
-      .addSelect(['CU.nickname', 'CU.profileImgUrl'])
-      .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .where('P.recruitPostId = :id', { id: recruitPostId })
-      .orderBy('C.recruitCommentId', 'ASC')
-      .getOne();
-    await this.recruitPostsRepository
-      .createQueryBuilder('P')
-      .update()
-      .set({ viewCount: () => 'viewCount + 1' })
-      .where('recruitPostId = :id', { id: recruitPostId })
-      .execute();
-
-    return recruitPost;
   }
 
   //마무리
