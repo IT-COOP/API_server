@@ -129,9 +129,9 @@ export class RecruitPostService {
 
   //마무리
   async ReadSpecificRecruits(recruitPostId: number, loginId: string) {
-    if (!loginId) {
-      const [recruitPost] = await Promise.all([
-        this.recruitPostsRepository
+    try {
+      if (!loginId) {
+        const recruitPost = await this.recruitPostsRepository
           .createQueryBuilder('P')
           .leftJoinAndSelect('P.recruitStacks', 'S')
           .leftJoinAndSelect('P.recruitTasks', 'T')
@@ -142,19 +142,17 @@ export class RecruitPostService {
           .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
           .orderBy('C.recruitCommentId', 'ASC')
-          .getOne(),
+          .getOne();
         await this.recruitPostsRepository
           .createQueryBuilder('P')
           .update()
           .set({ viewCount: () => 'viewCount + 1' })
           .where('recruitPostId = :id', { id: recruitPostId })
-          .execute(),
-      ]);
-      return recruitPost;
-    }
+          .execute();
+        return recruitPost;
+      }
 
-    const [recruitPost] = await Promise.all([
-      this.recruitPostsRepository
+      const recruitPost = await this.recruitPostsRepository
         .createQueryBuilder('P')
         .leftJoinAndSelect('P.recruitStacks', 'S')
         .leftJoinAndSelect('P.recruitTasks', 'T')
@@ -171,16 +169,18 @@ export class RecruitPostService {
         .addSelect(['U.nickname', 'U.profileImgUrl'])
         .where('P.recruitPostId = :id', { id: recruitPostId })
         .orderBy('C.recruitCommentId', 'ASC')
-        .getOne(),
+        .getOne();
       await this.recruitPostsRepository
         .createQueryBuilder('P')
         .update()
         .set({ viewCount: () => 'viewCount + 1' })
         .where('recruitPostId = :id', { id: recruitPostId })
-        .execute(),
-    ]);
+        .execute();
 
-    return recruitPost;
+      return recruitPost;
+    } catch (e) {
+      throw recruitError.DBqueryError;
+    }
   }
 
   //마무리
@@ -281,7 +281,7 @@ export class RecruitPostService {
         .where('recruitPostId = :recruitPostId', { recruitPostId })
         .execute();
       await queryRunner.commitTransaction();
-      console.log('저장 성공')
+      console.log('저장 성공');
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;

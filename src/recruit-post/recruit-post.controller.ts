@@ -174,7 +174,7 @@ export class RecruitPostController {
 
     const recruitPost: RecruitPosts =
       await this.recruitPostService.ReadSpecificRecruits(recruitPostId, userId);
-    console.log(recruitPost);    
+    console.log(recruitPost);
 
     const details: ResDetailPostDTO = new ResDetailPostDTO();
     details.recruitPostId = recruitPost.recruitPostId;
