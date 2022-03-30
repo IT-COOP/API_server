@@ -484,16 +484,18 @@ export class RecruitPostService {
     }
   }
 
-  async deleteApply(recruitPostId: number, applyId: number) {
+  async deleteApply(recruitPostId: number, applyId: number, userId: string) {
     /*
     1, applyId post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, apply가 true 이면 task, stack people set을 1씩 내리고 삭제
     3, apply가 false 이면 apply를 삭제
     */
-
-    let isExist;
+    let returned;
     try {
-      isExist = await this.recruitAppliesRepository.findOneOrFail(applyId);
+      returned = await this.recruitAppliesRepository.findOneOrFail(applyId);
+      if (returned.applicant !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
       throw recruitError.WrongRequiredError;
     }
@@ -501,17 +503,16 @@ export class RecruitPostService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      if (isExist.isAccepted) {
-        await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: isExist.recruitApplyId,
-        });
-        await queryRunner.manager
-          .getRepository(RecruitStacks)
-          .createQueryBuilder('S')
-          .update('S')
-          .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
-          .where('S.recruitPostId = :recruitPostId', { recruitPostId })
-          .execute();
+      if (returned.isAccepted) {
+        if (returned.task % 100 !== 0) {
+          await queryRunner.manager
+            .getRepository(RecruitStacks)
+            .createQueryBuilder('S')
+            .update('S')
+            .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
+            .where('S.recruitPostId = :recruitPostId', { recruitPostId })
+            .execute();
+        }
         await queryRunner.manager
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
@@ -519,11 +520,12 @@ export class RecruitPostService {
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
+
         await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: isExist.recruitApplyId,
+          recruitApplyId: returned.recruitApplyId,
         });
       } else {
-        await this.recruitKeepsRepository.delete(applyId);
+        await this.recruitKeepsRepository.delete({ recruitKeepId: applyId });
       }
       await queryRunner.commitTransaction();
     } catch (error) {

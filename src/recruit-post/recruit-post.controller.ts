@@ -354,7 +354,6 @@ export class RecruitPostController {
     apply.task = body.task;
     apply.isAccepted = false;
 
-    // await this.recruitPostService.readRecruitCount(userId);
     await this.recruitPostService.createApply(postId, apply);
 
     return { success: true };
@@ -435,8 +434,10 @@ export class RecruitPostController {
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    await this.recruitPostService.deleteApply(postId, applyId);
+    const { userId } = res.locals.user;
+    await this.recruitPostService.deleteApply(postId, applyId, userId);
 
     return { success: true };
   }
