@@ -5,11 +5,13 @@ import * as expressBasicAuth from 'express-basic-auth';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './http-exception.filter';
 import * as dotenv from 'dotenv';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.use(helmet());
   app.use(
     ['/api'],
     expressBasicAuth({
