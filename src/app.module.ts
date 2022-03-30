@@ -27,6 +27,8 @@ import { UserReputation } from './user/entities/UserReputation';
 import { SocketModule } from './socket/socket.module';
 import { ChatModule } from './chat/chat.module';
 import { UploadFileModule } from './upload-file/upload-file.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from './common/common.interceptor';
 
 @Module({
   imports: [
@@ -77,6 +79,12 @@ import { UploadFileModule } from './upload-file/upload-file.module';
     UploadFileModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
