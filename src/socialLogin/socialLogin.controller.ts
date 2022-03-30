@@ -23,19 +23,16 @@ export class SocialLoginController {
   constructor(private readonly socialLoginService: SocialLoginService) {}
   @Get('kakao')
   kakaoLoginGetToken(@Query('code') code: string, @Res() res: Response) {
-    console.log('kakao', code);
     return this.socialLoginService.getKakaoToken(code, res);
   }
 
   @Get('google')
   googleLogin(@Query('code') code: string, @Res() res: Response) {
-    console.log('google', code);
     return this.socialLoginService.getGoogleToken(code, res);
   }
 
   @Get('github')
   githubLogin(@Query('code') code: string, @Res() res: Response) {
-    console.log('github', code);
     return this.socialLoginService.getGithubToken(code, res);
   }
 
@@ -51,7 +48,6 @@ export class SocialLoginController {
     @Headers('authorization') accessTokenBearer: string,
     @Body(ValidationPipe) completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
-    console.log(accessTokenBearer);
     return this.socialLoginService.completeFirstLogin(
       accessTokenBearer,
       completeFistLoginDTO,
