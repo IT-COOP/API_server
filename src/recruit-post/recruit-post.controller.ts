@@ -292,7 +292,6 @@ export class RecruitPostController {
     const comment = new RecruitComments();
     comment.userId = userId;
     comment.recruitPostId = recruitPostId;
-    comment.commentDepth = body.commentDepth;
     comment.commentGroup = body.commentGroup;
     comment.recruitCommentContent = body.recruitCommentContent;
 

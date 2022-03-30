@@ -232,6 +232,25 @@ export class RecruitPostService {
   //마무리
   async createComment(comment: RecruitComments) {
     try {
+      const returned = await this.recruitCommentsRepository
+        .createQueryBuilder()
+        .where('recruitPostId = :id', { id: comment.recruitPostId })
+        .orderBy('commentGroup', 'DESC')
+        .getMany();
+      if (!returned.length) {
+        comment.commentDepth = 0;
+        comment.commentGroup = 1;
+      } else if (!comment.commentGroup) {
+        comment.commentDepth = 0;
+        comment.commentGroup = returned[0].commentGroup + 1;
+      } else {
+        comment.commentDepth = 1;
+      }
+    } catch (e) {
+      throw recruitError.WrongRequiredError;
+    }
+
+    try {
       await this.recruitCommentsRepository
         .createQueryBuilder()
         .insert()
