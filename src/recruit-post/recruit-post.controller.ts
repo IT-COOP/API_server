@@ -416,7 +416,7 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { userId } = res.locals.user;
-    await this.recruitPostService.deleteComment(postId, commentId);
+    await this.recruitPostService.deleteComment(postId, commentId, userId);
     return { success: true };
   }
 
