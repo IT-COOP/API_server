@@ -254,6 +254,7 @@ export class UserService {
 
   // 모집 중인 프로젝트 - 신청자 목록?
   async getMyRecruitingProject(userId: string, loginId: string) {
+    console.log(userId, loginId);
     let commonJoin = this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoin('P.author2', 'U')
@@ -278,7 +279,7 @@ export class UserService {
         .addSelect(['AP.nickname', 'AP.profileImgUrl']);
     }
     const posts = commonSelect
-      .where('U.userId = :loginId', { loginId })
+      .where('A.author = :loginId', { loginId })
       .andWhere('P.endAt = P.createdAt')
       .getMany();
 
