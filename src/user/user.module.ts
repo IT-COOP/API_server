@@ -10,6 +10,9 @@ import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { AuthModule } from './../auth/auth.module';
 import { Users } from './../socialLogin/entity/Users';
+import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
+import { RecruitStacks } from './../recruit-post/entities/RecruitStacks';
+import { RecruitTasks } from './../recruit-post/entities/RecruitTasks';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { Users } from './../socialLogin/entity/Users';
       UserReputation,
       RecruitKeeps,
       RecruitPosts,
+      RecruitApplies,
+      RecruitStacks,
+      RecruitTasks,
     ]),
     AuthModule,
     forwardRef(() => SocketModule),
