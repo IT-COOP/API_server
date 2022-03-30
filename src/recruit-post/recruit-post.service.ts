@@ -245,15 +245,15 @@ export class RecruitPostService {
       comment.recruitPostId,
     );
 
-    const notification = new CreateNotificationDto();
-    notification.notificationReceiver = returned.author; //글 주인 /
-    notification.notificationSender = comment.userId; //댓글 쓴 사람
-    notification.eventType = comment.commentDepth ? 2 : 1; //
-    notification.eventContent = ' 님이 댓글을 남겼습니다.'; //
-    notification.targetId = comment.recruitPostId; //어디서
-    if (notification.notificationReceiver != notification.notificationSender) {
-      this.socketGateway.sendNotification(notification);
-    }
+    // const notification = new CreateNotificationDto();
+    // notification.notificationReceiver = returned.author; //글 주인 /
+    // notification.notificationSender = comment.userId; //댓글 쓴 사람
+    // notification.eventType = comment.commentDepth ? 2 : 1; //
+    // notification.eventContent = comment.recruitCommentContent; //
+    // notification.targetId = comment.recruitPostId; //어디서
+    // if (notification.notificationReceiver != notification.notificationSender) {
+    //   this.socketGateway.sendNotification(notification);
+    // }
   }
 
   //마무리
