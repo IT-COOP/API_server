@@ -1,4 +1,4 @@
-import { ParseUUIDPipe, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { EventClientToServer } from './../common/socket.event';
 import { SocketService } from './socket.service';
 import { CreateChatRoomDto } from './dto/createChatRoom.dto';
@@ -23,7 +23,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public server: Server;
 
   @SubscribeMessage(EventClientToServer.msgToServer)
-  async handleSubmittedMessage(
+  handleSubmittedMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
@@ -35,7 +35,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.enterChatRoom)
-  async handleChatRoomEntrance(
+  handleChatRoomEntrance(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) enterChatRoomDto: EnterChatRoomDto,
   ) {
@@ -43,7 +43,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.createChatRoom)
-  async handleCreateChatRoom(
+  handleCreateChatRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) createChatRoomDto: CreateChatRoomDto,
   ) {
@@ -63,7 +63,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.notificationConnect)
-  async handleNotificationConnect(
+  handleNotificationConnect(
     @ConnectedSocket() client: Socket,
     @MessageBody() userId: string,
   ) {
@@ -71,7 +71,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.notificationToServer)
-  async handleNotification(
+  handleNotification(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
@@ -82,7 +82,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  async sendNotification(createNotificationDto: CreateNotificationDto) {
+  sendNotification(createNotificationDto: CreateNotificationDto) {
     return this.socketService.sendNotification(
       this.server,
       createNotificationDto,

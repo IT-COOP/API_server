@@ -1,13 +1,20 @@
+import { CreateNotificationDto } from './../socket/dto/createNotification.dto';
+import { SocketGateway } from 'src/socket/socket.gateway';
+import { myPageError } from './../common/error';
+import { RecruitStacks } from './../recruit-post/entities/RecruitStacks';
+import { RecruitTasks } from './../recruit-post/entities/RecruitTasks';
+import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
+import { ResponseToApplyDto } from './dto/responseToApply.dto';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
-import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './../socialLogin/entity/Users';
 import { Repository } from 'typeorm';
 import { UserReputation } from './entities/UserReputation';
 import { RateUserDto } from './dto/rateUser.dto';
+import { EventType } from 'src/socket/enum/eventType.enum';
 
 @Injectable()
 export class UserService {
@@ -17,10 +24,15 @@ export class UserService {
     private readonly userRepository: Repository<Users>,
     @InjectRepository(UserReputation)
     private readonly userReputationRepository: Repository<UserReputation>,
-    @InjectRepository(RecruitKeeps)
-    private readonly recruitKeepRepository: Repository<RecruitKeeps>,
     @InjectRepository(RecruitPosts)
     private readonly recruitPostRepository: Repository<RecruitPosts>,
+    @InjectRepository(RecruitApplies)
+    private readonly recruitApplyRepository: Repository<RecruitApplies>,
+    @InjectRepository(RecruitTasks)
+    private readonly recruitTaskRepository: Repository<RecruitTasks>,
+    @InjectRepository(RecruitStacks)
+    private readonly recruitStackRepository: Repository<RecruitStacks>,
+    private readonly socketGateway: SocketGateway,
   ) {}
   // 내 프로필 보기
   async getMyProfile(userId: string) {
@@ -74,7 +86,7 @@ export class UserService {
       relations: ['userReputations2'],
     });
     if (!profile) {
-      throw new BadRequestException('There Is No Such User');
+      throw myPageError.MissingUserError;
     }
     return { profile };
   }
@@ -148,6 +160,98 @@ export class UserService {
     return { posts };
   }
 
+  async responseToApply(
+    userId: string,
+    responseToApplyDto: ResponseToApplyDto,
+  ) {
+    const post = await this.recruitPostRepository.findOne({
+      where: { recruitPostId: responseToApplyDto.recruitPostId },
+    });
+    if (post.author !== userId) {
+      // 지가 적은 글도 아닌데 받으려고 함.
+      throw myPageError.WrongAuthorError;
+    }
+    const apply = await this.recruitApplyRepository.findOne({
+      where: {
+        recruitPostId: responseToApplyDto.recruitPostId,
+        applicant: responseToApplyDto.applicant,
+      },
+    });
+    if (!apply) {
+      // 신청한 적도 없음!
+      throw myPageError.NoApplyToResponseError;
+    }
+    if (!responseToApplyDto.isAccepted) {
+      // 거절했음
+      await this.recruitApplyRepository.delete(apply.recruitApplyId);
+      return {
+        success: true,
+      };
+    }
+    if (apply.isAccepted) {
+      // 이미 허락했음
+      throw myPageError.AlreadyRespondedError;
+    }
+    if (apply.task % 100) {
+      const task = apply.task / 100 < 3 ? 300 : 400;
+      // 개발자임
+      const recruitStack = await this.recruitStackRepository.findOne({
+        where: {
+          recruitPostId: apply.recruitPostId,
+          recruitStack: apply.task,
+        },
+      });
+      const recruitTask = await this.recruitTaskRepository.findOne({
+        where: {
+          recruitPostId: apply.recruitPostId,
+          recruitTask: task,
+        },
+      });
+      if (
+        !recruitStack ||
+        !recruitTask ||
+        recruitStack.numberOfPeopleRequired ===
+          recruitStack.numberOfPeopleSet ||
+        recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
+      ) {
+        // 이미 다 구함 에러처리 혹은 안 구하는 중
+        throw myPageError.NotRecruitingError;
+      }
+      recruitStack.numberOfPeopleRequired++;
+      recruitTask.numberOfPeopleRequired++;
+      await this.recruitStackRepository.save(recruitStack);
+      await this.recruitTaskRepository.save(recruitTask);
+    } else {
+      // 기획자 혹은 디자이너임
+      const recruitTask = await this.recruitTaskRepository.findOne({
+        where: {
+          recruitPostId: apply.recruitPostId,
+          recruitTask: apply.task,
+        },
+      });
+      if (
+        !recruitTask ||
+        recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
+      ) {
+        // 이미 다 구함 혹은 안 구함
+        throw myPageError.NotRecruitingError;
+      }
+      recruitTask.numberOfPeopleRequired++;
+      await this.recruitTaskRepository.save(recruitTask);
+    }
+    apply.isAccepted = true;
+    await this.recruitApplyRepository.save(apply);
+    const notification = new CreateNotificationDto();
+    notification.notificationReceiver = apply.applicant;
+    notification.notificationSender = userId;
+    notification.eventType = EventType.recruitApplyAccepted;
+    notification.eventContent = '';
+    notification.targetId = apply.recruitPostId;
+    this.socketGateway.sendNotification(notification);
+
+    return { success: true };
+  }
+
   // 모집 중인 프로젝트 - 신청자 목록?
   async getMyRecruitingProject(userId: string, loginId: string) {
     let commonJoin = this.recruitPostRepository
@@ -174,7 +278,7 @@ export class UserService {
         .addSelect(['AP.nickname', 'AP.profileImgUrl']);
     }
     const posts = commonSelect
-      .where('P.author = :userId', { userId })
+      .where('U.userId = :loginId', { loginId })
       .andWhere('P.endAt = P.createdAt')
       .getMany();
 
@@ -224,7 +328,7 @@ export class UserService {
       .andWhere('R.recruitPostId = :', { recruitPostId })
       .getOne();
     if (isRated) {
-      throw new BadRequestException("You Can't Rate A User Twice");
+      throw myPageError.UnableToRateTwiceError;
     }
 
     // 이거 orWhere하고 직접 뒤져보는 로직으로 조금 수정해야 할듯 함.
@@ -242,7 +346,7 @@ export class UserService {
       .getOne();
 
     if (!post) {
-      throw new BadRequestException("You Can't Rate The User");
+      throw myPageError.UnableToRateError;
     }
     let isOk = false;
     for (const members of post.chatRooms.chatMembers) {
@@ -262,6 +366,6 @@ export class UserService {
       // 여기 평가 반영
     }
 
-    throw new BadRequestException("You Can't Rate The User");
+    throw myPageError.UnableToRateError;
   }
 }

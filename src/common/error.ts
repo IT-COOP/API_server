@@ -63,3 +63,16 @@ export const recruitError = {
     400,
   ),
 };
+
+export const myPageError = {
+  UnableToRateTwiceError: new BadRequestException(
+    "You Can't Rate a User Twice",
+  ),
+  MissingUserError: new BadRequestException('There Is No Such User'),
+  UnableToRateError: new BadRequestException("You Can't Rate The User"),
+  NoSuchApplyError: new BadRequestException('There Is No Such Apply'),
+  WrongAuthorError: new ForbiddenException('You Are Not The Author'),
+  NoApplyToResponseError: new BadRequestException('There Is No Such Apply'),
+  AlreadyRespondedError: new BadRequestException('Already Responded The Apply'),
+  NotRecruitingError: new BadRequestException('Wrong Apply To Response'),
+};

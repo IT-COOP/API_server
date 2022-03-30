@@ -1,3 +1,4 @@
+import { ResponseToApplyDto } from './dto/responseToApply.dto';
 import { ApiOperation, ApiTags, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
@@ -104,6 +105,16 @@ export class UserController {
     return this.userService.getMyAppliedProject(userId);
   }
 
+  @UseGuards(StrictGuard)
+  @Post('recruiting/response')
+  responseToApply(
+    @Res({ passthrough: true }) res,
+    @Body('responseToApplyDto') responseToApplyDto: ResponseToApplyDto,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.responseToApply(userId, responseToApplyDto);
+  }
+
   // 모집 중인 프로젝트 - 신청자 목록은 분기처리
   @ApiOperation({
     summary:
@@ -147,3 +158,5 @@ export class UserController {
     return this.userService.rateUser(userId, rateUserDto);
   }
 }
+
+// 협업 진행 신청 각 포스트 별로, 그리고 포스트 안에서 직군 별로.

@@ -1,13 +1,14 @@
-import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
-import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
-import { AuthModule } from './../auth/auth.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { Notification } from './entities/Notification';
 import { UserReputation } from './entities/UserReputation';
-import { ConfigModule } from '@nestjs/config';
+import { SocketModule } from './../socket/socket.module';
+import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
+import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
+import { AuthModule } from './../auth/auth.module';
 import { Users } from './../socialLogin/entity/Users';
 
 @Module({
@@ -24,6 +25,7 @@ import { Users } from './../socialLogin/entity/Users';
       RecruitPosts,
     ]),
     AuthModule,
+    SocketModule,
   ],
   controllers: [UserController],
   providers: [UserService],
