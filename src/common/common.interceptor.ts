@@ -14,7 +14,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const req: Request = context.getArgByIndex(0);
     const now = new Date();
     console.log(
-      `Time : ${now.toLocaleString() + '\n'}Url: ${
+      `Time : ${now.toLocaleString() + '\n'}Method: ${req.method + '\n'}Url: ${
         req.hostname + req.originalUrl
       }`,
     );
