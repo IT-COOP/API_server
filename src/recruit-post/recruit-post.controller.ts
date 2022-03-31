@@ -224,7 +224,7 @@ export class RecruitPostController {
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.thumbImgUrl = body.imgUrl;
+    recruitPost.thumbImgUrl = body.thumbImgUrl;
     recruitPost.recruitKeepCount = 0;
     recruitPost.viewCount = 0;
 
@@ -262,7 +262,7 @@ export class RecruitPostController {
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.thumbImgUrl = body.imgUrl;
+    recruitPost.thumbImgUrl = body.thumbImgUrl;
 
     this.recruitPostService.updateRecruitPost(recruitPost);
 

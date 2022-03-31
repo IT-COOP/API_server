@@ -39,7 +39,7 @@ export class RecruitPostDTO {
     description: '프로젝트 이미지 url',
   })
   @IsString()
-  public imgUrl: string;
+  public thumbImgUrl: string;
 
   @ApiProperty({
     example: [

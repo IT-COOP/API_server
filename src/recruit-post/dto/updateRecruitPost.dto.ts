@@ -29,5 +29,5 @@ export class UpdateDetailPostsDTO {
     example: '이미지 url',
     description: '프로젝트 이미지 url',
   })
-  public imgUrl: string;
+  public thumbImgUrl: string;
 }
