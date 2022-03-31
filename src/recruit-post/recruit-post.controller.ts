@@ -7,6 +7,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -223,7 +224,7 @@ export class RecruitPostController {
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.thumbImgUrl = body.imgUrl;
+    recruitPost.thumbImgUrl = body.thumbImgUrl;
     recruitPost.recruitKeepCount = 0;
     recruitPost.viewCount = 0;
 
@@ -248,8 +249,8 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 게시물 수정' })
   @UseGuards(StrictGuard)
-  @Put('/:recruitPostId')
-  modifyRecruit(
+  @Patch('/:recruitPostId')
+  async modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res({ passthrough: true }) res: Response,
     @Body(ValidationPipe) body: UpdateDetailPostsDTO,
@@ -261,16 +262,9 @@ export class RecruitPostController {
     recruitPost.recruitLocation = body.recruitLocation;
     recruitPost.recruitContent = body.recruitContent;
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
-    recruitPost.thumbImgUrl = body.imgUrl;
+    recruitPost.thumbImgUrl = body.thumbImgUrl;
 
-    const recruitStacks = body.recruitStacks;
-    const recruitTasks = body.recruitTasks;
-
-    this.recruitPostService.updateRecruitPost(
-      recruitPost,
-      recruitStacks,
-      recruitTasks,
-    );
+    await this.recruitPostService.updateRecruitPost(recruitPost, recruitPostId);
 
     return { success: true };
   }
@@ -354,7 +348,6 @@ export class RecruitPostController {
     apply.task = body.task;
     apply.isAccepted = false;
 
-    // await this.recruitPostService.readRecruitCount(userId);
     await this.recruitPostService.createApply(postId, apply);
 
     return { success: true };
@@ -390,8 +383,10 @@ export class RecruitPostController {
   @Delete('/:recruitPostId')
   async removeRecruitPost(
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    await this.recruitPostService.deleteRecruitPost(postId);
+    const { userId } = res.locals.user;
+    await this.recruitPostService.deleteRecruitPost(postId, userId);
 
     return { success: true };
   }
@@ -435,8 +430,10 @@ export class RecruitPostController {
   async removeApply(
     @Param('applyId', ParseIntPipe) applyId: number,
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    await this.recruitPostService.deleteApply(postId, applyId);
+    const { userId } = res.locals.user;
+    await this.recruitPostService.deleteApply(postId, applyId, userId);
 
     return { success: true };
   }

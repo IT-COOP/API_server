@@ -335,7 +335,7 @@ export class RecruitPostService {
     const returned = await this.recruitAppliesRepository
       .createQueryBuilder()
       .where('recruitPostId = :recruitPostId', { recruitPostId })
-      .andWhere('userId = :userId', { userId: apply.applicant })
+      .andWhere('applicant = :userId', { userId: apply.applicant })
       .getManyAndCount();
     if (returned[1]) {
       throw recruitError.DuplicateOneRecruitApply;
@@ -349,37 +349,26 @@ export class RecruitPostService {
       .execute();
   }
 
-  //
-  async updateRecruitPost(
-    recruitPost: RecruitPosts,
-    stacks: RecruitStacks[],
-    tasks: RecruitTasks[],
-  ) {
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async updateRecruitPost(recruitPost: RecruitPosts, recruitPostId: number) {
     try {
-      await queryRunner.manager
-        .getRepository(RecruitPosts)
+      const returned = await this.recruitPostsRepository.findOneOrFail({
+        recruitPostId,
+      });
+      if (returned.author !== recruitPost.author) {
+        throw recruitError.WrongRequiredError;
+      }
+    } catch (e) {
+      throw recruitError.WrongRequiredError;
+    }
+    try {
+      await this.recruitPostsRepository
         .createQueryBuilder()
         .update()
         .set(recruitPost)
-        .where('recruitPostId = :id', { id: recruitPost.recruitPostId })
+        .where('recruitPostId = :id', { id: recruitPostId })
         .execute();
-      const recruitPostId: number = recruitPost.recruitPostId;
-      const recruitStacks = this.mappingStacks(stacks, recruitPostId);
-      const recruitTasks = this.mappingTasks(tasks, recruitPostId);
-      await queryRunner.manager
-        .getRepository(RecruitStacks)
-        .save(recruitStacks);
-      await queryRunner.manager.getRepository(RecruitStacks).save(recruitTasks);
-      await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
-      await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -399,15 +388,25 @@ export class RecruitPostService {
       .createQueryBuilder()
       .update(RecruitComments)
       .set(comment)
-      .where('RecruitComments.recruitCommentId=:commentId', { commentId })
+      .where('recruitCommentId=:commentId', { commentId })
       .execute();
   }
 
-  async deleteRecruitPost(postId: number) {
+  async deleteRecruitPost(postId: number, userId: string) {
     try {
-      await this.recruitPostsRepository.delete(postId);
+      const returned = await this.recruitPostsRepository.findOne({
+        recruitPostId: postId,
+      });
+      if (returned.author !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
       throw recruitError.WrongRequiredError;
+    }
+    try {
+      await this.recruitPostsRepository.delete({ recruitPostId: postId });
+    } catch (e) {
+      throw recruitError.DBqueryError;
     }
   }
 
@@ -484,34 +483,37 @@ export class RecruitPostService {
     }
   }
 
-  async deleteApply(recruitPostId: number, applyId: number) {
+  async deleteApply(recruitPostId: number, applyId: number, userId: string) {
     /*
     1, applyId post와 조인해 가지고 delete할 apply가 있는지 확인 
     2, apply가 true 이면 task, stack people set을 1씩 내리고 삭제
     3, apply가 false 이면 apply를 삭제
     */
-
-    let isExist;
+    let returned;
     try {
-      isExist = await this.recruitAppliesRepository.findOneOrFail(applyId);
+      returned = await this.recruitAppliesRepository.findOneOrFail(applyId);
+      if (returned.applicant !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
       throw recruitError.WrongRequiredError;
     }
+    console.log(returned);
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      if (isExist.isAccepted) {
-        await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: isExist.recruitApplyId,
-        });
-        await queryRunner.manager
-          .getRepository(RecruitStacks)
-          .createQueryBuilder('S')
-          .update('S')
-          .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
-          .where('S.recruitPostId = :recruitPostId', { recruitPostId })
-          .execute();
+      if (returned.isAccepted) {
+        if (returned.task % 100 !== 0) {
+          await queryRunner.manager
+            .getRepository(RecruitStacks)
+            .createQueryBuilder('S')
+            .update('S')
+            .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
+            .where('S.recruitPostId = :recruitPostId', { recruitPostId })
+            .execute();
+        }
         await queryRunner.manager
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
@@ -519,11 +521,13 @@ export class RecruitPostService {
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
+
         await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: isExist.recruitApplyId,
+          recruitApplyId: returned.recruitApplyId,
         });
       } else {
-        await this.recruitKeepsRepository.delete(applyId);
+        console.log(returned);
+        await this.recruitAppliesRepository.delete({ recruitApplyId: applyId });
       }
       await queryRunner.commitTransaction();
     } catch (error) {
