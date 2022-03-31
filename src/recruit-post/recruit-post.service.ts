@@ -349,7 +349,6 @@ export class RecruitPostService {
       .execute();
   }
 
-  //
   async updateRecruitPost(recruitPost: RecruitPosts) {
     try {
       const returned = await this.recruitPostsRepository.findOne({

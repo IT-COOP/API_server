@@ -250,7 +250,7 @@ export class RecruitPostController {
   @ApiOperation({ summary: '협업 게시물 수정' })
   @UseGuards(StrictGuard)
   @Patch('/:recruitPostId')
-  modifyRecruit(
+  async modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res({ passthrough: true }) res: Response,
     @Body(ValidationPipe) body: UpdateDetailPostsDTO,
@@ -264,7 +264,7 @@ export class RecruitPostController {
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
     recruitPost.thumbImgUrl = body.thumbImgUrl;
 
-    this.recruitPostService.updateRecruitPost(recruitPost);
+    await this.recruitPostService.updateRecruitPost(recruitPost);
 
     return { success: true };
   }
