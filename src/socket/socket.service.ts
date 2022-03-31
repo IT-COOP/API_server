@@ -55,17 +55,15 @@ export class SocketService {
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
       client.join(userId as string);
-      const notifications = await this.notificationRepository.find({
-        where: {
-          notificationReceiver: userId,
-          isRead: 0,
-        },
-        take: 20,
-        order: {
-          notificationId: 'DESC',
-        },
-      });
-      console.log(notifications);
+      const notifications = await this.notificationRepository
+        .createQueryBuilder('N')
+        .leftJoin('N.notificationSender2', 'U')
+        .select('U.nickname')
+        .where('N.notificationReceiver = :userId', { userId })
+        .take(20)
+        .orderBy('N.notificationId', 'DESC')
+        .getMany();
+
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
       return {
