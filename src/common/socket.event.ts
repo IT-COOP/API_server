@@ -10,4 +10,6 @@ export enum EventServerToClient {
   notificationToClient = 'notificationToClient',
   msgToClient = 'msgToClient',
   requestingNotificationConnect = 'requestingNotificationConnect',
+  enterChatRoom = 'enterChatRoom',
+  createChatRoom = 'createChatRoom',
 }

@@ -28,7 +28,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(client.handshake.headers);
     console.log(client);
     const accessTokenBearer = client.handshake.headers.authorization;
-    this.server.send(
+    client.emit(
+      EventServerToClient.notificationToClient,
       await this.socketService.handleConnection(client, accessTokenBearer),
     );
   }
@@ -43,7 +44,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.emit(
+    this.server.emit(
       EventServerToClient.msgToClient,
       await this.socketService.handleSubmittedMessage(
         client,
@@ -60,7 +61,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) chatRoomId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(
+    client.emit(
+      EventServerToClient.enterChatRoom,
       await this.socketService.handleChatRoomEntrance(
         client,
         chatRoomId,
@@ -75,7 +77,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) recruitPostId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(
+    client.emit(
+      EventServerToClient.createChatRoom,
       await this.socketService.handleCreateChatRoom(
         client,
         this.server,
@@ -91,13 +94,16 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(
-      await this.socketService.handleNotification(
-        this.server,
-        createNotificationDto,
-        accessTokenBearer,
-      ),
-    );
+    this.server
+      .to(createNotificationDto.notificationReceiver)
+      .emit(
+        EventServerToClient.notificationToClient,
+        await this.socketService.handleNotification(
+          this.server,
+          createNotificationDto,
+          accessTokenBearer,
+        ),
+      );
   }
 
   sendNotification(createNotificationDto: CreateNotificationDto) {
