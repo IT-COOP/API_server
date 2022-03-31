@@ -58,9 +58,8 @@ export class SocketService {
       const notifications = await this.notificationRepository
         .createQueryBuilder('N')
         .leftJoin('N.notificationSender2', 'U')
-        .select('U.nickname')
+        .addSelect('U.nickname')
         .where('N.notificationReceiver = :userId', { userId })
-        .orderBy('notificationId', 'DESC')
         .take(20)
         .getMany();
       console.log(notifications);
@@ -108,10 +107,13 @@ export class SocketService {
         },
       });
 
-      const chats = await this.chatRepository.find({
-        where: { chatRoomId },
-        relations: ['speaker2.nickname', 'speaker2.profileImgUrl'],
-      });
+      const chats = await this.chatRepository
+        .createQueryBuilder('C')
+        .leftJoin('C.speaker2', 'U')
+        .addSelect(['U.nickname', 'U.profileImgUrl'])
+        .where('C.chatRoomId = :chatRoomId', { chatRoomId })
+        .orderBy('C.chatId', 'DESC')
+        .getMany();
 
       if (!source || source.endAt < new Date()) {
         // 종료된 프로젝트
