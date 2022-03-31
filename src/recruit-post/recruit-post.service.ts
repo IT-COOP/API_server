@@ -498,6 +498,8 @@ export class RecruitPostService {
     } catch (e) {
       throw recruitError.WrongRequiredError;
     }
+    console.log(returned);
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -524,7 +526,8 @@ export class RecruitPostService {
           recruitApplyId: returned.recruitApplyId,
         });
       } else {
-        await this.recruitKeepsRepository.delete({ recruitKeepId: applyId });
+        console.log(returned);
+        await this.recruitAppliesRepository.delete({ recruitApplyId: applyId });
       }
       await queryRunner.commitTransaction();
     } catch (error) {
