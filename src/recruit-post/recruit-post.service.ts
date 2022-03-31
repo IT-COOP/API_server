@@ -522,9 +522,9 @@ export class RecruitPostService {
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
 
-        await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: returned.recruitApplyId,
-        });
+        await queryRunner.manager
+          .getRepository(RecruitApplies)
+          .delete(returned.recruitApplyId);
       } else {
         console.log(returned);
         await this.recruitAppliesRepository.delete({ recruitApplyId: applyId });
