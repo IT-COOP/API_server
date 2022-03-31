@@ -367,9 +367,6 @@ export class UserService {
       .andWhere('P.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
 
-    for (const crew in post.chatRooms.chatMembers) {
-      member = crew;
-    }
     if (!post) {
       throw myPageError.UnableToRateError;
     }
