@@ -36,9 +36,8 @@ export class UserController {
   @ApiOperation({ summary: '내 프로필 보기' })
   @UseGuards(StrictGuard)
   @Get('profile')
-  getMyProfile(@Res({ passthrough: true }) res) {
-    const userId = res.locals.user.userId;
-    return this.userService.getMyProfile(userId, res);
+  getMyProfile(@Res() res) {
+    return this.userService.getMyProfile(res);
   }
 
   // 다른 프로필 보기
