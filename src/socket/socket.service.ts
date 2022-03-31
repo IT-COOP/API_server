@@ -45,7 +45,7 @@ export class SocketService {
     }
   }
 
-  handleConnection(client: Socket, accessTokenBearer: string) {
+  async handleConnection(client: Socket, accessTokenBearer: string) {
     if (!accessTokenBearer) {
       return {
         status: 'failure',
@@ -55,7 +55,7 @@ export class SocketService {
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
       client.join(userId as string);
-      const notifications = this.notificationRepository.find({
+      const notifications = await this.notificationRepository.find({
         where: {
           notificationReceiver: userId,
           isRead: false,
