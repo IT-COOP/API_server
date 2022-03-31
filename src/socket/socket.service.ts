@@ -63,7 +63,6 @@ export class SocketService {
         .orderBy('N.createdAt', 'DESC')
         .take(20)
         .getMany();
-      console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
       return {
@@ -229,6 +228,8 @@ export class SocketService {
     msgToServerDto: MsgToServerDto,
     accessTokenBearer: string,
   ) {
+    console.log(msgToServerDto);
+    console.log(client.rooms);
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
       if (!client.rooms.has(String(msgToServerDto.chatRoomId))) {
