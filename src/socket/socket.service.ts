@@ -63,9 +63,10 @@ export class SocketService {
         .take(20)
         .orderBy('N.notificationId', 'DESC')
         .getMany();
-
+      console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
+      console.error(err);
       return {
         status: 'failure',
         data: err,
