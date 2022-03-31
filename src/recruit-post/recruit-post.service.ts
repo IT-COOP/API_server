@@ -506,37 +506,24 @@ export class RecruitPostService {
     try {
       if (returned.isAccepted) {
         if (returned.task % 100 !== 0) {
-          await queryRunner.manager
-            .getRepository(RecruitStacks)
-            .createQueryBuilder('S')
-            .update(RecruitStacks)
-            .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
-            .where('S.recruitPostId = :recruitPostId', { recruitPostId })
-            .execute();
+          await queryRunner.manager.decrement(
+            RecruitStacks,
+            { recruitPostId },
+            'numberOfPeopleSet',
+            -1,
+          );
         }
-        await queryRunner.manager
-          .getRepository(RecruitTasks)
-          .createQueryBuilder('T')
-          .update(RecruitTasks)
-          .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
-          .where('T.recruitPostId = :recruitPostId', { recruitPostId })
-          .execute();
+        await queryRunner.manager.decrement(
+          RecruitTasks,
+          { recruitPostId },
+          'numberOfPeopleSet',
+          -1,
+        );
 
-        await queryRunner.manager
-          .getRepository(RecruitApplies)
-          .createQueryBuilder('A')
-          .where('A.recruitApplyId = :applyId', { applyId })
-          .delete()
-          .execute();
+        await queryRunner.manager.remove(returned);
       } else {
         console.log(returned);
-        console.log(
-          await this.recruitAppliesRepository
-            .createQueryBuilder('A')
-            .where('A.recruitApplyId = :applyId', { applyId })
-            .delete()
-            .execute(),
-        );
+        console.log(await this.recruitAppliesRepository.remove(returned));
       }
       await queryRunner.commitTransaction();
     } catch (error) {
