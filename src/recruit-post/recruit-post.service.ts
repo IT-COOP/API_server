@@ -399,7 +399,7 @@ export class RecruitPostService {
       .createQueryBuilder()
       .update(RecruitComments)
       .set(comment)
-      .where('RecruitComments.recruitCommentId=:commentId', { commentId })
+      .where('recruitCommentId=:commentId', { commentId })
       .execute();
   }
 
