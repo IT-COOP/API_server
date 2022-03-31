@@ -108,12 +108,10 @@ export class SocketService {
         },
       });
 
-      const chats = await this.chatRepository
-        .createQueryBuilder('C')
-        .leftJoin('C.speaker', 'S')
-        .addSelect(['S.nickname', 'S.profileImgUrl'])
-        .where('C.chatRoomId = :chatRoomId', { chatRoomId })
-        .getMany();
+      const chats = await this.chatRepository.find({
+        where: { chatRoomId },
+        relations: ['speaker2'],
+      });
 
       if (!source || source.endAt < new Date()) {
         // 종료된 프로젝트
