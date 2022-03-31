@@ -349,10 +349,10 @@ export class RecruitPostService {
       .execute();
   }
 
-  async updateRecruitPost(recruitPost: RecruitPosts) {
+  async updateRecruitPost(recruitPost: RecruitPosts, recruitPostId: number) {
     try {
       const returned = await this.recruitPostsRepository.findOneOrFail({
-        recruitPostId: recruitPost.recruitPostId,
+        recruitPostId,
       });
       if (returned.author !== recruitPost.author) {
         throw recruitError.WrongRequiredError;
@@ -365,7 +365,7 @@ export class RecruitPostService {
         .createQueryBuilder()
         .update()
         .set(recruitPost)
-        .where('recruitPostId = :id', { id: recruitPost.recruitPostId })
+        .where('recruitPostId = :id', { id: recruitPostId })
         .execute();
     } catch (error) {
       throw recruitError.DBqueryError;

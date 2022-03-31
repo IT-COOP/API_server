@@ -264,7 +264,7 @@ export class RecruitPostController {
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
     recruitPost.thumbImgUrl = body.thumbImgUrl;
 
-    await this.recruitPostService.updateRecruitPost(recruitPost);
+    await this.recruitPostService.updateRecruitPost(recruitPost, recruitPostId);
 
     return { success: true };
   }
