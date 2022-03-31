@@ -524,10 +524,19 @@ export class RecruitPostService {
 
         await queryRunner.manager
           .getRepository(RecruitApplies)
-          .delete(returned.recruitApplyId);
+          .createQueryBuilder('A')
+          .where('A.recruitApplyId = :applyId', { applyId })
+          .delete()
+          .execute();
       } else {
         console.log(returned);
-        await this.recruitAppliesRepository.delete({ recruitApplyId: applyId });
+        console.log(
+          await this.recruitAppliesRepository
+            .createQueryBuilder('A')
+            .where('A.recruitApplyId = :applyId', { applyId })
+            .delete()
+            .execute(),
+        );
       }
       await queryRunner.commitTransaction();
     } catch (error) {
