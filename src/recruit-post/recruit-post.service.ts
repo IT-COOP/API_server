@@ -533,7 +533,11 @@ export class RecruitPostService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
     } finally {
-      await queryRunner.release();
+      try {
+        await queryRunner.release();
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
 
