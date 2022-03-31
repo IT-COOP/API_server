@@ -32,6 +32,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       EventServerToClient.notificationToClient,
       await this.socketService.handleConnection(client, accessTokenBearer),
     );
+    return '외않되';
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -53,6 +54,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         accessTokenBearer,
       ),
     );
+    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.enterChatRoom)
@@ -69,6 +71,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         accessTokenBearer,
       ),
     );
+    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.createChatRoom)
@@ -86,6 +89,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         accessTokenBearer,
       ),
     );
+    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.notificationToServer)
@@ -104,6 +108,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
           accessTokenBearer,
         ),
       );
+    return '외않되';
   }
 
   sendNotification(createNotificationDto: CreateNotificationDto) {
@@ -111,5 +116,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server,
       createNotificationDto,
     );
+    return '외않되';
   }
 }
