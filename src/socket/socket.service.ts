@@ -280,6 +280,7 @@ export class SocketService {
       await this.notificationRepository.insert(notifications);
 
       const chat = {
+        chatId: updated.chatId,
         chat: updated.chat,
         speaker: updated.speaker,
         chatRoomId: updated.chatRoomId,
