@@ -111,7 +111,7 @@ export class SocketService {
         .leftJoin('C.speaker2', 'U')
         .addSelect(['U.nickname', 'U.profileImgUrl', 'U.userId'])
         .where('C.chatRoomId = :chatRoomId', { chatRoomId })
-        .orderBy('C.chatId', 'DESC')
+        .orderBy('C.chatId', 'ASC')
         .getMany();
 
       if (!source || source.endAt < new Date()) {
@@ -279,18 +279,15 @@ export class SocketService {
 
       await this.notificationRepository.insert(notifications);
 
-      server
-        .to(String(msgToServerDto.chatRoomId))
-        .emit(EventServerToClient.msgToClient, {
-          profileImgUrl: user.profileImgUrl,
-          nickname: user.nickname,
-          userId: userId,
-          chat: chat.chat,
-        });
-
       chat.speaker2.userId = userId;
       chat.speaker2.nickname = user.nickname;
       chat.speaker2.profileImgUrl = user.profileImgUrl;
+
+      server
+        .to(String(msgToServerDto.chatRoomId))
+        .emit(EventServerToClient.msgToClient, {
+          chat,
+        });
       return {
         status: 'success',
         data: {
@@ -298,6 +295,7 @@ export class SocketService {
         },
       };
     } catch (err) {
+      console.error(err);
       return {
         status: 'failure',
         data: err,
