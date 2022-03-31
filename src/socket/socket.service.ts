@@ -109,7 +109,7 @@ export class SocketService {
       const chats = await this.chatRepository
         .createQueryBuilder('C')
         .leftJoin('C.speaker2', 'U')
-        .addSelect(['U.nickname', 'U.profileImgUrl'])
+        .addSelect(['U.nickname', 'U.profileImgUrl', 'U.userId'])
         .where('C.chatRoomId = :chatRoomId', { chatRoomId })
         .orderBy('C.chatId', 'DESC')
         .getMany();
@@ -240,7 +240,7 @@ export class SocketService {
         };
       }
 
-      await this.chatRepository.save(
+      const chat = await this.chatRepository.save(
         this.chatRepository.create({
           chatRoomId: msgToServerDto.chatRoomId,
           speaker: userId,
@@ -251,6 +251,7 @@ export class SocketService {
         where: {
           userId: userId,
         },
+        select: ['nickname', 'profileImgUrl'],
       });
 
       const notifications = [];
@@ -284,15 +285,16 @@ export class SocketService {
           profileImgUrl: user.profileImgUrl,
           nickname: user.nickname,
           userId: userId,
-          chat: msgToServerDto.chat,
+          chat: chat.chat,
         });
+
+      chat.speaker2.userId = userId;
+      chat.speaker2.nickname = user.nickname;
+      chat.speaker2.profileImgUrl = user.profileImgUrl;
       return {
         status: 'success',
         data: {
-          profileImgUrl: user.profileImgUrl,
-          nickname: user.nickname,
-          userId: userId,
-          chat: msgToServerDto.chat,
+          chat,
         },
       };
     } catch (err) {
