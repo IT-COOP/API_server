@@ -13,4 +13,6 @@ export class CreateNotificationDto {
   targetId: number;
   @IsBoolean()
   isRead: boolean;
+  @IsString()
+  nickname: string;
 }
