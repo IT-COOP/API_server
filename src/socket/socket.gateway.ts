@@ -16,7 +16,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { CreateNotificationDto } from './dto/createNotification.dto';
 
-@WebSocketGateway({ namespace: 'socket' })
+@WebSocketGateway({ namespace: 'socket', cors: true })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly socketService: SocketService) {}
   @WebSocketServer()
