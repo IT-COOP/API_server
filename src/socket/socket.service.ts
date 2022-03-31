@@ -60,12 +60,12 @@ export class SocketService {
         .leftJoin('N.notificationSender2', 'U')
         .addSelect('U.nickname')
         .where('N.notificationReceiver = :userId', { userId })
+        .orderBy('N.createdAt', 'DESC')
         .take(20)
         .getMany();
       console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
-      console.error(err);
       return {
         status: 'failure',
         data: err,
