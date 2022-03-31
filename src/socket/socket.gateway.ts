@@ -25,8 +25,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(@ConnectedSocket() client: Socket) {
     console.log('connected To socket');
-    console.log(client.handshake.headers);
-    console.log(client);
     const accessTokenBearer = client.handshake.headers.authorization;
     client.emit(
       EventServerToClient.notificationToClient,
@@ -71,16 +69,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) recruitPostId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.emit(
-      EventServerToClient.createChatRoom,
-      await this.socketService.handleCreateChatRoom(
-        client,
-        this.server,
-        recruitPostId,
-        accessTokenBearer,
-      ),
+    return await this.socketService.handleCreateChatRoom(
+      client,
+      this.server,
+      recruitPostId,
+      accessTokenBearer,
     );
-    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.notificationToServer)
@@ -89,17 +83,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    this.server
-      .to(createNotificationDto.notificationReceiver)
-      .emit(
-        EventServerToClient.notificationToClient,
-        await this.socketService.handleNotification(
-          this.server,
-          createNotificationDto,
-          accessTokenBearer,
-        ),
-      );
-    return '외않되';
+    return await this.socketService.handleNotification(
+      this.server,
+      createNotificationDto,
+      accessTokenBearer,
+    );
   }
 
   sendNotification(createNotificationDto: CreateNotificationDto) {

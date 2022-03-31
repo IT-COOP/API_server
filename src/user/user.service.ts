@@ -83,7 +83,6 @@ export class UserService {
         applyCount: applyCount || 0,
       });
     });
-    return;
   }
 
   // 다른 프로필 보기
@@ -214,18 +213,22 @@ export class UserService {
     if (apply.task % 100) {
       const task = apply.task / 100 < 3 ? 300 : 400;
       // 개발자임
-      const recruitStack = await this.recruitStackRepository.findOne({
+      const recruitStackPromise = this.recruitStackRepository.findOne({
         where: {
           recruitPostId: apply.recruitPostId,
           recruitStack: apply.task,
         },
       });
-      const recruitTask = await this.recruitTaskRepository.findOne({
+      const recruitTaskPromise = this.recruitTaskRepository.findOne({
         where: {
           recruitPostId: apply.recruitPostId,
           recruitTask: task,
         },
       });
+      const [recruitStack, recruitTask] = await Promise.all([
+        recruitStackPromise,
+        recruitTaskPromise,
+      ]);
       if (
         !recruitStack ||
         !recruitTask ||
