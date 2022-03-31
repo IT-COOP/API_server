@@ -167,6 +167,9 @@ export class UserService {
     const post = await this.recruitPostRepository.findOne({
       where: { recruitPostId: responseToApplyDto.recruitPostId },
     });
+    if (!post) {
+      throw myPageError.MissingPostError;
+    }
     if (post.author !== userId) {
       // 지가 적은 글도 아닌데 받으려고 함.
       throw myPageError.WrongAuthorError;

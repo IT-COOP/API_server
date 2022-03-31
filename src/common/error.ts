@@ -75,4 +75,5 @@ export const myPageError = {
   NoApplyToResponseError: new BadRequestException('There Is No Such Apply'),
   AlreadyRespondedError: new BadRequestException('Already Responded The Apply'),
   NotRecruitingError: new BadRequestException('Wrong Apply To Response'),
+  MissingPostError: new BadRequestException('No Such Post'),
 };

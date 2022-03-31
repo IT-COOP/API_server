@@ -55,6 +55,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
+    console.log('connected To socket');
     return this.socketService.handleConnection(client);
   }
 

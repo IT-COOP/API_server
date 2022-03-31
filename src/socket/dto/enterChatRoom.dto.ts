@@ -1,5 +1,5 @@
 export class EnterChatRoomDto {
-  chatRoomId: number;
+  chatRoomId: number; // << recruitPostId와 같음
   userId: string;
 }
 
