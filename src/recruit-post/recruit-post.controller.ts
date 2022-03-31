@@ -7,6 +7,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -248,7 +249,7 @@ export class RecruitPostController {
   })
   @ApiOperation({ summary: '협업 게시물 수정' })
   @UseGuards(StrictGuard)
-  @Put('/:recruitPostId')
+  @Patch('/:recruitPostId')
   modifyRecruit(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res({ passthrough: true }) res: Response,
@@ -263,14 +264,7 @@ export class RecruitPostController {
     recruitPost.recruitDurationDays = body.recruitDurationWeek * 7;
     recruitPost.thumbImgUrl = body.imgUrl;
 
-    const recruitStacks = body.recruitStacks;
-    const recruitTasks = body.recruitTasks;
-
-    this.recruitPostService.updateRecruitPost(
-      recruitPost,
-      recruitStacks,
-      recruitTasks,
-    );
+    this.recruitPostService.updateRecruitPost(recruitPost);
 
     return { success: true };
   }
@@ -389,8 +383,10 @@ export class RecruitPostController {
   @Delete('/:recruitPostId')
   async removeRecruitPost(
     @Param('recruitPostId', ParseIntPipe) postId: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    await this.recruitPostService.deleteRecruitPost(postId);
+    const { userId } = res.locals.user;
+    await this.recruitPostService.deleteRecruitPost(postId, userId);
 
     return { success: true };
   }

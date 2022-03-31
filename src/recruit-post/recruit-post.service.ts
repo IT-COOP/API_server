@@ -350,36 +350,26 @@ export class RecruitPostService {
   }
 
   //
-  async updateRecruitPost(
-    recruitPost: RecruitPosts,
-    stacks: RecruitStacks[],
-    tasks: RecruitTasks[],
-  ) {
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async updateRecruitPost(recruitPost: RecruitPosts) {
     try {
-      await queryRunner.manager
-        .getRepository(RecruitPosts)
+      const returned = await this.recruitPostsRepository.findOne({
+        recruitPostId: recruitPost.recruitPostId,
+      });
+      if (returned.author !== recruitPost.author) {
+        throw recruitError.WrongRequiredError;
+      }
+    } catch (e) {
+      throw recruitError.WrongRequiredError;
+    }
+    try {
+      await this.recruitPostsRepository
         .createQueryBuilder()
         .update()
         .set(recruitPost)
         .where('recruitPostId = :id', { id: recruitPost.recruitPostId })
         .execute();
-      const recruitPostId: number = recruitPost.recruitPostId;
-      const recruitStacks = this.mappingStacks(stacks, recruitPostId);
-      const recruitTasks = this.mappingTasks(tasks, recruitPostId);
-      await queryRunner.manager
-        .getRepository(RecruitStacks)
-        .save(recruitStacks);
-      await queryRunner.manager.getRepository(RecruitStacks).save(recruitTasks);
-      await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
-      await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -403,11 +393,21 @@ export class RecruitPostService {
       .execute();
   }
 
-  async deleteRecruitPost(postId: number) {
+  async deleteRecruitPost(postId: number, userId: string) {
     try {
-      await this.recruitPostsRepository.delete(postId);
+      const returned = await this.recruitPostsRepository.findOne({
+        recruitPostId: postId,
+      });
+      if (returned.author !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
     } catch (e) {
       throw recruitError.WrongRequiredError;
+    }
+    try {
+      await this.recruitPostsRepository.delete({ recruitPostId: postId });
+    } catch (e) {
+      throw recruitError.DBqueryError;
     }
   }
 
