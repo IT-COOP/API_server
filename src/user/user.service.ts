@@ -36,7 +36,8 @@ export class UserService {
     private readonly socketGateway: SocketGateway,
   ) {}
   // 내 프로필 보기
-  async getMyProfile(userId: string, res: Response) {
+  async getMyProfile(res: Response) {
+    const userId = res.locals.user.userId;
     const profile = await this.userRepository.findOne({
       where: { userId },
       select: [
