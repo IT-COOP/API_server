@@ -24,11 +24,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('connected To socket');
     console.log(client.handshake.headers);
     const accessTokenBearer = client.handshake.headers.authorization;
-    return this.socketService.handleConnection(client, accessTokenBearer);
+    client.send(this.socketService.handleConnection(client, accessTokenBearer));
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    return this.socketService.handleDisconnect(client);
+    client.send(this.socketService.handleDisconnect(client));
   }
 
   @SubscribeMessage(EventClientToServer.msgToServer)
@@ -37,11 +37,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    return this.socketService.handleSubmittedMessage(
-      client,
-      this.server,
-      mstToServerDto,
-      accessTokenBearer,
+    client.send(
+      this.socketService.handleSubmittedMessage(
+        client,
+        this.server,
+        mstToServerDto,
+        accessTokenBearer,
+      ),
     );
   }
 
@@ -51,10 +53,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) chatRoomId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    return this.socketService.handleChatRoomEntrance(
-      client,
-      chatRoomId,
-      accessTokenBearer,
+    client.send(
+      this.socketService.handleChatRoomEntrance(
+        client,
+        chatRoomId,
+        accessTokenBearer,
+      ),
     );
   }
 
@@ -64,11 +68,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) recruitPostId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    return this.socketService.handleCreateChatRoom(
-      client,
-      this.server,
-      recruitPostId,
-      accessTokenBearer,
+    client.send(
+      this.socketService.handleCreateChatRoom(
+        client,
+        this.server,
+        recruitPostId,
+        accessTokenBearer,
+      ),
     );
   }
 
@@ -78,10 +84,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    return this.socketService.handleNotification(
-      this.server,
-      createNotificationDto,
-      accessTokenBearer,
+    client.send(
+      this.socketService.handleNotification(
+        this.server,
+        createNotificationDto,
+        accessTokenBearer,
+      ),
     );
   }
 
