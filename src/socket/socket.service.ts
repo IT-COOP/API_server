@@ -12,9 +12,9 @@ import { Notification } from './../user/entities/Notification';
 import { MsgToServerDto } from './dto/msgToServer.dto';
 import { Server, Socket } from 'socket.io';
 import { CreateNotificationDto } from './dto/createNotification.dto';
-import { EnterChatRoomDto } from './dto/enterChatRoom.dto';
-import { CreateChatRoomDto } from './dto/createChatRoom.dto';
 import { EventType } from './enum/eventType.enum';
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class SocketService {
@@ -33,16 +33,45 @@ export class SocketService {
     private readonly notificationRepository: Repository<Notification>,
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
+    private readonly configService: ConfigService,
   ) {}
+  MY_SECRET_KEY = this.configService.get<string>('MY_SECRET_KEY');
+  handleAccessTokenBearer(accessTokenBearer) {
+    const accessToken = accessTokenBearer.split(' ')[1];
+    try {
+      return jwt.verify(accessToken, this.MY_SECRET_KEY).sub as string;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
 
-  handleConnection(client: Socket) {
-    client
-      .to(client.id)
-      .emit(EventServerToClient.requestingNotificationConnect);
-    return {
-      status: 'success',
-      data: 'connected',
-    };
+  handleConnection(client: Socket, accessTokenBearer: string) {
+    if (!accessTokenBearer) {
+      return {
+        status: 'failure',
+        data: 'accessTokenRequired',
+      };
+    }
+    try {
+      const userId = this.handleAccessTokenBearer(accessTokenBearer);
+      client.join(userId as string);
+      const notifications = this.notificationRepository.find({
+        where: {
+          notificationReceiver: userId,
+          isRead: false,
+        },
+        take: 20,
+        order: {
+          notificationId: 'DESC',
+        },
+      });
+      return { status: 'success', data: { notifications, EventType } };
+    } catch (err) {
+      return {
+        status: 'failure',
+        data: err,
+      };
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -55,121 +84,139 @@ export class SocketService {
 
   async handleChatRoomEntrance(
     client: Socket,
-    enterChatRoomDto: EnterChatRoomDto,
+    chatRoomId: number,
+    accessTokenBearer: string,
   ) {
-    const isBelonging = await this.chatMemberRepository.findOne({
-      where: {
-        chatRoomId: enterChatRoomDto.chatRoomId,
-        member: enterChatRoomDto.userId,
-      },
-    });
-    if (!isBelonging) {
+    try {
+      const userId = this.handleAccessTokenBearer(accessTokenBearer);
+      const isBelonging = await this.chatMemberRepository.findOne({
+        where: {
+          chatRoomId,
+          member: userId,
+        },
+      });
+      if (!isBelonging) {
+        return {
+          status: 'success',
+          data: 'BadRequest Not Belonging To The Chatroom',
+        };
+      }
+
+      const source = await this.recruitPostRepository.findOne({
+        where: {
+          recruitPostId: chatRoomId,
+        },
+      });
+
+      const chats = await this.chatRepository.find({
+        where: { chatRoomId },
+        relations: ['speaker2'],
+      });
+
+      if (source.endAt < new Date()) {
+        // 종료된 프로젝트
+        return {
+          status: 'success',
+          data: { chats, isOver: true },
+        };
+      }
+
+      client.join(String(chatRoomId));
       return {
         status: 'success',
-        data: 'BadRequest Not Belonging To The Chatroom',
+        data: { chats, isOver: false },
       };
-    }
-
-    const source = await this.recruitPostRepository.findOne({
-      where: {
-        recruitPostId: enterChatRoomDto.chatRoomId,
-      },
-    });
-
-    const chats = await this.chatRepository.find({
-      where: { chatRoomId: enterChatRoomDto.chatRoomId },
-      relations: ['speaker2'],
-    });
-
-    if (source.endAt < new Date()) {
-      // 종료된 프로젝트
+    } catch (err) {
       return {
-        status: 'success',
-        data: { chats, isOver: true },
+        status: 'failure',
+        data: err,
       };
     }
-
-    client.join(String(enterChatRoomDto.chatRoomId));
-    return {
-      status: 'success',
-      data: { chats, isOver: false },
-    };
   }
 
   async handleCreateChatRoom(
     client: Socket,
     server: Server,
-    enterChatRoomDto: CreateChatRoomDto,
+    recruitPostId: number,
+    accessTokenBearer: string,
   ) {
-    const recruitPost = await this.recruitPostRepository.findOne({
-      where: {
-        recruitPostId: enterChatRoomDto.recruitPostId,
-      },
-    });
-
-    const isAlreadyPresent = await this.chatRoomRepository.findOne({
-      where: {
-        chatRoomId: recruitPost.recruitPostId,
-      },
-    });
-
-    if (
-      recruitPost &&
-      recruitPost.createdAt !== recruitPost.endAt &&
-      recruitPost.endAt <= new Date() &&
-      recruitPost.author === enterChatRoomDto.userId &&
-      !isAlreadyPresent
-    ) {
-      const newChatRoom = await this.chatRoomRepository.save(
-        this.chatRoomRepository.create({
-          chatRoomId: enterChatRoomDto.recruitPostId,
-        }),
-      );
-
-      const crews = await this.recruitApplyRepository.find({
-        select: ['applicant'],
+    try {
+      const userId = this.handleAccessTokenBearer(accessTokenBearer);
+      const recruitPost = await this.recruitPostRepository.findOne({
         where: {
-          recruitPostId: enterChatRoomDto.recruitPostId,
-          isAccepted: true,
+          recruitPostId: recruitPostId,
         },
       });
-      const notifications = [];
-      // notification 추가하고 DB에 올려야함
-      const chatMembers = [
-        {
-          member: recruitPost.author,
-          chatRoomId: enterChatRoomDto.recruitPostId,
+
+      const isAlreadyPresent = await this.chatRoomRepository.findOne({
+        where: {
+          chatRoomId: recruitPost.recruitPostId,
         },
-      ];
-      for (const crew of crews) {
-        const notification = this.notificationRepository.create({
-          notificationSender: recruitPost.author,
-          notificationReceiver: crew.applicant,
-          eventType: EventType.chatRoomCreation,
-          eventContent: '새로운 채팅방이 생겼어요!',
-          targetId: enterChatRoomDto.recruitPostId,
-          isRead: false,
+      });
+
+      if (
+        recruitPost &&
+        recruitPost.createdAt !== recruitPost.endAt &&
+        recruitPost.endAt <= new Date() &&
+        recruitPost.author === userId &&
+        !isAlreadyPresent
+      ) {
+        const newChatRoom = await this.chatRoomRepository.save(
+          this.chatRoomRepository.create({
+            chatRoomId: recruitPostId,
+          }),
+        );
+
+        const crews = await this.recruitApplyRepository.find({
+          select: ['applicant'],
+          where: {
+            recruitPostId: recruitPostId,
+            isAccepted: true,
+          },
         });
-        chatMembers.push({
-          member: crew.applicant,
-          chatRoomId: enterChatRoomDto.recruitPostId,
-        });
-        notifications.push(notification);
-        server
-          .to(crew.applicant)
-          .emit(EventServerToClient.notificationToClient, notification);
+        const notifications = [];
+        // notification 추가하고 DB에 올려야함
+        const chatMembers = [
+          {
+            member: recruitPost.author,
+            chatRoomId: recruitPostId,
+          },
+        ];
+        for (const crew of crews) {
+          const notification = this.notificationRepository.create({
+            notificationSender: recruitPost.author,
+            notificationReceiver: crew.applicant,
+            eventType: EventType.chatRoomCreation,
+            eventContent: '새로운 채팅방이 생겼어요!',
+            targetId: recruitPostId,
+            isRead: false,
+          });
+          chatMembers.push({
+            member: crew.applicant,
+            chatRoomId: recruitPostId,
+          });
+          notifications.push(notification);
+          server
+            .to(crew.applicant)
+            .emit(EventServerToClient.notificationToClient, notification);
+        }
+        await this.chatMemberRepository.insert(chatMembers);
+        await this.notificationRepository.insert(notifications);
+        client.join(String(recruitPostId));
+        return {
+          status: 'success',
+          data: String(newChatRoom.chatRoomId),
+        };
+      } else {
+        return {
+          status: 'failure',
+          data: 'Bad Request Validation Failure',
+        };
       }
-      await this.chatMemberRepository.insert(chatMembers);
-      await this.notificationRepository.insert(notifications);
-      client.join(String(enterChatRoomDto.recruitPostId));
-      return {
-        status: 'success',
-        data: String(newChatRoom.chatRoomId),
-      };
-    } else {
+    } catch (err) {
       return {
         status: 'failure',
-        data: 'Bad Request Validation Failure',
+        data: err,
       };
     }
   }
@@ -177,95 +224,106 @@ export class SocketService {
   async handleSubmittedMessage(
     client: Socket,
     server: Server,
-    data: MsgToServerDto,
+    msgToServerDto: MsgToServerDto,
+    accessTokenBearer: string,
   ) {
-    if (!client.rooms.has(String(data.chatRoomId))) {
+    try {
+      const userId = this.handleAccessTokenBearer(accessTokenBearer);
+      if (!client.rooms.has(String(msgToServerDto.chatRoomId))) {
+        return {
+          status: 'failure',
+          msgToServerDto: 'Bad Request Must Join The Chatroom First',
+        };
+      }
+
+      await this.chatRepository.save(
+        this.chatRepository.create({
+          chatRoomId: msgToServerDto.chatRoomId,
+          speaker: userId,
+          chat: msgToServerDto.chat,
+        }),
+      );
+      const user = await this.userRepository.findOne({
+        where: {
+          userId: userId,
+        },
+      });
+
+      const notifications = [];
+      const notification: CreateNotificationDto = {
+        notificationSender: userId,
+        notificationReceiver: '',
+        eventType: EventType.chat,
+        eventContent: msgToServerDto.chat.slice(0, 30),
+        targetId: msgToServerDto.chatRoomId,
+        isRead: false,
+      };
+
+      const crews = await this.chatMemberRepository.find({
+        where: { chatRoomId: msgToServerDto.chatRoomId },
+        select: ['member'],
+      });
+      for (const crew of crews) {
+        if (crew.member === userId) continue;
+        notification.notificationReceiver = crew.member;
+        server
+          .to(crew.member)
+          .emit(EventServerToClient.notificationToClient, notification);
+        notifications.push(notification);
+      }
+
+      await this.notificationRepository.insert(notifications);
+
+      server
+        .to(String(msgToServerDto.chatRoomId))
+        .emit(EventServerToClient.msgToClient, {
+          profileImgUrl: user.profileImgUrl,
+          nickname: user.nickname,
+          userId: userId,
+          chat: msgToServerDto.chat,
+        });
+      return {
+        status: 'success',
+        data: {
+          profileImgUrl: user.profileImgUrl,
+          nickname: user.nickname,
+          userId: userId,
+          chat: msgToServerDto.chat,
+        },
+      };
+    } catch (err) {
       return {
         status: 'failure',
-        data: 'Bad Request Must Join The Chatroom First',
+        data: err,
       };
     }
-
-    await this.chatRepository.save(
-      this.chatRepository.create({
-        chatRoomId: data.chatRoomId,
-        speaker: data.userId,
-        chat: data.chat,
-      }),
-    );
-    const user = await this.userRepository.findOne({
-      where: {
-        userId: data.userId,
-      },
-    });
-
-    const notifications = [];
-    const notification: CreateNotificationDto = {
-      notificationSender: data.userId,
-      notificationReceiver: '',
-      eventType: EventType.chat,
-      eventContent: data.chat.slice(0, 30),
-      targetId: data.chatRoomId,
-      isRead: false,
-    };
-
-    const crews = await this.chatMemberRepository.find({
-      where: { chatRoomId: data.chatRoomId },
-      select: ['member'],
-    });
-    for (const crew of crews) {
-      if (crew.member === data.userId) continue;
-      notification.notificationReceiver = crew.member;
-      server
-        .to(crew.member)
-        .emit(EventServerToClient.notificationToClient, notification);
-      notifications.push(notification);
-    }
-
-    await this.notificationRepository.insert(notifications);
-
-    server.to(String(data.chatRoomId)).emit(EventServerToClient.msgToClient, {
-      profileImgUrl: user.profileImgUrl,
-      nickname: user.nickname,
-      userId: data.userId,
-      chat: data.chat,
-    });
-    return {
-      status: 'success',
-      data,
-    };
-  }
-
-  async handleNotificationConnect(client: Socket, userId: string) {
-    client.join(userId);
-    const notifications = this.notificationRepository.find({
-      where: {
-        notificationReceiver: userId,
-        isRead: false,
-      },
-      take: 20,
-      order: {
-        notificationId: 'DESC',
-      },
-    });
-    return { status: 'success', data: { notifications, EventType } };
   }
 
   async handleNotification(
-    client: Socket,
     server: Server,
     createNotificationDto: CreateNotificationDto,
+    accessTokenBearer: string,
   ) {
-    const result = await this.notificationRepository.insert(
-      createNotificationDto,
-    );
-    server
-      .to(createNotificationDto.notificationReceiver)
-      .emit(EventServerToClient.notificationToClient, createNotificationDto);
-    return {
-      status: 'success',
-      data: result,
-    };
+    try {
+      createNotificationDto.notificationSender =
+        this.handleAccessTokenBearer(accessTokenBearer);
+
+      const result = await this.notificationRepository.insert(
+        createNotificationDto,
+      );
+      server
+        .to(createNotificationDto.notificationReceiver)
+        .emit(EventServerToClient.notificationToClient, createNotificationDto);
+      return {
+        status: 'success',
+        data: result,
+      };
+    } catch (err) {
+      return {
+        status: 'failure',
+        data: err,
+      };
+    }
   }
 
   async sendNotification(

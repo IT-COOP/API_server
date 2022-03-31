@@ -1,9 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { EventClientToServer } from './../common/socket.event';
 import { SocketService } from './socket.service';
-import { CreateChatRoomDto } from './dto/createChatRoom.dto';
 import { MsgToServerDto } from './dto/msgToServer.dto';
-import { EnterChatRoomDto } from './dto/enterChatRoom.dto';
 import {
   WebSocketGateway,
   OnGatewayConnection,
@@ -22,53 +20,56 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   public server: Server;
 
-  @SubscribeMessage(EventClientToServer.msgToServer)
-  handleSubmittedMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
-  ) {
-    return this.socketService.handleSubmittedMessage(
-      client,
-      this.server,
-      mstToServerDto,
-    );
-  }
-
-  @SubscribeMessage(EventClientToServer.enterChatRoom)
-  handleChatRoomEntrance(
-    @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) enterChatRoomDto: EnterChatRoomDto,
-  ) {
-    return this.socketService.handleChatRoomEntrance(client, enterChatRoomDto);
-  }
-
-  @SubscribeMessage(EventClientToServer.createChatRoom)
-  handleCreateChatRoom(
-    @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) createChatRoomDto: CreateChatRoomDto,
-  ) {
-    return this.socketService.handleCreateChatRoom(
-      client,
-      this.server,
-      createChatRoomDto,
-    );
-  }
-
   handleConnection(@ConnectedSocket() client: Socket) {
     console.log('connected To socket');
-    return this.socketService.handleConnection(client);
+    console.log(client.handshake.headers);
+    const accessTokenBearer = client.handshake.headers.authorization;
+    return this.socketService.handleConnection(client, accessTokenBearer);
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
     return this.socketService.handleDisconnect(client);
   }
 
-  @SubscribeMessage(EventClientToServer.notificationConnect)
-  handleNotificationConnect(
+  @SubscribeMessage(EventClientToServer.msgToServer)
+  handleSubmittedMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() userId: string,
+    @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
-    return this.socketService.handleNotificationConnect(client, userId);
+    const accessTokenBearer = client.handshake.headers.authorization;
+    return this.socketService.handleSubmittedMessage(
+      client,
+      this.server,
+      mstToServerDto,
+      accessTokenBearer,
+    );
+  }
+
+  @SubscribeMessage(EventClientToServer.enterChatRoom)
+  handleChatRoomEntrance(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(ValidationPipe) chatRoomId: number,
+  ) {
+    const accessTokenBearer = client.handshake.headers.authorization;
+    return this.socketService.handleChatRoomEntrance(
+      client,
+      chatRoomId,
+      accessTokenBearer,
+    );
+  }
+
+  @SubscribeMessage(EventClientToServer.createChatRoom)
+  handleCreateChatRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(ValidationPipe) recruitPostId: number,
+  ) {
+    const accessTokenBearer = client.handshake.headers.authorization;
+    return this.socketService.handleCreateChatRoom(
+      client,
+      this.server,
+      recruitPostId,
+      accessTokenBearer,
+    );
   }
 
   @SubscribeMessage(EventClientToServer.notificationToServer)
@@ -76,10 +77,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
+    const accessTokenBearer = client.handshake.headers.authorization;
     return this.socketService.handleNotification(
-      client,
       this.server,
       createNotificationDto,
+      accessTokenBearer,
     );
   }
 

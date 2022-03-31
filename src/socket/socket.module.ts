@@ -12,6 +12,7 @@ import { SocketService } from './socket.service';
 import { SocketGateway } from './socket.gateway';
 import { RecruitPostModule } from './../recruit-post/recruit-post.module';
 import { Notification } from './../user/entities/Notification';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   providers: [SocketGateway, SocketService],
@@ -28,6 +29,7 @@ import { Notification } from './../user/entities/Notification';
     forwardRef(() => RecruitPostModule),
     UserModule,
     socialLoginModule,
+    ConfigModule,
   ],
   exports: [SocketGateway, SocketService],
 })
