@@ -58,13 +58,14 @@ export class SocketService {
       const notifications = await this.notificationRepository.find({
         where: {
           notificationReceiver: userId,
-          isRead: false,
+          isRead: 0,
         },
         take: 20,
         order: {
           notificationId: 'DESC',
         },
       });
+      console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
       return {
