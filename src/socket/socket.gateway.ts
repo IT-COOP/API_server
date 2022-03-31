@@ -28,8 +28,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(client.handshake.headers);
     console.log(client);
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.emit(
-      EventServerToClient.notificationToClient,
+    this.server.send(
       await this.socketService.handleConnection(client, accessTokenBearer),
     );
   }
