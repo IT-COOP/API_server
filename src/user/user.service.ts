@@ -103,7 +103,15 @@ export class UserService {
     if (!profile) {
       throw myPageError.MissingUserError;
     }
-    return { profile };
+    const projectCount = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoin('P.chatRooms', 'C')
+      .leftJoin('C.chatMembers', 'M')
+      .where('M.member = :userId', { userId })
+      .andWhere('P.createdAt != P.endAt')
+      .andWhere('P.endAt < :now', { now: new Date() })
+      .getCount();
+    return { profile, projectCount };
   }
 
   // 내 프로필 수정하기
