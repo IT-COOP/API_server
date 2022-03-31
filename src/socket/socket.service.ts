@@ -240,7 +240,7 @@ export class SocketService {
         };
       }
 
-      const chat = await this.chatRepository.save(
+      const updated = await this.chatRepository.save(
         this.chatRepository.create({
           chatRoomId: msgToServerDto.chatRoomId,
           speaker: userId,
@@ -279,9 +279,17 @@ export class SocketService {
 
       await this.notificationRepository.insert(notifications);
 
-      chat.speaker2.userId = userId;
-      chat.speaker2.nickname = user.nickname;
-      chat.speaker2.profileImgUrl = user.profileImgUrl;
+      const chat = {
+        chat: updated.chat,
+        speaker: updated.speaker,
+        chatRoomId: updated.chatRoomId,
+        createdAt: updated.createdAt,
+        speaker2: {
+          userId,
+          nickname: user.nickname,
+          profileImgUrl: user.profileImgUrl,
+        },
+      };
 
       server
         .to(String(msgToServerDto.chatRoomId))
