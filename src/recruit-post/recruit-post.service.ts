@@ -541,6 +541,7 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      console.error(error);
     } finally {
       try {
         await queryRunner.release();
