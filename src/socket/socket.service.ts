@@ -268,21 +268,6 @@ export class SocketService {
         },
       });
 
-      const crews = await this.chatMemberRepository.find({
-        where: { chatRoomId: msgToServerDto.chatRoomId },
-        select: ['member'],
-      });
-      for (const crew of crews) {
-        if (crew.member === userId) continue;
-        notification.notificationReceiver = crew.member;
-        server
-          .to(crew.member)
-          .emit(EventServerToClient.notificationToClient, notification);
-        notifications.push(notification);
-      }
-
-      await this.notificationRepository.insert(notifications);
-
       const chat = {
         chatId: updated.chatId,
         chat: updated.chat,
@@ -301,6 +286,23 @@ export class SocketService {
         .emit(EventServerToClient.msgToClient, {
           chat,
         });
+
+      const crews = await this.chatMemberRepository.find({
+        where: { chatRoomId: msgToServerDto.chatRoomId },
+        select: ['member'],
+      });
+      for (const crew of crews) {
+        if (crew.member === userId) continue;
+        notification.notificationReceiver = crew.member;
+        server
+          .to(crew.member)
+          .emit(EventServerToClient.notificationToClient, notification);
+        notifications.push(notification);
+      }
+
+      this.notificationRepository.insert(notifications).then(() => {
+        console.log('이래도 된단다');
+      });
     } catch (err) {
       console.error(err);
       return {
