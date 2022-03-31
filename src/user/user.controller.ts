@@ -38,7 +38,7 @@ export class UserController {
   @Get('profile')
   getMyProfile(@Res({ passthrough: true }) res) {
     const userId = res.locals.user.userId;
-    return this.userService.getMyProfile(userId);
+    return this.userService.getMyProfile(userId, res);
   }
 
   // 다른 프로필 보기

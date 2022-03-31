@@ -32,7 +32,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       EventServerToClient.notificationToClient,
       await this.socketService.handleConnection(client, accessTokenBearer),
     );
-    return '외않되';
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -45,16 +44,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    this.server.emit(
-      EventServerToClient.msgToClient,
-      await this.socketService.handleSubmittedMessage(
-        client,
-        this.server,
-        mstToServerDto,
-        accessTokenBearer,
-      ),
+    return await this.socketService.handleSubmittedMessage(
+      client,
+      this.server,
+      mstToServerDto,
+      accessTokenBearer,
     );
-    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.enterChatRoom)
@@ -63,15 +58,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) chatRoomId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.emit(
-      EventServerToClient.enterChatRoom,
-      await this.socketService.handleChatRoomEntrance(
-        client,
-        chatRoomId,
-        accessTokenBearer,
-      ),
+    return await this.socketService.handleChatRoomEntrance(
+      client,
+      chatRoomId,
+      accessTokenBearer,
     );
-    return '외않되';
   }
 
   @SubscribeMessage(EventClientToServer.createChatRoom)
@@ -116,6 +107,5 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server,
       createNotificationDto,
     );
-    return '외않되';
   }
 }

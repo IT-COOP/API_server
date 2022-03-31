@@ -15,6 +15,7 @@ import { Repository } from 'typeorm';
 import { UserReputation } from './entities/UserReputation';
 import { RateUserDto } from './dto/rateUser.dto';
 import { EventType } from 'src/socket/enum/eventType.enum';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -35,7 +36,7 @@ export class UserService {
     private readonly socketGateway: SocketGateway,
   ) {}
   // 내 프로필 보기
-  async getMyProfile(userId: string) {
+  async getMyProfile(userId: string, res: Response) {
     const profile = await this.userRepository.findOne({
       where: { userId },
       select: [
@@ -50,24 +51,37 @@ export class UserService {
       relations: ['userReputations2'],
     });
 
-    const counts = await this.userRepository
-      .createQueryBuilder('U')
-      .leftJoin('U.recruitPosts', 'P')
-      .leftJoin('U.chatMembers', 'M')
-      .leftJoin('U.recruitApplies', 'A')
-      .select('U.userId')
-      .addSelect('COUNT(P.author)', 'postCount')
-      .addSelect('COUNT(M.member)', 'projectCount')
-      .addSelect('COUNT(A.applicant)', 'applyCount')
-      .where('U.userId = :userId', { userId })
-      .getRawOne();
+    const postCountPromise = this.recruitPostRepository
+      .createQueryBuilder('P')
+      .where('P.author = :', { userId })
+      .getCount();
+    const projectCountPromise = this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoin('P.chatRooms', 'C')
+      .leftJoin('C.chatMembers', 'M')
+      .where('M.member = :userId', { userId })
+      .andWhere('P.createdAt != P.endAt')
+      .andWhere('P.endAt < :now', { now: new Date() })
+      .getCount();
+    const applyCountPromise = this.recruitApplyRepository
+      .createQueryBuilder('A')
+      .where('A.applicant = :userId', { userId })
+      .getCount();
 
-    return {
-      profile,
-      postCount: parseInt(counts.postCount),
-      projectCount: parseInt(counts.projectCount),
-      applyCount: parseInt(counts.applyCount1),
-    };
+    Promise.all([
+      postCountPromise,
+      projectCountPromise,
+      applyCountPromise,
+    ]).then((values) => {
+      const [postCount, projectCount, applyCount] = values;
+      res.status(200).send({
+        profile,
+        postCount: postCount || 0,
+        projectCount: projectCount || 0,
+        applyCount: applyCount || 0,
+      });
+    });
+    return;
   }
 
   // 다른 프로필 보기
@@ -350,11 +364,12 @@ export class UserService {
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
-      .andWhere('M.member = :userId', { userId })
-      .orWhere('M.member = :receiver', { receiver })
       .andWhere('P.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
 
+    for (const crew in post.chatRooms.chatMembers) {
+      member = crew;
+    }
     if (!post) {
       throw myPageError.UnableToRateError;
     }
