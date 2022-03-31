@@ -335,7 +335,7 @@ export class RecruitPostService {
     const returned = await this.recruitAppliesRepository
       .createQueryBuilder()
       .where('recruitPostId = :recruitPostId', { recruitPostId })
-      .andWhere('userId = :userId', { userId: apply.applicant })
+      .andWhere('applicant = :userId', { userId: apply.applicant })
       .getManyAndCount();
     if (returned[1]) {
       throw recruitError.DuplicateOneRecruitApply;
