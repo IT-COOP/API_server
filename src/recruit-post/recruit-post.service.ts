@@ -351,7 +351,7 @@ export class RecruitPostService {
 
   async updateRecruitPost(recruitPost: RecruitPosts) {
     try {
-      const returned = await this.recruitPostsRepository.findOne({
+      const returned = await this.recruitPostsRepository.findOneOrFail({
         recruitPostId: recruitPost.recruitPostId,
       });
       if (returned.author !== recruitPost.author) {
