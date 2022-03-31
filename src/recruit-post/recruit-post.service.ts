@@ -509,7 +509,7 @@ export class RecruitPostService {
           await queryRunner.manager
             .getRepository(RecruitStacks)
             .createQueryBuilder('S')
-            .update('S')
+            .update(RecruitStacks)
             .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
             .where('S.recruitPostId = :recruitPostId', { recruitPostId })
             .execute();
@@ -517,7 +517,7 @@ export class RecruitPostService {
         await queryRunner.manager
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
-          .update('T')
+          .update(RecruitTasks)
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
