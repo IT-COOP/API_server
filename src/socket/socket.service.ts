@@ -60,8 +60,8 @@ export class SocketService {
         .leftJoin('N.notificationSender2', 'U')
         .select('U.nickname')
         .where('N.notificationReceiver = :userId', { userId })
-        .take(20)
         .orderBy('N.notificationId', 'DESC')
+        .take(20)
         .getMany();
       console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
