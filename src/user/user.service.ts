@@ -250,6 +250,7 @@ export class UserService {
     notification.eventType = EventType.recruitApplyAccepted;
     notification.eventContent = '';
     notification.targetId = apply.recruitPostId;
+    notification.isRead = false;
     this.socketGateway.sendNotification(notification);
 
     return { success: true };
