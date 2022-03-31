@@ -20,25 +20,27 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   public server: Server;
 
-  handleConnection(@ConnectedSocket() client: Socket) {
+  async handleConnection(@ConnectedSocket() client: Socket) {
     console.log('connected To socket');
     console.log(client.handshake.headers);
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(this.socketService.handleConnection(client, accessTokenBearer));
+    client.send(
+      await this.socketService.handleConnection(client, accessTokenBearer),
+    );
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    client.send(this.socketService.handleDisconnect(client));
+    return this.socketService.handleDisconnect(client);
   }
 
   @SubscribeMessage(EventClientToServer.msgToServer)
-  handleSubmittedMessage(
+  async handleSubmittedMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     client.send(
-      this.socketService.handleSubmittedMessage(
+      await this.socketService.handleSubmittedMessage(
         client,
         this.server,
         mstToServerDto,
@@ -48,13 +50,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.enterChatRoom)
-  handleChatRoomEntrance(
+  async handleChatRoomEntrance(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) chatRoomId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     client.send(
-      this.socketService.handleChatRoomEntrance(
+      await this.socketService.handleChatRoomEntrance(
         client,
         chatRoomId,
         accessTokenBearer,
@@ -63,13 +65,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.createChatRoom)
-  handleCreateChatRoom(
+  async handleCreateChatRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) recruitPostId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     client.send(
-      this.socketService.handleCreateChatRoom(
+      await this.socketService.handleCreateChatRoom(
         client,
         this.server,
         recruitPostId,
@@ -79,13 +81,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventClientToServer.notificationToServer)
-  handleNotification(
+  async handleNotification(
     @ConnectedSocket() client: Socket,
     @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     client.send(
-      this.socketService.handleNotification(
+      await this.socketService.handleNotification(
         this.server,
         createNotificationDto,
         accessTokenBearer,
