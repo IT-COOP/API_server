@@ -60,7 +60,7 @@ export class SocketService {
         .leftJoin('N.notificationSender2', 'U')
         .select('U.nickname')
         .where('N.notificationReceiver = :userId', { userId })
-        .orderBy('N.notificationId', 'DESC')
+        .orderBy('notificationId', 'DESC')
         .take(20)
         .getMany();
       console.log(notifications);
@@ -110,7 +110,7 @@ export class SocketService {
 
       const chats = await this.chatRepository.find({
         where: { chatRoomId },
-        relations: ['speaker2'],
+        relations: ['speaker2.nickname', 'speaker2.profileImgUrl'],
       });
 
       if (!source || source.endAt < new Date()) {
