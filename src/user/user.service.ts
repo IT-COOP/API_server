@@ -53,7 +53,7 @@ export class UserService {
 
     const postCountPromise = this.recruitPostRepository
       .createQueryBuilder('P')
-      .where('P.author = :', { userId })
+      .where('P.author = :userId', { userId })
       .getCount();
     const projectCountPromise = this.recruitPostRepository
       .createQueryBuilder('P')
