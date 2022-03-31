@@ -1,5 +1,8 @@
 import { ValidationPipe } from '@nestjs/common';
-import { EventClientToServer } from './../common/socket.event';
+import {
+  EventClientToServer,
+  EventServerToClient,
+} from './../common/socket.event';
 import { SocketService } from './socket.service';
 import { MsgToServerDto } from './dto/msgToServer.dto';
 import {
@@ -24,7 +27,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('connected To socket');
     console.log(client.handshake.headers);
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(
+    client.emit(
+      EventServerToClient.notificationToClient,
       await this.socketService.handleConnection(client, accessTokenBearer),
     );
   }
@@ -39,7 +43,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
-    client.send(
+    client.emit(
+      EventServerToClient.msgToClient,
       await this.socketService.handleSubmittedMessage(
         client,
         this.server,
