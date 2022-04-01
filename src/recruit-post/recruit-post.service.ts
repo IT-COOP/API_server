@@ -64,7 +64,7 @@ export class RecruitPostService {
           .where('P.recruitPostId > 0');
       } else {
         recruitQuery = recruitQuery
-          .leftJoinAndSelect('P.recruitKeeps', 'K', 'P.author = :id', {
+          .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
             id: loginId,
           })
           .where('P.recruitPostId > 0');
@@ -131,52 +131,55 @@ export class RecruitPostService {
   async ReadSpecificRecruits(recruitPostId: number, loginId: string) {
     try {
       if (!loginId) {
-        const recruitPost = await this.recruitPostsRepository
+        const [recruitPost] = await Promise.all([
+          this.recruitPostsRepository
+            .createQueryBuilder('P')
+            .leftJoinAndSelect('P.recruitStacks', 'S')
+            .leftJoinAndSelect('P.recruitTasks', 'T')
+            .leftJoinAndSelect('P.recruitComments', 'C')
+            .leftJoin('P.author2', 'U')
+            .leftJoin('C.user', 'CU')
+            .addSelect(['CU.nickname', 'CU.profileImgUrl'])
+            .addSelect(['U.nickname', 'U.profileImgUrl'])
+            .where('P.recruitPostId = :id', { id: recruitPostId })
+            .orderBy('C.recruitCommentId', 'ASC')
+            .getOne(),
+          await this.recruitPostsRepository
+            .createQueryBuilder('P')
+            .update()
+            .set({ viewCount: () => 'viewCount + 1' })
+            .where('recruitPostId = :id', { id: recruitPostId })
+            .execute(),
+        ]);
+        return recruitPost;
+      }
+
+      const [recruitPost] = await Promise.all([
+        this.recruitPostsRepository
           .createQueryBuilder('P')
           .leftJoinAndSelect('P.recruitStacks', 'S')
           .leftJoinAndSelect('P.recruitTasks', 'T')
           .leftJoinAndSelect('P.recruitComments', 'C')
+          .leftJoinAndSelect('P.recruitApplies', 'A', 'A.applicant =:loginId', {
+            loginId,
+          })
+          .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId =:loginId', {
+            loginId,
+          })
           .leftJoin('P.author2', 'U')
           .leftJoin('C.user', 'CU')
           .addSelect(['CU.nickname', 'CU.profileImgUrl'])
           .addSelect(['U.nickname', 'U.profileImgUrl'])
           .where('P.recruitPostId = :id', { id: recruitPostId })
           .orderBy('C.recruitCommentId', 'ASC')
-          .getOne();
+          .getOne(),
         await this.recruitPostsRepository
           .createQueryBuilder('P')
           .update()
           .set({ viewCount: () => 'viewCount + 1' })
           .where('recruitPostId = :id', { id: recruitPostId })
-          .execute();
-        return recruitPost;
-      }
-
-      const recruitPost = await this.recruitPostsRepository
-        .createQueryBuilder('P')
-        .leftJoinAndSelect('P.recruitStacks', 'S')
-        .leftJoinAndSelect('P.recruitTasks', 'T')
-        .leftJoinAndSelect('P.recruitComments', 'C')
-        .leftJoinAndSelect('P.recruitApplies', 'A', 'A.applicant =:loginId', {
-          loginId,
-        })
-        .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId =:loginId', {
-          loginId,
-        })
-        .leftJoin('P.author2', 'U')
-        .leftJoin('C.user', 'CU')
-        .addSelect(['CU.nickname', 'CU.profileImgUrl'])
-        .addSelect(['U.nickname', 'U.profileImgUrl'])
-        .where('P.recruitPostId = :id', { id: recruitPostId })
-        .orderBy('C.recruitCommentId', 'ASC')
-        .getOne();
-      await this.recruitPostsRepository
-        .createQueryBuilder('P')
-        .update()
-        .set({ viewCount: () => 'viewCount + 1' })
-        .where('recruitPostId = :id', { id: recruitPostId })
-        .execute();
-
+          .execute(),
+      ]);
       return recruitPost;
     } catch (e) {
       throw recruitError.DBqueryError;
