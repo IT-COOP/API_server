@@ -170,7 +170,6 @@ export class SocketService {
       const notifications = [];
       const notification = this.notificationRepository.create({
         notificationSender: userId,
-        notificationReceiver: '',
         eventType: EventType.chat,
         eventContent: msgToServerDto.chat.slice(0, 30),
         targetId: msgToServerDto.chatRoomId,
@@ -209,6 +208,7 @@ export class SocketService {
         server
           .to(crew.member)
           .emit(EventServerToClient.notificationToClient, notification);
+        delete notification.notificationReceiver2;
         notifications.push(notification);
       }
 
@@ -244,10 +244,12 @@ export class SocketService {
           nickname: createNotificationDto.nickname,
         },
       });
-      const result = await this.notificationRepository.insert(notification);
+
       server
         .to(createNotificationDto.notificationReceiver)
         .emit(EventServerToClient.notificationToClient, notification);
+      delete notification.notificationReceiver2;
+      const result = await this.notificationRepository.insert(notification);
       return {
         status: 'success',
         data: result,
@@ -277,10 +279,11 @@ export class SocketService {
           nickname: createNotificationDto.nickname,
         },
       });
-      notifications.push(notification);
       server
         .to(createNotificationDto.notificationReceiver)
         .emit(EventServerToClient.notificationToClient, notification);
+      delete notification.notificationReceiver2;
+      notifications.push(notification);
     }
     const result = await this.notificationRepository.insert(notifications);
     return {
