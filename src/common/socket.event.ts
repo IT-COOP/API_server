@@ -10,5 +10,4 @@ export enum EventServerToClient {
   notificationToClient = 'notificationToClient',
   msgToClient = 'msgToClient',
   enterChatRoom = 'enterChatRoom',
-  createChatRoom = 'createChatRoom',
 }

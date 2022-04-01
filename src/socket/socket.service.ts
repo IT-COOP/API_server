@@ -63,7 +63,10 @@ export class SocketService {
         .orderBy('N.createdAt', 'DESC')
         .take(20)
         .getMany();
-      return { status: 'success', data: { notifications, EventType } };
+      return {
+        status: 'success',
+        data: { notifications, EventType },
+      };
     } catch (err) {
       return {
         status: 'failure',
@@ -275,14 +278,14 @@ export class SocketService {
         eventContent: createNotificationDto.eventContent,
         targetId: createNotificationDto.targetId,
         isRead: createNotificationDto.isRead,
-        notificationReceiver2: {
+        notificationSender2: {
           nickname: createNotificationDto.nickname,
         },
       });
       server
         .to(createNotificationDto.notificationReceiver)
         .emit(EventServerToClient.notificationToClient, notification);
-      delete notification.notificationReceiver2;
+      delete notification.notificationSender2;
       notifications.push(notification);
     }
     const result = await this.notificationRepository.insert(notifications);

@@ -267,12 +267,10 @@ export class UserService {
         recruitStack.numberOfPeopleRequired++;
         recruitTask.numberOfPeopleRequired++;
 
-        await Promise.all([
-          queryRunner.manager.getRepository(RecruitStacks).save(recruitStack),
-          queryRunner.manager.getRepository(RecruitTasks).save(recruitTask),
-        ]).catch((err) => {
-          throw new Error(err);
-        });
+        await queryRunner.manager
+          .getRepository(RecruitStacks)
+          .save(recruitStack);
+        await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
       } else {
         // 기획자 혹은 디자이너임
         const recruitTask = await this.recruitTaskRepository.findOne({
@@ -309,7 +307,7 @@ export class UserService {
     notification.notificationReceiver = apply.applicant;
     notification.notificationSender = userId;
     notification.eventType = EventType.recruitApplyAccepted;
-    notification.eventContent = '';
+    notification.eventContent = '협업 신청이 수락되었습니다.';
     notification.targetId = apply.recruitPostId;
     notification.isRead = false;
     notification.nickname = apply.applicant2.nickname;
