@@ -1,5 +1,6 @@
 export class MsgToServerDto {
   chatRoomId: number;
+  nickname: string;
   chat: string;
 }
 

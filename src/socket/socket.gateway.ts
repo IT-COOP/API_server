@@ -33,6 +33,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
+    console.log(client.id);
     return this.socketService.handleDisconnect(client);
   }
 

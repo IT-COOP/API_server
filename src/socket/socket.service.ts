@@ -58,15 +58,13 @@ export class SocketService {
       const notifications = await this.notificationRepository
         .createQueryBuilder('N')
         .leftJoin('N.notificationSender2', 'U')
-        .select('U.nickname')
+        .addSelect('U.nickname')
         .where('N.notificationReceiver = :userId', { userId })
-        .orderBy('notificationId', 'DESC')
+        .orderBy('N.createdAt', 'DESC')
         .take(20)
         .getMany();
-      console.log(notifications);
       return { status: 'success', data: { notifications, EventType } };
     } catch (err) {
-      console.error(err);
       return {
         status: 'failure',
         data: err,
@@ -108,10 +106,13 @@ export class SocketService {
         },
       });
 
-      const chats = await this.chatRepository.find({
-        where: { chatRoomId },
-        relations: ['speaker2.nickname', 'speaker2.profileImgUrl'],
-      });
+      const chats = await this.chatRepository
+        .createQueryBuilder('C')
+        .leftJoin('C.speaker2', 'U')
+        .addSelect(['U.nickname', 'U.profileImgUrl', 'U.userId'])
+        .where('C.chatRoomId = :chatRoomId', { chatRoomId })
+        .orderBy('C.chatId', 'ASC')
+        .getMany();
 
       if (!source || source.endAt < new Date()) {
         // 종료된 프로젝트
@@ -122,6 +123,7 @@ export class SocketService {
       }
 
       client.join(String(chatRoomId));
+      console.log('entrance', client.rooms);
       return {
         status: 'success',
         data: { chats, isOver: false },
@@ -190,6 +192,7 @@ export class SocketService {
             eventContent: '새로운 채팅방이 생겼어요!',
             targetId: recruitPostId,
             isRead: false,
+            notificationSender2: { nickname: 'asdf' },
           });
           chatMembers.push({
             member: crew.applicant,
@@ -227,6 +230,8 @@ export class SocketService {
     msgToServerDto: MsgToServerDto,
     accessTokenBearer: string,
   ) {
+    console.log(msgToServerDto);
+    console.log(client.rooms);
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
       if (!client.rooms.has(String(msgToServerDto.chatRoomId))) {
@@ -236,7 +241,7 @@ export class SocketService {
         };
       }
 
-      await this.chatRepository.save(
+      const updated = await this.chatRepository.save(
         this.chatRepository.create({
           chatRoomId: msgToServerDto.chatRoomId,
           speaker: userId,
@@ -247,17 +252,40 @@ export class SocketService {
         where: {
           userId: userId,
         },
+        select: ['nickname', 'profileImgUrl'],
       });
 
       const notifications = [];
-      const notification: CreateNotificationDto = {
+      const notification = this.notificationRepository.create({
         notificationSender: userId,
         notificationReceiver: '',
         eventType: EventType.chat,
         eventContent: msgToServerDto.chat.slice(0, 30),
         targetId: msgToServerDto.chatRoomId,
         isRead: false,
+        notificationReceiver2: {
+          nickname: msgToServerDto.nickname,
+        },
+      });
+
+      const chat = {
+        chatId: updated.chatId,
+        chat: updated.chat,
+        speaker: updated.speaker,
+        chatRoomId: updated.chatRoomId,
+        createdAt: updated.createdAt,
+        speaker2: {
+          userId,
+          nickname: user.nickname,
+          profileImgUrl: user.profileImgUrl,
+        },
       };
+
+      server
+        .to(String(msgToServerDto.chatRoomId))
+        .emit(EventServerToClient.msgToClient, {
+          chat,
+        });
 
       const crews = await this.chatMemberRepository.find({
         where: { chatRoomId: msgToServerDto.chatRoomId },
@@ -272,26 +300,11 @@ export class SocketService {
         notifications.push(notification);
       }
 
-      await this.notificationRepository.insert(notifications);
-
-      server
-        .to(String(msgToServerDto.chatRoomId))
-        .emit(EventServerToClient.msgToClient, {
-          profileImgUrl: user.profileImgUrl,
-          nickname: user.nickname,
-          userId: userId,
-          chat: msgToServerDto.chat,
-        });
-      return {
-        status: 'success',
-        data: {
-          profileImgUrl: user.profileImgUrl,
-          nickname: user.nickname,
-          userId: userId,
-          chat: msgToServerDto.chat,
-        },
-      };
+      this.notificationRepository.insert(notifications).then(() => {
+        console.log('이래도 된단다');
+      });
     } catch (err) {
+      console.error(err);
       return {
         status: 'failure',
         data: err,
@@ -308,12 +321,21 @@ export class SocketService {
       createNotificationDto.notificationSender =
         this.handleAccessTokenBearer(accessTokenBearer);
 
-      const result = await this.notificationRepository.insert(
-        createNotificationDto,
-      );
+      const notification = this.notificationRepository.create({
+        notificationSender: createNotificationDto.notificationSender,
+        notificationReceiver: createNotificationDto.notificationReceiver,
+        eventType: createNotificationDto.eventType,
+        eventContent: createNotificationDto.eventContent,
+        targetId: createNotificationDto.targetId,
+        isRead: createNotificationDto.isRead,
+        notificationReceiver2: {
+          nickname: createNotificationDto.nickname,
+        },
+      });
+      const result = await this.notificationRepository.insert(notification);
       server
         .to(createNotificationDto.notificationReceiver)
-        .emit(EventServerToClient.notificationToClient, createNotificationDto);
+        .emit(EventServerToClient.notificationToClient, notification);
       return {
         status: 'success',
         data: result,
@@ -330,12 +352,21 @@ export class SocketService {
     server: Server,
     createNotificationDto: CreateNotificationDto,
   ) {
-    const result = await this.notificationRepository.insert(
-      createNotificationDto,
-    );
+    const notification = this.notificationRepository.create({
+      notificationSender: createNotificationDto.notificationSender,
+      notificationReceiver: createNotificationDto.notificationReceiver,
+      eventType: createNotificationDto.eventType,
+      eventContent: createNotificationDto.eventContent,
+      targetId: createNotificationDto.targetId,
+      isRead: createNotificationDto.isRead,
+      notificationReceiver2: {
+        nickname: createNotificationDto.nickname,
+      },
+    });
+    const result = await this.notificationRepository.insert(notification);
     server
       .to(createNotificationDto.notificationReceiver)
-      .emit(EventServerToClient.notificationToClient, createNotificationDto);
+      .emit(EventServerToClient.notificationToClient, notification);
     return {
       status: 'success',
       data: result,
