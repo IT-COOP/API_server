@@ -64,9 +64,14 @@ export class RecruitPostService {
           .where('P.recruitPostId > 0');
       } else {
         recruitQuery = recruitQuery
-          .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-            id: loginId,
-          })
+          .leftJoinAndSelect(
+            'P.recruitKeeps',
+            'K',
+            'K.userId = :id and P.recruitPostId = K.recruitPostId',
+            {
+              id: loginId,
+            },
+          )
           .where('P.recruitPostId > 0');
       }
 
