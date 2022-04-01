@@ -230,7 +230,7 @@ export class RecruitPostService {
   }
 
   //마무리
-  async createComment(comment: RecruitComments) {
+  async createComment(comment: RecruitComments, nickname: string) {
     try {
       const returned = await this.recruitCommentsRepository
         .createQueryBuilder()
@@ -264,15 +264,16 @@ export class RecruitPostService {
       comment.recruitPostId,
     );
 
-    // const notification = new CreateNotificationDto();
-    // notification.notificationReceiver = returned.author; //글 주인 /
-    // notification.notificationSender = comment.userId; //댓글 쓴 사람
-    // notification.eventType = comment.commentDepth ? 2 : 1; //
-    // notification.eventContent = comment.recruitCommentContent; //
-    // notification.targetId = comment.recruitPostId; //어디서
-    // if (notification.notificationReceiver != notification.notificationSender) {
-    //   this.socketGateway.sendNotification(notification);
-    // }
+    const notification = new CreateNotificationDto();
+    notification.notificationReceiver = returned.author; //글 주인 /
+    notification.notificationSender = comment.userId; //댓글 쓴 사람
+    notification.eventType = comment.commentDepth ? 2 : 1; //
+    notification.eventContent = comment.recruitCommentContent; //
+    notification.targetId = comment.recruitPostId; //어디서
+    notification.nickname = nickname;
+    if (notification.notificationReceiver != notification.notificationSender) {
+      this.socketGateway.sendNotification(notification);
+    }
   }
 
   //마무리
@@ -512,6 +513,7 @@ export class RecruitPostService {
             .update('S')
             .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
             .where('S.recruitPostId = :recruitPostId', { recruitPostId })
+            .andWhere('S.stack = :stack', { task: returned.stack })
             .execute();
           returned.task = returned.task > 300 ? 400 : 300;
         }
@@ -522,6 +524,7 @@ export class RecruitPostService {
           .update('T')
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
+          .andWhere('T.task = :task', { task: returned.task })
           .execute();
       }
       await queryRunner.manager.getRepository(RecruitApplies).delete({
