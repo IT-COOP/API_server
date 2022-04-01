@@ -26,6 +26,7 @@ import { RecruitTasks } from './../recruit-post/entities/RecruitTasks';
       RecruitTasks,
       ChatRooms,
       ChatMembers,
+      Notification,
     ]),
     AuthModule,
     forwardRef(() => SocketModule),
