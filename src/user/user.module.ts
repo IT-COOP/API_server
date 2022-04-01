@@ -1,13 +1,13 @@
+import { ChatMembers } from './../socket/entities/ChatMembers';
+import { ChatRooms } from './../socket/entities/ChatRooms';
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { Notification } from './entities/Notification';
 import { UserReputation } from './entities/UserReputation';
 import { SocketModule } from './../socket/socket.module';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
-import { RecruitKeeps } from './../recruit-post/entities/RecruitKeeps';
 import { AuthModule } from './../auth/auth.module';
 import { Users } from './../socialLogin/entity/Users';
 import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
@@ -16,19 +16,16 @@ import { RecruitTasks } from './../recruit-post/entities/RecruitTasks';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule,
     TypeOrmModule.forFeature([
-      Notification,
-      UserReputation,
       Users,
       UserReputation,
-      RecruitKeeps,
       RecruitPosts,
       RecruitApplies,
       RecruitStacks,
       RecruitTasks,
+      ChatRooms,
+      ChatMembers,
     ]),
     AuthModule,
     forwardRef(() => SocketModule),
