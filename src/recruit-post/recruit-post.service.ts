@@ -260,20 +260,55 @@ export class RecruitPostService {
     } catch (error) {
       throw recruitError.DBqueryError;
     }
-    const returned = await this.recruitPostsRepository.findOne(
-      comment.recruitPostId,
-    );
 
-    const notification = new CreateNotificationDto();
-    notification.notificationReceiver = returned.author; //글 주인 /
-    notification.notificationSender = comment.userId; //댓글 쓴 사람
-    notification.eventType = comment.commentDepth ? 2 : 1; //
-    notification.eventContent = comment.recruitCommentContent; //
-    notification.targetId = comment.recruitPostId; //어디서
-    notification.nickname = nickname;
-    if (notification.notificationReceiver != notification.notificationSender) {
-      this.socketGateway.sendNotification([notification]);
+    const returned = await this.recruitPostsRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect(
+        'P.recruitComments',
+        'C',
+        'P.recruitPostId = :postId',
+        { postId: comment.recruitPostId },
+      )
+      .where('C.commentDepth = 0 and C.commentGroup = :group', {
+        group: comment.commentGroup,
+      })
+      .getOne();
+
+    console.log(returned);
+
+    const notifications = [];
+    const toPostNotification = new CreateNotificationDto();
+    toPostNotification.notificationReceiver = returned.author; //글 주인 /
+    toPostNotification.notificationSender = comment.userId; //댓글 쓴 사람
+    toPostNotification.eventType = comment.commentDepth ? 2 : 1; //
+    toPostNotification.eventContent = comment.recruitCommentContent; //
+    toPostNotification.targetId = comment.recruitPostId; //어디서
+    toPostNotification.nickname = nickname;
+    if (
+      toPostNotification.notificationReceiver !=
+      toPostNotification.notificationSender
+    ) {
+      notifications.push(toPostNotification);
     }
+    if (comment.commentDepth) {
+      const toCommentNotification = new CreateNotificationDto();
+      toCommentNotification.notificationReceiver =
+        returned.recruitComments[0].userId; //글 주인 / 댓글 주인
+      toCommentNotification.notificationSender = comment.userId; //댓글 쓴 사람
+      toCommentNotification.eventType = 2;
+      toCommentNotification.eventContent = comment.recruitCommentContent; //
+      toCommentNotification.targetId = comment.recruitPostId; //어디서
+      toCommentNotification.nickname = nickname;
+      if (
+        toCommentNotification.notificationReceiver !=
+        toCommentNotification.notificationSender
+      ) {
+        notifications.push(toPostNotification);
+      }
+    }
+
+    if (notifications.length)
+      await this.socketGateway.sendNotification(notifications);
   }
 
   //마무리
@@ -332,14 +367,21 @@ export class RecruitPostService {
     return returned;
   }
 
-  async createApply(recruitPostId: number, apply: RecruitApplies) {
+  async createApply(
+    recruitPostId: number,
+    apply: RecruitApplies,
+    nickname: string,
+  ) {
     const returned = await this.recruitAppliesRepository
       .createQueryBuilder()
       .where('recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('applicant = :userId', { userId: apply.applicant })
-      .getManyAndCount();
-    if (returned[1]) {
+      .getMany();
+    if (returned.length) {
       throw recruitError.DuplicateOneRecruitApply;
+    }
+    if (returned[0].applicant === apply.applicant) {
+      throw recruitError.WrongRequiredError;
     }
 
     await this.recruitAppliesRepository
@@ -348,6 +390,22 @@ export class RecruitPostService {
       .into(RecruitApplies)
       .values(apply)
       .execute();
+
+    const returnedPost = await this.recruitPostsRepository.findOne({
+      recruitPostId,
+    });
+
+    const notifications = [];
+    const applyNotification = new CreateNotificationDto();
+    applyNotification.notificationReceiver = returnedPost.author; //글 주인 /
+    applyNotification.notificationSender = apply.applicant; //댓글 쓴 사람
+    applyNotification.eventType = 3; //
+    applyNotification.eventContent = '프로젝트 참가 신청이 왔습니다.'; //
+    applyNotification.targetId = recruitPostId; //어디서
+    applyNotification.nickname = nickname;
+    notifications.push(applyNotification);
+
+    await this.socketGateway.sendNotification(notifications);
   }
 
   async updateRecruitPost(recruitPost: RecruitPosts, recruitPostId: number) {
@@ -513,7 +571,7 @@ export class RecruitPostService {
             .update('S')
             .set({ numberOfPeopleRequired: () => 'numberOfPeopleRequired - 1' })
             .where('S.recruitPostId = :recruitPostId', { recruitPostId })
-            .andWhere('S.stack = :stack', { task: returned.stack })
+            .andWhere('S.stack = :stack', { stack: returned.task })
             .execute();
           returned.task = returned.task > 300 ? 400 : 300;
         }
