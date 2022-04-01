@@ -64,20 +64,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  @SubscribeMessage(EventClientToServer.createChatRoom)
-  async handleCreateChatRoom(
-    @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) recruitPostId: number,
-  ) {
-    const accessTokenBearer = client.handshake.headers.authorization;
-    return await this.socketService.handleCreateChatRoom(
-      client,
-      this.server,
-      recruitPostId,
-      accessTokenBearer,
-    );
-  }
-
   @SubscribeMessage(EventClientToServer.notificationToServer)
   async handleNotification(
     @ConnectedSocket() client: Socket,
@@ -91,10 +77,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  sendNotification(createNotificationDto: CreateNotificationDto) {
+  sendNotification(createNotificationDtos: CreateNotificationDto[]) {
     return this.socketService.sendNotification(
       this.server,
-      createNotificationDto,
+      createNotificationDtos,
     );
   }
 }

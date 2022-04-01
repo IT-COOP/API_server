@@ -311,7 +311,7 @@ export class UserService {
     notification.targetId = apply.recruitPostId;
     notification.isRead = false;
     notification.nickname = apply.applicant2.nickname;
-    this.socketGateway.sendNotification(notification);
+    this.socketGateway.sendNotification([notification]);
 
     return { success: true };
   }
@@ -442,7 +442,7 @@ export class UserService {
   // endAt을 바꿔줘야 함.
   // apply 다 삭제해야함
   // 채팅방 만들어줘야함.
-  async completeRecruit(userId, recruitPostId) {
+  async completeRecruit(userId: string, recruitPostId: number) {
     const post = await this.recruitPostRepository.findOne({
       where: {
         recruitPostId,
@@ -473,7 +473,8 @@ export class UserService {
         recruitPostId: recruitPostId,
         isAccepted: 1,
       },
-      select: ['applicant', 'recruitApplyId'],
+      relations: ['applicant2'],
+      select: ['applicant', 'recruitApplyId', 'applicant2'],
     });
     // 이제 사람들 찾았으니 채팅방 만들고, 멤버 추가하고, apply들 삭제해주면 됨. << false인 애들도 삭제해야함
     // endAt도 변경해줘야함.
@@ -492,6 +493,7 @@ export class UserService {
           chatRoomId: recruitPostId,
         }),
       ];
+      const notifications: CreateNotificationDto[] = [];
       for (const apply of applies) {
         members.push(
           this.chatMemberRepository.create({
@@ -499,7 +501,18 @@ export class UserService {
             chatRoomId: recruitPostId,
           }),
         );
+        if (userId === apply.applicant) continue;
+        const notification = new CreateNotificationDto();
+        notification.notificationReceiver = apply.applicant;
+        notification.notificationSender = userId;
+        notification.eventType = EventType.chatRoomCreation;
+        notification.eventContent = '채팅방이 생셩되었습니다.';
+        notification.targetId = apply.recruitPostId;
+        notification.isRead = false;
+        notification.nickname = apply.applicant2.nickname;
+        notifications.push(notification);
       }
+      this.socketGateway.sendNotification(notifications);
       [createdRoom, , ,] = await Promise.all([
         queryRunner.manager.getRepository(ChatRooms).save(chatRoom),
         queryRunner.manager.getRepository(ChatMembers).save(members),
