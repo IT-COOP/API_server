@@ -1,11 +1,12 @@
 import { ResponseToApplyDto } from './dto/responseToApply.dto';
-import { ApiOperation, ApiTags, ApiParam, ApiHeader } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
   Body,
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -62,13 +63,13 @@ export class UserController {
 
   // 내가 keep한 게시물
 
-  @ApiParam({
+  @ApiQuery({
     name: 'items',
     required: false,
     description:
       '받을 게시물의 갯수를 의미합니다. input이 주어지지 않을 경우, default는 12입니다.',
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'cur',
     required: false,
     description:
@@ -104,6 +105,7 @@ export class UserController {
     return this.userService.getMyAppliedProject(userId);
   }
 
+  @ApiOperation({ summary: '신청 수락 혹은 거절하기' })
   @UseGuards(StrictGuard)
   @Post('recruiting/response')
   responseToApply(
@@ -155,6 +157,17 @@ export class UserController {
   ) {
     const userId = res.locals.user.userId;
     return this.userService.rateUser(userId, rateUserDto);
+  }
+
+  // 채팅방 만들기
+  @UseGuards(StrictGuard)
+  @Post('/:recruitPostId/create')
+  completeRecruit(
+    @Res({ passthrough: true }) res,
+    @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
+  ) {
+    const userId = res.locals.user.userID;
+    return this.userService.completeRecruit(userId, recruitPostId);
   }
 }
 

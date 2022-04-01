@@ -1,3 +1,5 @@
+import { ChatMembers } from './../socket/entities/ChatMembers';
+import { ChatRooms } from './../socket/entities/ChatRooms';
 import { CreateNotificationDto } from './../socket/dto/createNotification.dto';
 import { SocketGateway } from 'src/socket/socket.gateway';
 import { myPageError } from './../common/error';
@@ -7,14 +9,18 @@ import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { ResponseToApplyDto } from './dto/responseToApply.dto';
 import { RecruitPosts } from './../recruit-post/entities/RecruitPosts';
 import { UpdateUserProfileDTO } from './dto/updateUserProfile.dto';
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from './../socialLogin/entity/Users';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { UserReputation } from './entities/UserReputation';
 import { RateUserDto } from './dto/rateUser.dto';
-import { EventType } from 'src/socket/enum/eventType.enum';
+import { EventType } from './../socket/enum/eventType.enum';
 import { Response } from 'express';
 
 @Injectable()
@@ -33,7 +39,12 @@ export class UserService {
     private readonly recruitTaskRepository: Repository<RecruitTasks>,
     @InjectRepository(RecruitStacks)
     private readonly recruitStackRepository: Repository<RecruitStacks>,
+    @InjectRepository(ChatRooms)
+    private readonly chatRoomRepository: Repository<ChatRooms>,
+    @InjectRepository(ChatMembers)
+    private readonly chatMemberRepository: Repository<ChatMembers>,
     private readonly socketGateway: SocketGateway,
+    private connection: Connection,
   ) {}
   // 내 프로필 보기
   async getMyProfile(res: Response) {
@@ -187,8 +198,10 @@ export class UserService {
     userId: string,
     responseToApplyDto: ResponseToApplyDto,
   ) {
+    const { recruitPostId, applicant, isAccepted } = responseToApplyDto;
     const post = await this.recruitPostRepository.findOne({
-      where: { recruitPostId: responseToApplyDto.recruitPostId },
+      where: { recruitPostId: recruitPostId },
+      select: ['author'],
     });
     if (!post) {
       throw myPageError.MissingPostError;
@@ -197,78 +210,97 @@ export class UserService {
       // 지가 적은 글도 아닌데 받으려고 함.
       throw myPageError.WrongAuthorError;
     }
-    const apply = await this.recruitApplyRepository.findOne({
-      where: {
-        recruitPostId: responseToApplyDto.recruitPostId,
-        applicant: responseToApplyDto.applicant,
-      },
-    });
+
+    const apply = await this.recruitApplyRepository
+      .createQueryBuilder('A')
+      .leftJoin('A.applicant2', 'U')
+      .select(['A.task', 'A.isAccepted', 'A.recruitApplyId'])
+      .addSelect('U.nickname')
+      .where('A.applicant = :applicant', { applicant })
+      .getOne();
+
     if (!apply) {
       // 신청한 적도 없음!
       throw myPageError.NoApplyToResponseError;
     }
-    if (!responseToApplyDto.isAccepted) {
+    if (!isAccepted) {
       // 거절했음
-      await this.recruitApplyRepository.delete(apply.recruitApplyId);
-      return {
-        success: true,
-      };
+      await this.recruitApplyRepository.remove(apply);
+      return { success: true };
     }
     if (apply.isAccepted) {
       // 이미 허락했음
       throw myPageError.AlreadyRespondedError;
     }
-    if (apply.task % 100) {
-      const task = apply.task / 100 < 3 ? 300 : 400;
-      // 개발자임
-      const recruitStackPromise = this.recruitStackRepository.findOne({
-        where: {
-          recruitPostId: apply.recruitPostId,
-          recruitStack: apply.task,
-        },
-      });
-      const recruitTaskPromise = this.recruitTaskRepository.findOne({
-        where: {
-          recruitPostId: apply.recruitPostId,
-          recruitTask: task,
-        },
-      });
-      const [recruitStack, recruitTask] = await Promise.all([
-        recruitStackPromise,
-        recruitTaskPromise,
-      ]);
-      if (
-        !recruitStack ||
-        !recruitTask ||
-        recruitStack.numberOfPeopleRequired ===
-          recruitStack.numberOfPeopleSet ||
-        recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
-      ) {
-        // 이미 다 구함 에러처리 혹은 안 구하는 중
-        throw myPageError.NotRecruitingError;
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      if (apply.task % 100) {
+        const task = apply.task / 100 < 3 ? 300 : 400;
+        // 개발자임
+        const [recruitStack, recruitTask] = await Promise.all([
+          this.recruitStackRepository.findOne({
+            where: {
+              recruitPostId: apply.recruitPostId,
+              recruitStack: apply.task,
+            },
+          }),
+          this.recruitTaskRepository.findOne({
+            where: {
+              recruitPostId: apply.recruitPostId,
+              recruitTask: task,
+            },
+          }),
+        ]);
+        if (
+          !recruitStack ||
+          !recruitTask ||
+          recruitStack.numberOfPeopleRequired ===
+            recruitStack.numberOfPeopleSet ||
+          recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
+        ) {
+          // 이미 다 구함 에러처리 혹은 안 구하는 중
+          throw myPageError.NotRecruitingError;
+        }
+        recruitStack.numberOfPeopleRequired++;
+        recruitTask.numberOfPeopleRequired++;
+
+        await Promise.all([
+          queryRunner.manager.getRepository(RecruitStacks).save(recruitStack),
+          queryRunner.manager.getRepository(RecruitTasks).save(recruitTask),
+        ]).catch((err) => {
+          throw new Error(err);
+        });
+      } else {
+        // 기획자 혹은 디자이너임
+        const recruitTask = await this.recruitTaskRepository.findOne({
+          where: {
+            recruitPostId: apply.recruitPostId,
+            recruitTask: apply.task,
+          },
+        });
+        if (
+          !recruitTask ||
+          recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
+        ) {
+          // 이미 다 구함 혹은 안 구함
+          throw myPageError.NotRecruitingError;
+        }
+        recruitTask.numberOfPeopleRequired++;
+        await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
       }
-      recruitStack.numberOfPeopleRequired++;
-      recruitTask.numberOfPeopleRequired++;
-      await this.recruitStackRepository.save(recruitStack);
-      await this.recruitTaskRepository.save(recruitTask);
-    } else {
-      // 기획자 혹은 디자이너임
-      const recruitTask = await this.recruitTaskRepository.findOne({
-        where: {
-          recruitPostId: apply.recruitPostId,
-          recruitTask: apply.task,
-        },
+    } catch (err) {
+      queryRunner.rollbackTransaction().then(() => {
+        console.error(err);
       });
-      if (
-        !recruitTask ||
-        recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
-      ) {
-        // 이미 다 구함 혹은 안 구함
-        throw myPageError.NotRecruitingError;
-      }
-      recruitTask.numberOfPeopleRequired++;
-      await this.recruitTaskRepository.save(recruitTask);
+      throw new InternalServerErrorException(
+        `Something Went Wrong. Please Try Again.`,
+      );
+    } finally {
+      queryRunner.release();
     }
+
     apply.isAccepted = true;
     await this.recruitApplyRepository.save(apply);
     const notification = new CreateNotificationDto();
@@ -278,6 +310,7 @@ export class UserService {
     notification.eventContent = '';
     notification.targetId = apply.recruitPostId;
     notification.isRead = false;
+    notification.nickname = apply.applicant2.nickname;
     this.socketGateway.sendNotification(notification);
 
     return { success: true };
@@ -361,6 +394,7 @@ export class UserService {
     const { point, receiver, recruitPostId } = rateUserDto;
     const isRated = await this.userReputationRepository
       .createQueryBuilder('R')
+      .select('R.userReputationId')
       .where('R.userReputationSender = :receiver', { receiver })
       .andWhere('R.recruitPostId = :', { recruitPostId })
       .getOne();
@@ -383,12 +417,13 @@ export class UserService {
     if (!post) {
       throw myPageError.UnableToRateError;
     }
-    let isOk = false;
-    for (const members of post.chatRooms.chatMembers) {
-      isOk = members.member === receiver || isOk;
+
+    let canRate = 0;
+    for (const member in post.chatRooms.chatMembers) {
+      if (member === userId || member === receiver) canRate++;
     }
 
-    if (isOk) {
+    if (canRate === 2) {
       const result = await this.userReputationRepository.save(
         this.userReputationRepository.create({
           userReputationSender: userId,
@@ -402,5 +437,92 @@ export class UserService {
     }
 
     throw myPageError.UnableToRateError;
+  }
+  // 모집을 마치고 이제 시작하기.
+  // endAt을 바꿔줘야 함.
+  // apply 다 삭제해야함
+  // 채팅방 만들어줘야함.
+  async completeRecruit(userId, recruitPostId) {
+    const post = await this.recruitPostRepository.findOne({
+      where: {
+        recruitPostId,
+        author: userId,
+      },
+      relations: ['recruitTasks', 'recruitStacks'],
+    });
+    let isError = false;
+    let createdRoom: ChatRooms;
+    if (!post) {
+      throw new BadRequestException('No Post To Run');
+    }
+    post.endAt.setDate(post.createdAt.getDate() + post.recruitDurationDays);
+    let isRunnable = true;
+    for (const each of post.recruitTasks) {
+      isRunnable =
+        isRunnable && each.numberOfPeopleRequired === each.numberOfPeopleSet;
+    }
+    for (const each of post.recruitStacks) {
+      isRunnable =
+        isRunnable && each.numberOfPeopleRequired === each.numberOfPeopleSet;
+    }
+    if (!isRunnable) {
+      // 사람 덜 구했음 아 우리 사람 덜 구해도 되던가? 이거 물어보자
+    }
+    const applies = await this.recruitApplyRepository.find({
+      where: {
+        recruitPostId: recruitPostId,
+        isAccepted: 1,
+      },
+      select: ['applicant', 'recruitApplyId'],
+    });
+    // 이제 사람들 찾았으니 채팅방 만들고, 멤버 추가하고, apply들 삭제해주면 됨. << false인 애들도 삭제해야함
+    // endAt도 변경해줘야함.
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const chatRoom = this.chatRoomRepository.create({
+        chatRoomId: recruitPostId,
+        participantCount: applies.length,
+        isValid: true,
+      });
+      const members: ChatMembers[] = [
+        this.chatMemberRepository.create({
+          member: userId,
+          chatRoomId: recruitPostId,
+        }),
+      ];
+      for (const apply of applies) {
+        members.push(
+          this.chatMemberRepository.create({
+            member: apply.applicant,
+            chatRoomId: recruitPostId,
+          }),
+        );
+      }
+      [createdRoom, , ,] = await Promise.all([
+        queryRunner.manager.getRepository(ChatRooms).save(chatRoom),
+        queryRunner.manager.getRepository(ChatMembers).save(members),
+        queryRunner.manager.getRepository(RecruitApplies).remove(applies),
+        queryRunner.manager.getRepository(RecruitPosts).save(post),
+      ]).catch((error) => {
+        console.error(error);
+        throw new Error(error);
+      });
+    } catch (err) {
+      queryRunner.rollbackTransaction().then(() => console.log('Rollback'));
+      isError = true;
+    } finally {
+      await queryRunner.release();
+      if (isError) {
+        throw new InternalServerErrorException(
+          'Something Went Wrong Please Try Again',
+        );
+      }
+      return {
+        success: true,
+        chatRoom: createdRoom,
+      };
+    }
   }
 }

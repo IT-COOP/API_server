@@ -522,19 +522,13 @@ export class RecruitPostService {
 
         await queryRunner.manager.remove(returned);
       } else {
-        console.log(returned);
-        console.log(await this.recruitAppliesRepository.remove(returned));
+        await this.recruitAppliesRepository.remove(returned);
       }
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.error(error);
     } finally {
-      try {
-        await queryRunner.release();
-      } catch (err) {
-        console.error(err);
-      }
+      await queryRunner.release();
     }
   }
 

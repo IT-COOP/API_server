@@ -144,11 +144,14 @@ export class SocketService {
   ) {
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
-      const recruitPost = await this.recruitPostRepository.findOne({
-        where: {
-          recruitPostId: recruitPostId,
-        },
-      });
+      const recruitPost = await this.recruitPostRepository
+        .createQueryBuilder('P')
+        .select(['P.recruitPostId', 'P.author', 'P.endAt', 'P.createdAt'])
+        .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+        .andWhere('P.author = :userId', { userId })
+        .andWhere('P.endAt != P.createdAt')
+        .andWhere('P.endAt < :now', { now: new Date() })
+        .getOne();
 
       const isAlreadyPresent = await this.chatRoomRepository.findOne({
         where: {
@@ -160,7 +163,6 @@ export class SocketService {
         recruitPost &&
         recruitPost.createdAt !== recruitPost.endAt &&
         recruitPost.endAt <= new Date() &&
-        recruitPost.author === userId &&
         !isAlreadyPresent
       ) {
         const newChatRoom = await this.chatRoomRepository.save(
