@@ -511,7 +511,7 @@ export class RecruitPostService {
             .getRepository(RecruitStacks)
             .createQueryBuilder('S')
             .update('S')
-            .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
+            .set({ numberOfPeopleRequired: () => 'numberOfPeopleRequired - 1' })
             .where('S.recruitPostId = :recruitPostId', { recruitPostId })
             .andWhere('S.stack = :stack', { task: returned.stack })
             .execute();
@@ -522,7 +522,7 @@ export class RecruitPostService {
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
           .update('T')
-          .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
+          .set({ numberOfPeopleRequired: () => 'numberOfPeopleRequired - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .andWhere('T.task = :task', { task: returned.task })
           .execute();
