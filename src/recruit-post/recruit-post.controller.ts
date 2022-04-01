@@ -282,14 +282,14 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Body() body: RecruitCommentDTO,
   ) {
-    const { userId } = res.locals.user;
+    const { userId, nickname } = res.locals.user;
     const comment = new RecruitComments();
     comment.userId = userId;
     comment.recruitPostId = recruitPostId;
     comment.commentGroup = body.commentGroup;
     comment.recruitCommentContent = body.recruitCommentContent;
 
-    await this.recruitPostService.createComment(comment);
+    await this.recruitPostService.createComment(comment, nickname);
 
     return { success: true };
   }
