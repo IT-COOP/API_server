@@ -489,6 +489,7 @@ export class RecruitPostService {
     2, apply가 true 이면 task, stack people set을 1씩 내리고 삭제
     3, apply가 false 이면 apply를 삭제
     */
+    //
     let returned;
     try {
       returned = await this.recruitAppliesRepository.findOneOrFail(applyId);
@@ -505,14 +506,16 @@ export class RecruitPostService {
     try {
       if (returned.isAccepted) {
         if (returned.task % 100 !== 0) {
-          await queryRunner.manager.decrement(
-            RecruitStacks,
-            { recruitPostId },
-            'numberOfPeopleSet',
-            -1,
-          );
+          await queryRunner.manager
+            .getRepository(RecruitStacks)
+            .createQueryBuilder('S')
+            .update('S')
+            .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
+            .where('S.recruitPostId = :recruitPostId', { recruitPostId })
+            .execute();
+          returned.task = returned.task > 300 ? 400 : 300;
         }
-<<<<<<< HEAD
+
         await queryRunner.manager
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
@@ -520,19 +523,6 @@ export class RecruitPostService {
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
-=======
-        await queryRunner.manager.decrement(
-          RecruitTasks,
-          { recruitPostId },
-          'numberOfPeopleSet',
-          -1,
-        );
-
-        await queryRunner.manager.remove(returned);
-      } else {
-        console.log(returned);
-        console.log(await this.recruitAppliesRepository.remove(returned));
->>>>>>> c8a4897e396f4e605a1cf449dd46cfb593c9c55e
       }
       await queryRunner.manager.getRepository(RecruitApplies).delete({
         recruitApplyId: returned.recruitApplyId,
@@ -541,13 +531,8 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.error(error);
     } finally {
-      try {
-        await queryRunner.release();
-      } catch (err) {
-        console.error(err);
-      }
+      await queryRunner.release();
     }
   }
 
