@@ -340,7 +340,7 @@ export class RecruitPostController {
     @Res({ passthrough: true }) res: Response,
     @Body() body: RecruitApplyDTO,
   ) {
-    const { userId } = res.locals.user;
+    const { userId, nickname } = res.locals.user;
     const apply = new RecruitApplies();
     apply.applicant = userId;
     apply.recruitPostId = postId;
@@ -348,7 +348,7 @@ export class RecruitPostController {
     apply.task = body.task;
     apply.isAccepted = false;
 
-    await this.recruitPostService.createApply(postId, apply);
+    await this.recruitPostService.createApply(postId, apply, nickname);
 
     return { success: true };
   }
