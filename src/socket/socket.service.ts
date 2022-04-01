@@ -145,8 +145,6 @@ export class SocketService {
     msgToServerDto: MsgToServerDto,
     accessTokenBearer: string,
   ) {
-    console.log(msgToServerDto);
-    console.log(client.rooms);
     try {
       const userId = this.handleAccessTokenBearer(accessTokenBearer);
       if (!client.rooms.has(String(msgToServerDto.chatRoomId))) {
@@ -288,10 +286,11 @@ export class SocketService {
       delete notification.notificationSender2;
       notifications.push(notification);
     }
-    const result = await this.notificationRepository.insert(notifications);
+    this.notificationRepository.insert(notifications).then(() => {
+      console.log('notification saved');
+    });
     return {
       status: 'success',
-      data: result,
     };
   }
 }

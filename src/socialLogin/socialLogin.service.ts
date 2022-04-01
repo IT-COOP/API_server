@@ -317,7 +317,7 @@ export class SocialLoginService {
       userId,
       nickname: completeFirstLoginDTO.nickname,
       profileImgUrl: completeFirstLoginDTO.profileImgUrl,
-      portfolioUrl: completeFirstLoginDTO.profileImgUrl,
+      portfolioUrl: completeFirstLoginDTO.portfolioUrl,
       technologyStack: completeFirstLoginDTO.technologyStack,
       refreshToken,
     });

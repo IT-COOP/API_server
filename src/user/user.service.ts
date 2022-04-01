@@ -455,7 +455,10 @@ export class UserService {
     if (!post) {
       throw new BadRequestException('No Post To Run');
     }
-    post.endAt.setDate(post.createdAt.getDate() + post.recruitDurationDays);
+    const now = new Date();
+    post.endAt = new Date(
+      now.setDate(now.getDate() + post.recruitDurationDays),
+    );
     let isRunnable = true;
     for (const each of post.recruitTasks) {
       isRunnable =
