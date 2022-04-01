@@ -498,7 +498,6 @@ export class RecruitPostService {
     } catch (e) {
       throw recruitError.WrongRequiredError;
     }
-    console.log(returned);
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -521,14 +520,11 @@ export class RecruitPostService {
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
           .execute();
-
-        await queryRunner.manager.getRepository(RecruitApplies).delete({
-          recruitApplyId: returned.recruitApplyId,
-        });
-      } else {
-        console.log(returned);
-        await this.recruitAppliesRepository.delete({ recruitApplyId: applyId });
       }
+      await queryRunner.manager.getRepository(RecruitApplies).delete({
+        recruitApplyId: returned.recruitApplyId,
+      });
+
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
