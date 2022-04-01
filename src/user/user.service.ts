@@ -311,7 +311,7 @@ export class UserService {
     notification.targetId = apply.recruitPostId;
     notification.isRead = false;
     notification.nickname = apply.applicant2.nickname;
-    this.socketGateway.sendNotification(notification);
+    this.socketGateway.sendNotification([notification]);
 
     return { success: true };
   }
