@@ -98,7 +98,7 @@ export class SocketService {
       });
       if (!isBelonging) {
         return {
-          status: 'success',
+          status: 'failure',
           data: 'BadRequest Not Belonging To The Chatroom',
         };
       }
