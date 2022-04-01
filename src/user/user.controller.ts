@@ -53,12 +53,12 @@ export class UserController {
   @ApiOperation({ summary: '내 프로필 수정하기' })
   @UseGuards(StrictGuard)
   @Patch('profile')
-  putMyProfile(
+  patchMyProfile(
     @Res({ passthrough: true }) res,
     @Body(ValidationPipe) updateUserProfileDTO: UpdateUserProfileDTO,
   ) {
     const userId = res.locals.user.userId;
-    return this.userService.putMyProfile(userId, updateUserProfileDTO);
+    return this.userService.patchMyProfile(userId, updateUserProfileDTO);
   }
 
   // 내가 keep한 게시물

@@ -126,7 +126,7 @@ export class UserService {
   }
 
   // 내 프로필 수정하기
-  async putMyProfile(
+  async patchMyProfile(
     userId: string,
     updateUserProfileDTO: UpdateUserProfileDTO,
   ) {
