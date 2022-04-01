@@ -512,6 +512,7 @@ export class RecruitPostService {
             .update('S')
             .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
             .where('S.recruitPostId = :recruitPostId', { recruitPostId })
+            .andWhere('S.stack = :stack', { task: returned.stack })
             .execute();
           returned.task = returned.task > 300 ? 400 : 300;
         }
@@ -522,6 +523,7 @@ export class RecruitPostService {
           .update('T')
           .set({ numberOfPeopleSet: () => 'numberOfPeopleSet - 1' })
           .where('T.recruitPostId = :recruitPostId', { recruitPostId })
+          .andWhere('T.task = :task', { task: returned.task })
           .execute();
       }
       await queryRunner.manager.getRepository(RecruitApplies).delete({
