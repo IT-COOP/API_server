@@ -10,6 +10,8 @@ import { UploadFileService } from './upload-file.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multerS3 from 'multer-s3';
 import * as AWS from 'aws-sdk';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const AWS_S3_BUCKET = process.env.AWS_S3_BUCKET;
 const s3 = new AWS.S3({

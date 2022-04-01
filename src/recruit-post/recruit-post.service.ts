@@ -272,7 +272,7 @@ export class RecruitPostService {
     notification.targetId = comment.recruitPostId; //어디서
     notification.nickname = nickname;
     if (notification.notificationReceiver != notification.notificationSender) {
-      this.socketGateway.sendNotification(notification);
+      this.socketGateway.sendNotification([notification]);
     }
   }
 

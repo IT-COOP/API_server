@@ -13,6 +13,7 @@ import { Users } from './../socialLogin/entity/Users';
 import { RecruitApplies } from './../recruit-post/entities/RecruitApplies';
 import { RecruitStacks } from './../recruit-post/entities/RecruitStacks';
 import { RecruitTasks } from './../recruit-post/entities/RecruitTasks';
+import { Notification } from './entities/Notification';
 
 @Module({
   imports: [

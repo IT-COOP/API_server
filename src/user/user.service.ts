@@ -198,6 +198,7 @@ export class UserService {
     userId: string,
     responseToApplyDto: ResponseToApplyDto,
   ) {
+    let isError = false;
     const { recruitPostId, applicant, isAccepted } = responseToApplyDto;
     const post = await this.recruitPostRepository.findOne({
       where: { recruitPostId: recruitPostId },
@@ -291,14 +292,15 @@ export class UserService {
         await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
       }
     } catch (err) {
-      queryRunner.rollbackTransaction().then(() => {
-        console.error(err);
-      });
-      throw new InternalServerErrorException(
-        `Something Went Wrong. Please Try Again.`,
-      );
+      await queryRunner.rollbackTransaction();
+      isError = true;
     } finally {
-      queryRunner.release();
+      await queryRunner.release();
+      if (isError) {
+        throw new InternalServerErrorException(
+          `Something Went Wrong. Please Try Again.`,
+        );
+      }
     }
 
     apply.isAccepted = true;
@@ -467,15 +469,14 @@ export class UserService {
     }
     if (!isRunnable) {
       // 사람 덜 구했음 아 우리 사람 덜 구해도 되던가? 이거 물어보자
+      throw new BadRequestException('Must Recruit People First');
     }
-    const applies = await this.recruitApplyRepository.find({
-      where: {
-        recruitPostId: recruitPostId,
-        isAccepted: 1,
-      },
-      relations: ['applicant2'],
-      select: ['applicant', 'recruitApplyId', 'applicant2'],
-    });
+    const applies = await this.recruitApplyRepository
+      .createQueryBuilder('A')
+      .leftJoin('A.applicant2', 'U')
+      .addSelect('U.nickname')
+      .where('A.recruitPostId = :recruitPostId', { recruitPostId })
+      .getMany();
     // 이제 사람들 찾았으니 채팅방 만들고, 멤버 추가하고, apply들 삭제해주면 됨. << false인 애들도 삭제해야함
     // endAt도 변경해줘야함.
     const queryRunner = this.connection.createQueryRunner();
@@ -495,6 +496,7 @@ export class UserService {
       ];
       const notifications: CreateNotificationDto[] = [];
       for (const apply of applies) {
+        if (!apply.isAccepted) continue;
         members.push(
           this.chatMemberRepository.create({
             member: apply.applicant,
@@ -506,24 +508,22 @@ export class UserService {
         notification.notificationReceiver = apply.applicant;
         notification.notificationSender = userId;
         notification.eventType = EventType.chatRoomCreation;
-        notification.eventContent = '채팅방이 생셩되었습니다.';
+        notification.eventContent = '채팅방이 생성되었습니다.';
         notification.targetId = apply.recruitPostId;
         notification.isRead = false;
         notification.nickname = apply.applicant2.nickname;
         notifications.push(notification);
       }
       this.socketGateway.sendNotification(notifications);
-      [createdRoom, , ,] = await Promise.all([
-        queryRunner.manager.getRepository(ChatRooms).save(chatRoom),
-        queryRunner.manager.getRepository(ChatMembers).save(members),
-        queryRunner.manager.getRepository(RecruitApplies).remove(applies),
-        queryRunner.manager.getRepository(RecruitPosts).save(post),
-      ]).catch((error) => {
-        console.error(error);
-        throw new Error(error);
-      });
+
+      createdRoom = await queryRunner.manager
+        .getRepository(ChatRooms)
+        .save(chatRoom);
+      await queryRunner.manager.getRepository(ChatMembers).save(members);
+      await queryRunner.manager.getRepository(RecruitApplies).remove(applies);
+      await queryRunner.manager.getRepository(RecruitPosts).save(post);
     } catch (err) {
-      queryRunner.rollbackTransaction().then(() => console.log('Rollback'));
+      await queryRunner.rollbackTransaction();
       isError = true;
     } finally {
       await queryRunner.release();

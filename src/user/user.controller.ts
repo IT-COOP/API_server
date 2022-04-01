@@ -162,6 +162,7 @@ export class UserController {
   // 채팅방 만들기
   @UseGuards(StrictGuard)
   @Post('/:recruitPostId/create')
+  @ApiOperation({ summary: '협업 시작하기, 채팅방 만들기' })
   completeRecruit(
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
