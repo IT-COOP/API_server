@@ -64,9 +64,14 @@ export class RecruitPostService {
           .where('P.recruitPostId > 0');
       } else {
         recruitQuery = recruitQuery
-          .leftJoinAndSelect('P.recruitKeeps', 'K', 'K.userId = :id', {
-            id: loginId,
-          })
+          .leftJoinAndSelect(
+            'P.recruitKeeps',
+            'K',
+            'K.userId = :id and P.recruitPostId = K.recruitPostId',
+            {
+              id: loginId,
+            },
+          )
           .where('P.recruitPostId > 0');
       }
 
@@ -383,9 +388,6 @@ export class RecruitPostService {
     if (returned.length) {
       throw recruitError.DuplicateOneRecruitApply;
     }
-    if (returned[0].applicant === apply.applicant) {
-      throw recruitError.WrongRequiredError;
-    }
 
     await this.recruitAppliesRepository
       .createQueryBuilder()
@@ -578,7 +580,6 @@ export class RecruitPostService {
             .execute();
           returned.task = returned.task > 300 ? 400 : 300;
         }
-
         await queryRunner.manager
           .getRepository(RecruitTasks)
           .createQueryBuilder('T')
@@ -588,10 +589,10 @@ export class RecruitPostService {
           .andWhere('T.task = :task', { task: returned.task })
           .execute();
       }
-      await queryRunner.manager.getRepository(RecruitApplies).delete({
-        recruitApplyId: returned.recruitApplyId,
-      });
 
+      await queryRunner.manager.getRepository(RecruitApplies).delete({
+        recruitApplyId: applyId,
+      });
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
