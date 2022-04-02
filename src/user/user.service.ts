@@ -454,6 +454,7 @@ export class UserService {
       now.setDate(now.getDate() + post.recruitDurationDays),
     );
 
+    let participantCount = 1;
     const applies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .leftJoin('A.applicant2', 'U')
@@ -465,11 +466,6 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const chatRoom = this.chatRoomRepository.create({
-        chatRoomId: recruitPostId,
-        participantCount: applies.length,
-        isValid: true,
-      });
       const members: ChatMembers[] = [
         this.chatMemberRepository.create({
           member: userId,
@@ -479,6 +475,7 @@ export class UserService {
       const notifications: CreateNotificationDto[] = [];
       for (const apply of applies) {
         if (!apply.isAccepted) continue;
+        participantCount++;
         members.push(
           this.chatMemberRepository.create({
             member: apply.applicant,
@@ -496,6 +493,11 @@ export class UserService {
         notification.nickname = apply.applicant2.nickname;
         notifications.push(notification);
       }
+      const chatRoom = this.chatRoomRepository.create({
+        chatRoomId: recruitPostId,
+        participantCount: participantCount,
+        isValid: true,
+      });
       this.socketGateway.sendNotification(notifications);
 
       const createdRoom = await queryRunner.manager
@@ -510,6 +512,7 @@ export class UserService {
         chatRoom: createdRoom,
       };
     } catch (err) {
+      console.error(err);
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
       throw new InternalServerErrorException(

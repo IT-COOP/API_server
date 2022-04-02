@@ -161,7 +161,7 @@ export class UserController {
 
   // 채팅방 만들기
   @UseGuards(StrictGuard)
-  @Post('create/:recruitPostId')
+  @Post('/:recruitPostId/create')
   @ApiOperation({ summary: '협업 시작하기, 채팅방 만들기' })
   completeRecruit(
     @Res({ passthrough: true }) res,
@@ -184,7 +184,7 @@ export class UserController {
 
   @UseGuards(StrictGuard)
   @Get('recruiting/accepted/:recruitPostId')
-  @ApiOperation({ summary: '협업 신청 보기 - ' })
+  @ApiOperation({ summary: '협업 신청 보기 - 수락자 명수' })
   getRecruitAppliesProfileImgUrl(
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId,

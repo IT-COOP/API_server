@@ -169,18 +169,6 @@ export class SocketService {
         select: ['nickname', 'profileImgUrl'],
       });
 
-      const notifications = [];
-      const notification = this.notificationRepository.create({
-        notificationSender: userId,
-        eventType: EventType.chat,
-        eventContent: msgToServerDto.chat.slice(0, 30),
-        targetId: msgToServerDto.chatRoomId,
-        isRead: false,
-        notificationReceiver2: {
-          nickname: msgToServerDto.nickname,
-        },
-      });
-
       const chat = {
         chatId: updated.chatId,
         chat: updated.chat,
@@ -200,23 +188,39 @@ export class SocketService {
           chat,
         });
 
-      const crews = await this.chatMemberRepository.find({
-        where: { chatRoomId: msgToServerDto.chatRoomId },
-        select: ['member'],
-      });
-      for (const crew of crews) {
-        if (crew.member === userId) continue;
-        notification.notificationReceiver = crew.member;
-        notifications.push(notification);
-      }
+      const notifications = [];
+      this.chatMemberRepository
+        .createQueryBuilder('M')
+        .leftJoin('M.member2', 'U')
+        .addSelect(['U.nickname'])
+        .getMany()
+        .then((crews) => {
+          for (const crew of crews) {
+            if (crew.member === userId) continue;
+            const notification = this.notificationRepository.create({
+              notificationSender: userId,
+              eventType: EventType.chat,
+              eventContent: msgToServerDto.chat.slice(0, 30),
+              targetId: msgToServerDto.chatRoomId,
+              isRead: false,
+              notificationSender2: {
+                nickname: msgToServerDto.nickname,
+              },
+            });
+            notification.notificationReceiver = crew.member;
+            notifications.push(notification);
+          }
 
-      this.notificationRepository.save(notifications).then((notifications) => {
-        for (const notification of notifications) {
-          server
-            .to(notification.notificationReceiver)
-            .emit(EventServerToClient.notificationToClient, notification);
-        }
-      });
+          this.notificationRepository
+            .save(notifications)
+            .then((notifications) => {
+              for (const notification of notifications) {
+                server
+                  .to(notification.notificationReceiver)
+                  .emit(EventServerToClient.notificationToClient, notification);
+              }
+            });
+        });
     } catch (err) {
       console.error(err);
       return {
@@ -242,18 +246,19 @@ export class SocketService {
         eventContent: createNotificationDto.eventContent,
         targetId: createNotificationDto.targetId,
         isRead: createNotificationDto.isRead,
-        notificationReceiver2: {
+        notificationSender2: {
           nickname: createNotificationDto.nickname,
         },
       });
       server
         .to(createNotificationDto.notificationReceiver)
         .emit(EventServerToClient.notificationToClient, notification);
-      delete notification.notificationReceiver2;
-      const result = this.notificationRepository.save(notification);
+      const savedNotifications = await this.notificationRepository.save(
+        notification,
+      );
       return {
         status: 'success',
-        data: result,
+        data: savedNotifications,
       };
     } catch (err) {
       return {
@@ -277,20 +282,27 @@ export class SocketService {
           eventContent: createNotificationDto.eventContent,
           targetId: createNotificationDto.targetId,
           isRead: createNotificationDto.isRead,
-          notificationSender2: {
-            nickname: createNotificationDto.nickname,
-          },
         });
-        server
-          .to(createNotificationDto.notificationReceiver)
-          .emit(EventServerToClient.notificationToClient, notification);
-        delete notification.notificationSender2;
         notifications.push(notification);
       }
-      const result = await this.notificationRepository.save(notifications);
+      const savedNotifications = await this.notificationRepository.save(
+        notifications,
+      );
+
+      for (const idx in savedNotifications) {
+        savedNotifications[parseInt(idx)].notificationSender2 = {
+          nickname: createNotificationDtos[parseInt(idx)].nickname,
+        };
+        server
+          .to(savedNotifications[parseInt(idx)].notificationReceiver)
+          .emit(
+            EventServerToClient.notificationToClient,
+            savedNotifications[parseInt(idx)],
+          );
+      }
       return {
         status: 'success',
-        data: result,
+        data: savedNotifications,
       };
     } catch (err) {
       return {
