@@ -2,6 +2,7 @@ import { ResponseToApplyDto } from './dto/responseToApply.dto';
 import { ApiOperation, ApiTags, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { StrictGuard } from './../auth/auth.guard';
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -177,9 +178,17 @@ export class UserController {
   getRecruitApplies(
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
+    @Query('isAccepted', ParseIntPipe) isAccepted,
   ) {
+    if (1 < isAccepted || isAccepted < 0) {
+      throw new BadRequestException('Wrong Request.');
+    }
     const userId = res.locals.user.userId;
-    return this.userService.getRecruitApplies(userId, recruitPostId);
+    return this.userService.getRecruitApplies(
+      userId,
+      recruitPostId,
+      isAccepted,
+    );
   }
 
   @UseGuards(StrictGuard)

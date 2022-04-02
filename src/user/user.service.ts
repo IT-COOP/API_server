@@ -525,7 +525,11 @@ export class UserService {
 
   // userId랑 recruitPostId 받아서 applies 돌려주기.
   // 재협업 희망률이랑 협업 횟수도
-  async getRecruitApplies(userId: string, recruitPostId: number) {
+  async getRecruitApplies(
+    userId: string,
+    recruitPostId: number,
+    isAccepted: number,
+  ) {
     try {
       await this.recruitPostRepository.findOneOrFail({
         where: {
@@ -559,6 +563,7 @@ export class UserService {
       ])
       .addSelect('RP.recruitPostId')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .andWhere('P.author = :userId', { userId }) // 본인 것인가
       .andWhere('P.createdAt = P.endAt')
       .andWhere('RP.endAt < :now', { now: new Date() })
