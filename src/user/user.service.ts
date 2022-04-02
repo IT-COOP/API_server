@@ -13,6 +13,7 @@ import {
   Injectable,
   InternalServerErrorException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -520,6 +521,17 @@ export class UserService {
   // userId랑 recruitPostId 받아서 applies 돌려주기.
   // 재협업 희망률이랑 협업 횟수도
   async getRecruitApplies(userId: string, recruitPostId: number) {
+    try {
+      await this.recruitPostRepository.findOneOrFail({
+        where: {
+          recruitPostId,
+          author: userId,
+        },
+        select: ['recruitPostId'],
+      });
+    } catch (err) {
+      throw new ForbiddenException('Not Your Post');
+    }
     const applies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .leftJoin('A.recruitPost', 'P')
@@ -548,6 +560,17 @@ export class UserService {
 
   // 협업 신청 수락된 사람들 프로필 이미지 보기
   async getRecruitAppliesProfileImgUrl(userId: string, recruitPostId: number) {
+    try {
+      await this.recruitPostRepository.findOneOrFail({
+        where: {
+          recruitPostId,
+          author: userId,
+        },
+        select: ['recruitPostId'],
+      });
+    } catch (err) {
+      throw new ForbiddenException('Not Your Post');
+    }
     const acceptedAppliesCount = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .leftJoinAndSelect('A.recruitPost', 'P')
