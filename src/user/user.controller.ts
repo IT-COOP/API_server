@@ -161,7 +161,7 @@ export class UserController {
 
   // 채팅방 만들기
   @UseGuards(StrictGuard)
-  @Post('/:recruitPostId/create')
+  @Post('create/:recruitPostId')
   @ApiOperation({ summary: '협업 시작하기, 채팅방 만들기' })
   completeRecruit(
     @Res({ passthrough: true }) res,
@@ -172,7 +172,7 @@ export class UserController {
   }
 
   @UseGuards(StrictGuard)
-  @Get('/recruiting/applies/:recruitPostId')
+  @Get('recruiting/applies/:recruitPostId')
   @ApiOperation({ summary: '협업 신청 보기 - 모든 정보' })
   getRecruitApplies(
     @Res({ passthrough: true }) res,
@@ -183,7 +183,7 @@ export class UserController {
   }
 
   @UseGuards(StrictGuard)
-  @Get('/recruiting/accepted/:recruitPostId')
+  @Get('recruiting/accepted/:recruitPostId')
   @ApiOperation({ summary: '협업 신청 보기 - ' })
   getRecruitAppliesProfileImgUrl(
     @Res({ passthrough: true }) res,

@@ -23,8 +23,6 @@ export class SocialLoginService {
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
   ) {}
-
-  hash = new SHA3(224);
   ACCESS_TOKEN_DURATION = this.configService.get<string>(
     'ACCESS_TOKEN_DURATION',
   );
@@ -140,9 +138,8 @@ export class SocialLoginService {
     res: Response,
     idToken?: string,
   ) {
-    const container = this.hash;
     let userInfo: AxiosResponse<any, any>;
-    let key: string;
+    let indigenousKey: string;
 
     try {
       switch (loginType) {
@@ -154,8 +151,7 @@ export class SocialLoginService {
               Authorization: `Bearer ${accessToken}`,
             },
           });
-          key = String(userInfo.data.id);
-          container.update(String(userInfo.data.id));
+          indigenousKey = String(userInfo.data.id);
 
           break;
         case LoginType.google:
@@ -169,8 +165,7 @@ export class SocialLoginService {
               id_token: `${idToken}`,
             },
           });
-          key = String(userInfo.data.sub);
-          container.update(String(userInfo.data.sub));
+          indigenousKey = String(userInfo.data.sub);
           break;
 
         case LoginType.github:
@@ -183,8 +178,7 @@ export class SocialLoginService {
               Accept: 'application/json',
             },
           });
-          key = String(userInfo.data.id);
-          container.update(String(userInfo.data.id));
+          indigenousKey = String(userInfo.data.id);
           break;
       }
     } catch (err) {
@@ -193,8 +187,7 @@ export class SocialLoginService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    const indigenousKey = String(container.digest('hex'));
-    return this.internalTokenCreation(key, loginType, res);
+    return this.internalTokenCreation(indigenousKey, loginType, res);
   }
 
   async internalTokenCreation(
