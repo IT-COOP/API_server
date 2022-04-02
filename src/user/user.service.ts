@@ -291,6 +291,7 @@ export class UserService {
         }
         recruitTask.numberOfPeopleRequired++;
         await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
+        await queryRunner.commitTransaction();
       }
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -492,19 +493,21 @@ export class UserService {
         notification.nickname = apply.applicant2.nickname;
         notifications.push(notification);
       }
-      const chatRoom = this.chatRoomRepository.create({
-        chatRoomId: recruitPostId,
-        participantCount: participantCount,
-        isValid: true,
-      });
       this.socketGateway.sendNotification(notifications);
 
       const createdRoom = await queryRunner.manager
         .getRepository(ChatRooms)
-        .save(chatRoom);
-      await queryRunner.manager.getRepository(ChatMembers).save(members);
+        .save(
+          this.chatRoomRepository.create({
+            chatRoomId: recruitPostId,
+            participantCount: participantCount,
+            isValid: true,
+          }),
+        );
+      await queryRunner.manager.getRepository(ChatMembers).insert(members);
       await queryRunner.manager.getRepository(RecruitApplies).remove(applies);
       await queryRunner.manager.getRepository(RecruitPosts).save(post);
+      await queryRunner.commitTransaction();
       await queryRunner.release();
       return {
         success: true,
