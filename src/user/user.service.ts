@@ -520,38 +520,38 @@ export class UserService {
   // userId랑 recruitPostId 받아서 applies 돌려주기.
   // 재협업 희망률이랑 협업 횟수도
   async getRecruitApplies(userId: string, recruitPostId: number) {
-    const post = await this.recruitPostRepository
-      .createQueryBuilder('P')
-      .leftJoin('P.recruitApplies', 'A')
+    const applies = await this.recruitPostRepository
+      .createQueryBuilder('A')
+      .leftJoin('A.recruitPost', 'P')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
       .leftJoin('CR.chatRoom', 'RP', 'RP.endAt != RP.createdAt')
       .leftJoin('U.userReputations2', 'UR')
-      .addSelect('A.recruitApplyId')
+      .addSelect('P.recruitPostId')
       .addSelect('CM.chatRoomId')
       .addSelect('CR.chatRoomId')
       .addSelect('RP.recruitPostId')
       .addSelect('UR.userReputationPoint')
       .addSelect(['U.nickname', 'U.userId', 'U.profileImgUrl'])
       .addSelect('RP.recruitPostId')
-      .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+      .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('P.author = :userId', { userId }) // 본인 것인가
       .andWhere('P.createdAt = P.endAt')
       .andWhere('RP.endAt < :now', { now: new Date() })
       .andWhere('P.author = :userId', { userId })
       .orderBy('A.recruitApplyId', 'DESC')
-      .getOne();
+      .getMany();
     return {
-      post,
+      applies,
     };
   }
 
   // 협업 신청 수락된 사람들 프로필 이미지 보기
   async getRecruitAppliesProfileImgUrl(userId: string, recruitPostId: number) {
-    const post = await this.recruitPostRepository
-      .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitApplies', 'A')
+    const applies = await this.recruitPostRepository
+      .createQueryBuilder('A')
+      .leftJoinAndSelect('A.recruitPost', 'P')
       .leftJoin('A.applicant2', 'U')
       .addSelect('A.recruitApplyId')
       .addSelect(['U.profileImgUrl', 'U.nickname'])
@@ -560,7 +560,7 @@ export class UserService {
       .andWhere('P.author = :userId', { userId })
       .getMany();
     return {
-      post,
+      applies,
     };
   }
 }
