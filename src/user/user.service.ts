@@ -461,6 +461,7 @@ export class UserService {
       .addSelect('U.nickname')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getMany();
+    console.log(applies);
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
