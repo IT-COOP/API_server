@@ -40,13 +40,13 @@ export class LooseGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { res, accessTokenBearer } =
       this.authService.getTokensFromContext(context);
-    let userId: string;
+    let userId: string | null;
     let existUser: Users | undefined;
     if (accessTokenBearer) {
       const decrypted = this.authService.jwtVerification(
         accessTokenBearer.split(' ')[1],
       );
-      userId = decrypted.userId ? decrypted.userId : '';
+      userId = decrypted.userId || null;
       if (userId) {
         existUser = await this.authService.findUserByUserId(userId);
       }

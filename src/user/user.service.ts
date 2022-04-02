@@ -326,11 +326,9 @@ export class UserService {
       posts = await this.recruitPostRepository
         .createQueryBuilder('P')
         .leftJoin('P.author2', 'U')
-        .leftJoin('P.recruitComments', 'C')
         .leftJoin('P.recruitApplies', 'A')
         .leftJoin('A.applicant2', 'AP')
         .addSelect(['U.nickname', 'U.profileImgUrl'])
-        .addSelect('C.recruitCommentId')
         .addSelect([
           'A.applicant',
           'A.task',
@@ -341,15 +339,14 @@ export class UserService {
         .addSelect(['AP.nickname', 'AP.profileImgUrl'])
         .where('P.author = :loginId', { loginId })
         .andWhere('P.endAt = P.createdAt')
+        .orderBy('A.recruitApplyId', 'DESC')
         .getMany();
       return { posts };
     } else {
       posts = await this.recruitPostRepository
         .createQueryBuilder('P')
         .leftJoin('P.author2', 'U')
-        .leftJoin('P.recruitComments', 'C')
         .addSelect(['U.nickname', 'U.profileImgUrl'])
-        .addSelect('C.recruitCommentId')
         .where('P.author = :userId', { userId })
         .andWhere('P.endAt = P.createdAt')
         .getMany();
@@ -364,9 +361,7 @@ export class UserService {
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'CM')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('CM.recruitCommentId')
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
@@ -381,9 +376,7 @@ export class UserService {
       .leftJoinAndSelect('P.chatRooms', 'C')
       .leftJoinAndSelect('C.chatMembers', 'M')
       .leftJoin('P.author2', 'U')
-      .leftJoin('P.recruitComments', 'CM')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
-      .addSelect('CM.recruitCommentId')
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('M.member = :userId', { userId })
@@ -440,20 +433,18 @@ export class UserService {
 
     throw myPageError.UnableToRateError;
   }
+
   // 모집을 마치고 이제 시작하기.
   // endAt을 바꿔줘야 함.
   // apply 다 삭제해야함
   // 채팅방 만들어줘야함.
   async completeRecruit(userId: string, recruitPostId: number) {
-    const post = await this.recruitPostRepository.findOne({
-      where: {
-        recruitPostId,
-        author: userId,
-      },
-      relations: ['recruitTasks', 'recruitStacks'],
-    });
-    let isError = false;
-    let createdRoom: ChatRooms;
+    const post = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('P.author = :userId', { userId })
+      .andWhere('P.endAt = P.createdAt')
+      .getOne();
     if (!post) {
       throw new BadRequestException('No Post To Run');
     }
@@ -461,27 +452,14 @@ export class UserService {
     post.endAt = new Date(
       now.setDate(now.getDate() + post.recruitDurationDays),
     );
-    let isRunnable = true;
-    for (const each of post.recruitTasks) {
-      isRunnable =
-        isRunnable && each.numberOfPeopleRequired === each.numberOfPeopleSet;
-    }
-    for (const each of post.recruitStacks) {
-      isRunnable =
-        isRunnable && each.numberOfPeopleRequired === each.numberOfPeopleSet;
-    }
-    if (!isRunnable) {
-      // 사람 덜 구했음 아 우리 사람 덜 구해도 되던가? 이거 물어보자
-      throw new BadRequestException('Must Recruit People First');
-    }
+
     const applies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .leftJoin('A.applicant2', 'U')
       .addSelect('U.nickname')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getMany();
-    // 이제 사람들 찾았으니 채팅방 만들고, 멤버 추가하고, apply들 삭제해주면 됨. << false인 애들도 삭제해야함
-    // endAt도 변경해줘야함.
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -519,26 +497,67 @@ export class UserService {
       }
       this.socketGateway.sendNotification(notifications);
 
-      createdRoom = await queryRunner.manager
+      const createdRoom = await queryRunner.manager
         .getRepository(ChatRooms)
         .save(chatRoom);
       await queryRunner.manager.getRepository(ChatMembers).save(members);
       await queryRunner.manager.getRepository(RecruitApplies).remove(applies);
       await queryRunner.manager.getRepository(RecruitPosts).save(post);
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      isError = true;
-    } finally {
       await queryRunner.release();
-      if (isError) {
-        throw new InternalServerErrorException(
-          'Something Went Wrong Please Try Again',
-        );
-      }
       return {
         success: true,
         chatRoom: createdRoom,
       };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw new InternalServerErrorException(
+        'Something Went Wrong Please Try Again',
+      );
     }
+  }
+
+  // userId랑 recruitPostId 받아서 applies 돌려주기.
+  // 재협업 희망률이랑 협업 횟수도
+  async getRecruitApplies(userId: string, recruitPostId: number) {
+    const applies = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoin('P.recruitApplies', 'A')
+      .leftJoin('A.applicant2', 'U')
+      .leftJoin('U.chatMembers', 'CM')
+      .leftJoin('CM.chatRoom', 'CR')
+      .leftJoin('CR.chatRoom', 'RP', 'RP.endAt != RP.createdAt')
+      .leftJoin('U.userReputations2', 'UR')
+      .addSelect('UR.userReputationPoint')
+      .addSelect(['U.nickname', 'U.userId', 'U.profileImgUrl'])
+      .addSelect('RP.recruitPostId')
+      .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('P.author = :userId', { userId }) // 본인 것인가
+      .andWhere('P.createdAt != P.endAt')
+      .andWhere('P.endAt < :now', { now: new Date() })
+      .andWhere('UR.')
+      .andWhere('RP.endAt < :now', { now: new Date() })
+      .andWhere('P.author = :userId', { userId })
+      .orderBy('A.recruitApplyId', 'DESC')
+      .getOne();
+    return {
+      applies,
+    };
+  }
+
+  // 협업 신청 수락된 사람들 프로필 이미지 보기
+  async getRecruitAppliesProfileImgUrl(userId: string, recruitPostId: number) {
+    const applies = await this.recruitPostRepository
+      .createQueryBuilder('P')
+      .leftJoinAndSelect('P.recruitApplies', 'A')
+      .leftJoin('A.applicant2', 'U')
+      .select('U.profileImgUrl')
+      .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('A.isAccepted = 1')
+      .andWhere('P.author = :userId', { userId })
+      .getMany();
+    return {
+      applies,
+    };
   }
 }

@@ -280,7 +280,7 @@ export class RecruitPostController {
   async postComment(
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Res({ passthrough: true }) res: Response,
-    @Body() body: RecruitCommentDTO,
+    @Body(ValidationPipe) body: RecruitCommentDTO,
   ) {
     const { userId, nickname } = res.locals.user;
     const comment = new RecruitComments();
@@ -311,7 +311,7 @@ export class RecruitPostController {
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
     @Param('recruitCommentId', ParseIntPipe) recruitCommentId,
     @Res({ passthrough: true }) res: Response,
-    @Body() body: RecruitCommentDTO,
+    @Body(ValidationPipe) body: RecruitCommentDTO,
   ) {
     const { userId } = res.locals.user;
 
@@ -338,7 +338,7 @@ export class RecruitPostController {
   async postApply(
     @Param('recruitPostId', ParseIntPipe) postId: number,
     @Res({ passthrough: true }) res: Response,
-    @Body() body: RecruitApplyDTO,
+    @Body(ValidationPipe) body: RecruitApplyDTO,
   ) {
     const { userId, nickname } = res.locals.user;
     const apply = new RecruitApplies();

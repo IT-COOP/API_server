@@ -167,8 +167,33 @@ export class UserController {
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId: number,
   ) {
-    const userId = res.locals.user.userID;
+    const userId = res.locals.user.userId;
     return this.userService.completeRecruit(userId, recruitPostId);
+  }
+
+  @UseGuards(StrictGuard)
+  @Get('/recruiting/applies/:recruitPostId')
+  @ApiOperation({ summary: '협업 신청 보기 - 모든 정보' })
+  getRecruitApplies(
+    @Res({ passthrough: true }) res,
+    @Param('recruitPostId', ParseIntPipe) recruitPostId,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getRecruitApplies(userId, recruitPostId);
+  }
+
+  @UseGuards(StrictGuard)
+  @Get('/recruiting/accepted/:recruitPostId')
+  @ApiOperation({ summary: '협업 신청 보기 - ' })
+  getRecruitAppliesProfileImgUrl(
+    @Res({ passthrough: true }) res,
+    @Param('recruitPostId', ParseIntPipe) recruitPostId,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getRecruitAppliesProfileImgUrl(
+      userId,
+      recruitPostId,
+    );
   }
 }
 
