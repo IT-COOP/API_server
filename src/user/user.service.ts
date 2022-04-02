@@ -529,7 +529,7 @@ export class UserService {
       .leftJoin('CR.chatRoom', 'RP', 'RP.endAt != RP.createdAt')
       .leftJoin('U.userReputations2', 'UR')
       .addSelect('P.recruitPostId')
-      .addSelect('CM.chatRoomId')
+      .addSelect('CM.memberId')
       .addSelect('CR.chatRoomId')
       .addSelect('RP.recruitPostId')
       .addSelect('UR.userReputationPoint')
@@ -539,7 +539,6 @@ export class UserService {
       .andWhere('P.author = :userId', { userId }) // 본인 것인가
       .andWhere('P.createdAt = P.endAt')
       .andWhere('RP.endAt < :now', { now: new Date() })
-      .andWhere('P.author = :userId', { userId })
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
     return {
