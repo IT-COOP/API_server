@@ -321,7 +321,6 @@ export class UserService {
 
   // 모집 중인 프로젝트 - 신청자 목록?
   async getMyRecruitingProject(userId: string, loginId: string) {
-    console.log(userId, loginId);
     let posts: RecruitPosts[];
     if (userId === loginId) {
       posts = await this.recruitPostRepository
@@ -461,7 +460,6 @@ export class UserService {
       .addSelect('U.nickname')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getMany();
-    console.log(applies);
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();

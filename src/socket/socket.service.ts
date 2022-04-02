@@ -127,7 +127,6 @@ export class SocketService {
       }
 
       client.join(String(chatRoomId));
-      console.log('entrance', client.rooms);
       return {
         status: 'success',
         data: { chats, isOver: false },
