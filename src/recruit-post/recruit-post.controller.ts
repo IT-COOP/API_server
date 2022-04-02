@@ -190,6 +190,7 @@ export class RecruitPostController {
     details.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
 
     details.createdAt = recruitPost.createdAt.toISOString();
+    details.endAt = recruitPost.endAt.toISOString();
 
     if (userId) {
       details.keepId = recruitPost.recruitKeeps.length
