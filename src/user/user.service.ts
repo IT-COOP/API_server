@@ -545,7 +545,13 @@ export class UserService {
       .addSelect('CR.chatRoomId')
       .addSelect('RP.recruitPostId')
       .addSelect('UR.userReputationPoint')
-      .addSelect(['U.nickname', 'U.userId', 'U.profileImgUrl'])
+      .addSelect([
+        'U.nickname',
+        'U.userId',
+        'U.profileImgUrl',
+        'U.selfIntroduction',
+        'U.portfolioUrl',
+      ])
       .addSelect('RP.recruitPostId')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('P.author = :userId', { userId }) // 본인 것인가
@@ -577,7 +583,7 @@ export class UserService {
       .leftJoin('A.applicant2', 'U')
       .addSelect('A.recruitApplyId')
       .addSelect(['U.userId'])
-      .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+      .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = 1')
       .andWhere('P.author = :userId', { userId })
       .getCount();
