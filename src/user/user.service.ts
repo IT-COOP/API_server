@@ -520,7 +520,7 @@ export class UserService {
   // userId랑 recruitPostId 받아서 applies 돌려주기.
   // 재협업 희망률이랑 협업 횟수도
   async getRecruitApplies(userId: string, recruitPostId: number) {
-    const applies = await this.recruitPostRepository
+    const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoin('P.recruitApplies', 'A')
       .leftJoin('A.applicant2', 'U')
@@ -533,15 +533,13 @@ export class UserService {
       .addSelect('RP.recruitPostId')
       .where('P.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('P.author = :userId', { userId }) // 본인 것인가
-      .andWhere('P.createdAt != P.endAt')
-      .andWhere('P.endAt < :now', { now: new Date() })
-      .andWhere('UR.')
+      .andWhere('P.createdAt = P.endAt')
       .andWhere('RP.endAt < :now', { now: new Date() })
       .andWhere('P.author = :userId', { userId })
       .orderBy('A.recruitApplyId', 'DESC')
       .getOne();
     return {
-      applies,
+      post,
     };
   }
 
