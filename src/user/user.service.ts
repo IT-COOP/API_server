@@ -549,17 +549,18 @@ export class UserService {
 
   // 협업 신청 수락된 사람들 프로필 이미지 보기
   async getRecruitAppliesProfileImgUrl(userId: string, recruitPostId: number) {
-    const applies = await this.recruitPostRepository
+    const post = await this.recruitPostRepository
       .createQueryBuilder('P')
       .leftJoinAndSelect('P.recruitApplies', 'A')
       .leftJoin('A.applicant2', 'U')
-      .select('U.profileImgUrl')
+      .addSelect('A.recruitApplyId')
+      .addSelect(['U.profileImgUrl', 'U.nickname'])
       .where('P.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = 1')
       .andWhere('P.author = :userId', { userId })
       .getMany();
     return {
-      applies,
+      post,
     };
   }
 }
