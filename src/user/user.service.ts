@@ -540,6 +540,7 @@ export class UserService {
     } catch (err) {
       throw new ForbiddenException('Not Your Post');
     }
+    // 무언가 공약수가 곱해진 형태입니다...
     const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .select([
@@ -553,6 +554,7 @@ export class UserService {
       .addSelect('Count(CR.recruitPost)', 'Projects')
       .addSelect('SUM(UR.userReputationPoint)', 'Point')
       .addSelect('COUNT(UR.userReputationPoint)', 'Scores')
+      .addSelect('COUNT(A.recruitApplyId)', 'GCD')
       .groupBy('A.recruitApplyId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
@@ -563,8 +565,38 @@ export class UserService {
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .orderBy('A.recruitApplyId', 'DESC')
       .getRawMany();
+
+    // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
+    const applies = await this.recruitApplyRepository
+      .createQueryBuilder('A')
+      .addSelect('CM.memberId')
+      .addSelect('CR.chatRoomId')
+      .addSelect('RP.recruitPostId')
+      .addSelect('UR.userReputationPoint')
+      .addSelect([
+        'U.nickname',
+        'U.userId',
+        'U.profileImgUrl',
+        'U.portfolioUrl',
+      ])
+      .groupBy('A.recruitApplyId')
+      .addGroupBy('CM.memberId')
+      .addGroupBy('CR.chatRoomId')
+      .addGroupBy('RP.recruitPostId')
+      .addGroupBy('U.userId')
+      .addGroupBy('UR.userReputationId')
+      .leftJoin('A.applicant2', 'U')
+      .leftJoin('U.chatMembers', 'CM')
+      .leftJoin('CM.chatRoom', 'CR')
+      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
+      .leftJoin('U.userReputations2', 'UR')
+      .where('A.recruitPostId = :recruitPostId', { recruitPostId })
+      .andWhere('A.isAccepted = :isAccepted', { isAccepted })
+      .orderBy('A.recruitApplyId', 'DESC')
+      .getMany();
     return {
       recruitApplies,
+      applies,
     };
   }
 
