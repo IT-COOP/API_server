@@ -36,7 +36,7 @@ export class ChatRooms {
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'chatRoomId', referencedColumnName: 'recruitPostId' }])
-  chatRoom: RecruitPosts;
+  recruitPost: RecruitPosts;
 
   @OneToMany(() => Chats, (chats) => chats.chatRoom)
   chats: Chats[];

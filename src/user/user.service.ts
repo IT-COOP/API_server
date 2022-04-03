@@ -542,16 +542,9 @@ export class UserService {
     }
     const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .leftJoin('A.recruitPost', 'P')
-      .leftJoin('A.applicant2', 'U')
-      .leftJoin('U.chatMembers', 'CM')
-      .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.chatRoom', 'RP')
-      .leftJoin('U.userReputations2', 'UR')
-      .addSelect('P.recruitPostId')
       .addSelect('CM.memberId')
       .addSelect('CR.chatRoomId')
-      .addSelect('RP.recruitPostId')
+      .addSelect(['RP.recruitPostId'])
       .addSelect('UR.userReputationPoint')
       .addSelect([
         'U.nickname',
@@ -559,12 +552,13 @@ export class UserService {
         'U.profileImgUrl',
         'U.portfolioUrl',
       ])
-      .addSelect('RP.recruitPostId')
+      .leftJoin('A.applicant2', 'U')
+      .leftJoin('U.chatMembers', 'CM')
+      .leftJoin('CM.chatRoom', 'CR')
+      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
+      .leftJoin('U.userReputations2', 'UR')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
-      .andWhere('P.createdAt = P.endAt')
-      .andWhere('RP.endAt < :now', { now: new Date() })
-      .andWhere('RP.endAt != RP.createdAt')
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
     return {

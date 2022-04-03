@@ -83,7 +83,7 @@ export class RecruitPosts {
   })
   updatedAt: Date | null;
 
-  @OneToOne(() => ChatRooms, (chatRooms) => chatRooms.chatRoom)
+  @OneToOne(() => ChatRooms, (chatRooms) => chatRooms.recruitPost)
   chatRooms: ChatRooms;
 
   @OneToMany(
