@@ -531,13 +531,12 @@ export class UserService {
     isAccepted: number,
   ) {
     try {
-      await this.recruitPostRepository.findOneOrFail({
-        where: {
-          recruitPostId,
-          author: userId,
-        },
-        select: ['recruitPostId'],
-      });
+      await this.recruitPostRepository
+        .createQueryBuilder('P')
+        .select('P.recruitPostId')
+        .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+        .andWhere('P.author = :userId', { userId })
+        .getOneOrFail();
     } catch (err) {
       throw new ForbiddenException('Not Your Post');
     }
@@ -547,7 +546,7 @@ export class UserService {
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.chatRoom', 'RP', 'RP.endAt != RP.createdAt')
+      .leftJoin('CR.chatRoom', 'RP')
       .leftJoin('U.userReputations2', 'UR')
       .addSelect('P.recruitPostId')
       .addSelect('CM.memberId')
@@ -563,9 +562,9 @@ export class UserService {
       .addSelect('RP.recruitPostId')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
-      .andWhere('P.author = :userId', { userId }) // 본인 것인가
       .andWhere('P.createdAt = P.endAt')
       .andWhere('RP.endAt < :now', { now: new Date() })
+      .andWhere('RP.endAt != RP.createdAt')
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
     return {
@@ -573,16 +572,15 @@ export class UserService {
     };
   }
 
-  // 협업 신청 수락된 사람들 프로필 이미지 보기
+  // 협업 신청 수락된 사람들 숫자 보기
   async getRecruitAppliesProfileImgUrl(userId: string, recruitPostId: number) {
     try {
-      await this.recruitPostRepository.findOneOrFail({
-        where: {
-          recruitPostId,
-          author: userId,
-        },
-        select: ['recruitPostId'],
-      });
+      await this.recruitPostRepository
+        .createQueryBuilder('P')
+        .select('P.recruitPostId')
+        .where('P.recruitPostId = :recruitPostId', { recruitPostId })
+        .andWhere('P.author = :userId', { userId })
+        .getOneOrFail();
     } catch (err) {
       throw new ForbiddenException('Not Your Post');
     }

@@ -205,5 +205,3 @@ export class UserController {
     );
   }
 }
-
-// 협업 진행 신청 각 포스트 별로, 그리고 포스트 안에서 직군 별로.
