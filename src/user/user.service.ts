@@ -586,9 +586,10 @@ export class UserService {
     }
     const acceptedAppliesCount = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .leftJoinAndSelect('A.recruitPost', 'P')
+      .leftJoin('A.recruitPost', 'P')
       .leftJoin('A.applicant2', 'U')
       .addSelect('A.recruitApplyId')
+      .addSelect('P.recruitPostId')
       .addSelect(['U.userId'])
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = 1')
