@@ -178,8 +178,9 @@ export class UserController {
   getRecruitApplies(
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
-    @Query('isAccepted', ParseIntPipe) isAccepted,
+    @Query('isAccepted') isAccepted,
   ) {
+    isAccepted = parseInt(isAccepted);
     if (1 < isAccepted || isAccepted < 0) {
       throw new BadRequestException('Wrong Request.');
     }
