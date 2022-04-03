@@ -542,16 +542,18 @@ export class UserService {
     }
     const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .addSelect('CM.memberId')
-      .addSelect('CR.chatRoomId')
-      .addSelect(['RP.recruitPostId'])
-      .addSelect('UR.userReputationPoint')
-      .addSelect([
-        'U.nickname',
-        'U.userId',
-        'U.profileImgUrl',
-        'U.portfolioUrl',
+      .select([
+        'A.recruitApplyId',
+        'A.task',
+        'A.applicant',
+        'A.isAccepted',
+        'A.applyMessage',
       ])
+      .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
+      .addSelect('Count(CR.recruitPost)', 'Projects')
+      .addSelect('SUM(UR.userReputationPoint)', 'Point')
+      .addSelect('COUNT(UR.userReputationPoint)', 'Scores')
+      .groupBy('A.recruitApplyId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
@@ -560,7 +562,7 @@ export class UserService {
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .orderBy('A.recruitApplyId', 'DESC')
-      .getMany();
+      .getRawMany();
     return {
       recruitApplies,
     };
