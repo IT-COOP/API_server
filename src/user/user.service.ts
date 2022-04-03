@@ -541,7 +541,7 @@ export class UserService {
     } catch (err) {
       throw new ForbiddenException('Not Your Post');
     }
-    const applies = await this.recruitApplyRepository
+    const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .leftJoin('A.recruitPost', 'P')
       .leftJoin('A.applicant2', 'U')
@@ -558,7 +558,6 @@ export class UserService {
         'U.nickname',
         'U.userId',
         'U.profileImgUrl',
-        'U.selfIntroduction',
         'U.portfolioUrl',
       ])
       .addSelect('RP.recruitPostId')
@@ -570,7 +569,7 @@ export class UserService {
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
     return {
-      applies,
+      recruitApplies,
     };
   }
 
