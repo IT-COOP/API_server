@@ -201,7 +201,6 @@ export class UserService {
     userId: string,
     responseToApplyDto: ResponseToApplyDto,
   ) {
-    let isError = false;
     const { recruitPostId, applicant, isAccepted } = responseToApplyDto;
     const post = await this.recruitPostRepository.findOne({
       where: { recruitPostId: recruitPostId },
@@ -299,14 +298,11 @@ export class UserService {
         await queryRunner.release();
       }
     } catch (err) {
+      console.error(err);
       await queryRunner.rollbackTransaction();
-      isError = true;
-    } finally {
-      if (isError) {
-        throw new InternalServerErrorException(
-          `Something Went Wrong. Please Try Again.`,
-        );
-      }
+      throw new InternalServerErrorException(
+        `Something Went Wrong. Please Try Again.`,
+      );
     }
     console.log('마지막', apply);
 
