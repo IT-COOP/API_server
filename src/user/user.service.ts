@@ -395,14 +395,15 @@ export class UserService {
       .andWhere('R.recruitPostId = :', { recruitPostId })
       .getOne();
     if (isRated) {
+      console.log(isRated);
+
       throw myPageError.UnableToRateTwiceError;
     }
 
     // 이거 orWhere하고 직접 뒤져보는 로직으로 조금 수정해야 할듯 함.
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'C')
-      .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoinAndSelect('P.recruitApplies', 'A')
       .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
@@ -411,12 +412,14 @@ export class UserService {
       .getOne();
 
     if (!post) {
+      console.log(post);
+
       throw myPageError.UnableToRateError;
     }
 
     let canRate = 0;
-    for (const member in post.chatRooms.chatMembers) {
-      if (member === userId || member === receiver) canRate++;
+    for (const apply of post.recruitApplies) {
+      if (apply.applicant === userId || apply.applicant === receiver) canRate++;
     }
 
     if (canRate === 2) {
@@ -552,15 +555,11 @@ export class UserService {
       ])
       .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
       .addSelect('Count(CR.recruitPost)', 'Projects')
-      .addSelect('SUM(UR.userReputationPoint)', 'Point')
-      .addSelect('COUNT(UR.userReputationPoint)', 'Scores')
-      .addSelect('COUNT(A.recruitApplyId)', 'GCD')
       .groupBy('A.recruitApplyId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
       .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
-      .leftJoin('U.userReputations2', 'UR')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .orderBy('A.recruitApplyId', 'DESC')
@@ -569,26 +568,11 @@ export class UserService {
     // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
     const applies = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .addSelect('CM.memberId')
-      .addSelect('CR.chatRoomId')
-      .addSelect('RP.recruitPostId')
+      .select('A.recruitApplyId')
       .addSelect('UR.userReputationPoint')
-      .addSelect([
-        'U.nickname',
-        'U.userId',
-        'U.profileImgUrl',
-        'U.portfolioUrl',
-      ])
+      .addSelect('U.userId')
       .groupBy('A.recruitApplyId')
-      .addGroupBy('CM.memberId')
-      .addGroupBy('CR.chatRoomId')
-      .addGroupBy('RP.recruitPostId')
-      .addGroupBy('U.userId')
-      .addGroupBy('UR.userReputationId')
       .leftJoin('A.applicant2', 'U')
-      .leftJoin('U.chatMembers', 'CM')
-      .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
       .leftJoin('U.userReputations2', 'UR')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
