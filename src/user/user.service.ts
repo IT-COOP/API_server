@@ -234,6 +234,8 @@ export class UserService {
       return { success: true };
     }
     if (apply.isAccepted) {
+      console.log(apply, '에러 뜨고 있는 것');
+      console.log(apply.isAccepted);
       // 이미 허락했음
       throw myPageError.AlreadyRespondedError;
     }
