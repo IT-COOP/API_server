@@ -222,7 +222,7 @@ export class UserService {
       .addSelect('U.nickname')
       .where('A.applicant = :applicant', { applicant })
       .getOne();
-    console.log(apply);
+    console.log(apply, '최초 apply 받자마자');
 
     if (!apply) {
       // 신청한 적도 없음!
