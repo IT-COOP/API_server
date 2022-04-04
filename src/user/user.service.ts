@@ -565,13 +565,17 @@ export class UserService {
       .addSelect([
         'A.recruitApplyId',
         'A.recruitPostId',
-        'A.applicant',
         'A.task',
         'A.applyMessage',
         'A.isAccepted',
       ])
       .addSelect('UR.userReputationPoint')
-      .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
+      .addSelect([
+        'U.nickname',
+        'U.profileImgUrl',
+        'U.portfolioUrl',
+        'U.userId',
+      ])
       .groupBy('A.recruitApplyId')
       .addGroupBy('UR.userReputationId')
       .leftJoin('A.applicant2', 'U')
