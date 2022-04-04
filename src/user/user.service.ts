@@ -544,43 +544,52 @@ export class UserService {
       throw new ForbiddenException('Not Your Post');
     }
     // 무언가 공약수가 곱해진 형태입니다...
-    const recruitApplies = await this.recruitApplyRepository
+    const projects = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .select([
-        'A.recruitApplyId',
-        'A.task',
-        'A.applicant',
-        'A.isAccepted',
-        'A.applyMessage',
-      ])
-      .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
+      .select('A.recruitApplyId')
       .addSelect('Count(CR.recruitPost)', 'Projects')
       .groupBy('A.recruitApplyId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
+      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < now()')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
+      .andWhere('RP.endAt < now()')
       .orderBy('A.recruitApplyId', 'DESC')
       .getRawMany();
 
     // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
-    const applies = await this.recruitApplyRepository
+    const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .select('A.recruitApplyId')
       .addSelect('UR.userReputationPoint')
-      .addSelect('U.userId')
+      .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
       .groupBy('A.recruitApplyId')
+      .addGroupBy('UR.userReputationId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.userReputations2', 'UR')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
+    let m = 0;
+    const projectCount = [];
+    for (let idx = 0; idx < recruitApplies.length; idx++) {
+      if (m === projects.length) {
+        projectCount.push(0);
+      } else if (
+        recruitApplies[idx].recruitApplyId === projects[m].A_recruitApplyId
+      ) {
+        projectCount.push(parseInt(projects[m].Projects));
+        m++;
+      } else {
+        projectCount.push(0);
+      }
+      console.log(projectCount);
+    }
     return {
       recruitApplies,
-      applies,
+      projectCount,
     };
   }
 
