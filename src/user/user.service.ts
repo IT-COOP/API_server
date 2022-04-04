@@ -246,22 +246,20 @@ export class UserService {
     await queryRunner.startTransaction();
     try {
       if (apply.task % 100) {
-        const task = apply.task / 100 < 3 ? 300 : 400;
+        const task = apply.task < 300 ? 300 : 400;
         // 개발자임
-        const [recruitStack, recruitTask] = await Promise.all([
-          this.recruitStackRepository.findOne({
-            where: {
-              recruitPostId: apply.recruitPostId,
-              recruitStack: apply.task,
-            },
-          }),
-          this.recruitTaskRepository.findOne({
-            where: {
-              recruitPostId: apply.recruitPostId,
-              recruitTask: task,
-            },
-          }),
-        ]);
+        const recruitStack = await this.recruitStackRepository.findOne({
+          where: {
+            recruitPostId: apply.recruitPostId,
+            recruitStack: apply.task,
+          },
+        });
+        const recruitTask = await this.recruitTaskRepository.findOne({
+          where: {
+            recruitPostId: apply.recruitPostId,
+            recruitTask: task,
+          },
+        });
         if (
           !recruitStack ||
           !recruitTask ||
@@ -284,7 +282,7 @@ export class UserService {
         // 기획자 혹은 디자이너임
         const recruitTask = await this.recruitTaskRepository.findOne({
           where: {
-            recruitPostId: apply.recruitPostId,
+            recruitPostId,
             recruitTask: apply.task,
           },
         });
