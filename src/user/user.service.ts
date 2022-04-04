@@ -207,6 +207,7 @@ export class UserService {
       where: { recruitPostId: recruitPostId },
       select: ['author'],
     });
+    console.log(post);
     if (!post) {
       throw myPageError.MissingPostError;
     }
@@ -222,6 +223,7 @@ export class UserService {
       .addSelect('U.nickname')
       .where('A.applicant = :applicant', { applicant })
       .getOne();
+    console.log(apply);
 
     if (!apply) {
       // 신청한 적도 없음!
@@ -236,6 +238,7 @@ export class UserService {
       // 이미 허락했음
       throw myPageError.AlreadyRespondedError;
     }
+    apply.isAccepted = true;
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -291,22 +294,22 @@ export class UserService {
         }
         recruitTask.numberOfPeopleRequired++;
         await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
+        await queryRunner.manager.getRepository(RecruitApplies).save(apply);
         await queryRunner.commitTransaction();
+        await queryRunner.release();
       }
     } catch (err) {
       await queryRunner.rollbackTransaction();
       isError = true;
     } finally {
-      await queryRunner.release();
       if (isError) {
         throw new InternalServerErrorException(
           `Something Went Wrong. Please Try Again.`,
         );
       }
     }
+    console.log('마지막', apply);
 
-    apply.isAccepted = true;
-    await this.recruitApplyRepository.save(apply);
     const notification = new CreateNotificationDto();
     notification.notificationReceiver = apply.applicant;
     notification.notificationSender = userId;

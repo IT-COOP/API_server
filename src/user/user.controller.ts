@@ -113,6 +113,7 @@ export class UserController {
     @Res({ passthrough: true }) res,
     @Body('responseToApplyDto') responseToApplyDto: ResponseToApplyDto,
   ) {
+    console.log(responseToApplyDto);
     const userId = res.locals.user.userId;
     return this.userService.responseToApply(userId, responseToApplyDto);
   }
