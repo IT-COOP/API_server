@@ -293,10 +293,10 @@ export class UserService {
         }
         recruitTask.numberOfPeopleRequired++;
         await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
-        await queryRunner.manager.getRepository(RecruitApplies).save(apply);
-        await queryRunner.commitTransaction();
-        await queryRunner.release();
       }
+      await queryRunner.manager.getRepository(RecruitApplies).save(apply);
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
     } catch (err) {
       console.error(err);
       await queryRunner.rollbackTransaction();
