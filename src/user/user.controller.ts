@@ -111,8 +111,9 @@ export class UserController {
   @Post('recruiting/response')
   responseToApply(
     @Res({ passthrough: true }) res,
-    @Body('responseToApplyDto') responseToApplyDto: ResponseToApplyDto,
+    @Body() responseToApplyDto: ResponseToApplyDto,
   ) {
+    console.log(responseToApplyDto);
     const userId = res.locals.user.userId;
     return this.userService.responseToApply(userId, responseToApplyDto);
   }

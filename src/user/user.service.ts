@@ -201,12 +201,12 @@ export class UserService {
     userId: string,
     responseToApplyDto: ResponseToApplyDto,
   ) {
-    let isError = false;
     const { recruitPostId, applicant, isAccepted } = responseToApplyDto;
     const post = await this.recruitPostRepository.findOne({
       where: { recruitPostId: recruitPostId },
       select: ['author'],
     });
+    console.log(post);
     if (!post) {
       throw myPageError.MissingPostError;
     }
@@ -221,7 +221,9 @@ export class UserService {
       .select(['A.task', 'A.isAccepted', 'A.recruitApplyId'])
       .addSelect('U.nickname')
       .where('A.applicant = :applicant', { applicant })
+      .andWhere('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
+    console.log(apply, '최초 apply 받자마자');
 
     if (!apply) {
       // 신청한 적도 없음!
@@ -233,30 +235,31 @@ export class UserService {
       return { success: true };
     }
     if (apply.isAccepted) {
+      console.log(apply, '에러 뜨고 있는 것');
+      console.log(apply.isAccepted);
       // 이미 허락했음
       throw myPageError.AlreadyRespondedError;
     }
+    apply.isAccepted = true;
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       if (apply.task % 100) {
-        const task = apply.task / 100 < 3 ? 300 : 400;
+        const task = apply.task < 300 ? 300 : 400;
         // 개발자임
-        const [recruitStack, recruitTask] = await Promise.all([
-          this.recruitStackRepository.findOne({
-            where: {
-              recruitPostId: apply.recruitPostId,
-              recruitStack: apply.task,
-            },
-          }),
-          this.recruitTaskRepository.findOne({
-            where: {
-              recruitPostId: apply.recruitPostId,
-              recruitTask: task,
-            },
-          }),
-        ]);
+        const recruitStack = await this.recruitStackRepository.findOne({
+          where: {
+            recruitPostId,
+            recruitStack: apply.task,
+          },
+        });
+        const recruitTask = await this.recruitTaskRepository.findOne({
+          where: {
+            recruitPostId,
+            recruitTask: task,
+          },
+        });
         if (
           !recruitStack ||
           !recruitTask ||
@@ -264,6 +267,7 @@ export class UserService {
             recruitStack.numberOfPeopleSet ||
           recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
         ) {
+          console.log([recruitStack, recruitTask]);
           // 이미 다 구함 에러처리 혹은 안 구하는 중
           throw myPageError.NotRecruitingError;
         }
@@ -278,7 +282,7 @@ export class UserService {
         // 기획자 혹은 디자이너임
         const recruitTask = await this.recruitTaskRepository.findOne({
           where: {
-            recruitPostId: apply.recruitPostId,
+            recruitPostId,
             recruitTask: apply.task,
           },
         });
@@ -286,27 +290,25 @@ export class UserService {
           !recruitTask ||
           recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
         ) {
+          console.log([recruitTask]);
           // 이미 다 구함 혹은 안 구함
           throw myPageError.NotRecruitingError;
         }
         recruitTask.numberOfPeopleRequired++;
         await queryRunner.manager.getRepository(RecruitTasks).save(recruitTask);
-        await queryRunner.commitTransaction();
       }
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      isError = true;
-    } finally {
+      await queryRunner.manager.getRepository(RecruitApplies).save(apply);
+      await queryRunner.commitTransaction();
       await queryRunner.release();
-      if (isError) {
-        throw new InternalServerErrorException(
-          `Something Went Wrong. Please Try Again.`,
-        );
-      }
+    } catch (err) {
+      console.error(err);
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `Something Went Wrong. Please Try Again.`,
+      );
     }
+    console.log('마지막', apply);
 
-    apply.isAccepted = true;
-    await this.recruitApplyRepository.save(apply);
     const notification = new CreateNotificationDto();
     notification.notificationReceiver = apply.applicant;
     notification.notificationSender = userId;
@@ -395,14 +397,15 @@ export class UserService {
       .andWhere('R.recruitPostId = :', { recruitPostId })
       .getOne();
     if (isRated) {
+      console.log(isRated);
+
       throw myPageError.UnableToRateTwiceError;
     }
 
     // 이거 orWhere하고 직접 뒤져보는 로직으로 조금 수정해야 할듯 함.
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.chatRooms', 'C')
-      .leftJoinAndSelect('C.chatMembers', 'M')
+      .leftJoinAndSelect('P.recruitApplies', 'A')
       .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
       .where('P.endAt != P.createdAt')
@@ -411,12 +414,14 @@ export class UserService {
       .getOne();
 
     if (!post) {
+      console.log(post);
+
       throw myPageError.UnableToRateError;
     }
 
     let canRate = 0;
-    for (const member in post.chatRooms.chatMembers) {
-      if (member === userId || member === receiver) canRate++;
+    for (const apply of post.recruitApplies) {
+      if (apply.applicant === userId || apply.applicant === receiver) canRate++;
     }
 
     if (canRate === 2) {
@@ -541,62 +546,63 @@ export class UserService {
       throw new ForbiddenException('Not Your Post');
     }
     // 무언가 공약수가 곱해진 형태입니다...
-    const recruitApplies = await this.recruitApplyRepository
+    const projects = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .select([
-        'A.recruitApplyId',
-        'A.task',
-        'A.applicant',
-        'A.isAccepted',
-        'A.applyMessage',
-      ])
-      .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
+      .select('A.recruitApplyId')
       .addSelect('Count(CR.recruitPost)', 'Projects')
-      .addSelect('SUM(UR.userReputationPoint)', 'Point')
-      .addSelect('COUNT(UR.userReputationPoint)', 'Scores')
-      .addSelect('COUNT(A.recruitApplyId)', 'GCD')
       .groupBy('A.recruitApplyId')
       .leftJoin('A.applicant2', 'U')
       .leftJoin('U.chatMembers', 'CM')
       .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
-      .leftJoin('U.userReputations2', 'UR')
+      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < now()')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
+      .andWhere('RP.endAt < now()')
       .orderBy('A.recruitApplyId', 'DESC')
       .getRawMany();
 
     // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
-    const applies = await this.recruitApplyRepository
+    const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
-      .addSelect('CM.memberId')
-      .addSelect('CR.chatRoomId')
-      .addSelect('RP.recruitPostId')
+      .addSelect([
+        'A.recruitApplyId',
+        'A.recruitPostId',
+        'A.task',
+        'A.applyMessage',
+        'A.isAccepted',
+      ])
       .addSelect('UR.userReputationPoint')
       .addSelect([
         'U.nickname',
-        'U.userId',
         'U.profileImgUrl',
         'U.portfolioUrl',
+        'U.userId',
       ])
       .groupBy('A.recruitApplyId')
-      .addGroupBy('CM.memberId')
-      .addGroupBy('CR.chatRoomId')
-      .addGroupBy('RP.recruitPostId')
-      .addGroupBy('U.userId')
       .addGroupBy('UR.userReputationId')
       .leftJoin('A.applicant2', 'U')
-      .leftJoin('U.chatMembers', 'CM')
-      .leftJoin('CM.chatRoom', 'CR')
-      .leftJoin('CR.recruitPost', 'RP', 'RP.endAt < :now', { now: new Date() })
       .leftJoin('U.userReputations2', 'UR')
       .where('A.recruitPostId = :recruitPostId', { recruitPostId })
       .andWhere('A.isAccepted = :isAccepted', { isAccepted })
       .orderBy('A.recruitApplyId', 'DESC')
       .getMany();
+    let m = 0;
+    const projectCount = [];
+    for (let idx = 0; idx < recruitApplies.length; idx++) {
+      if (m === projects.length) {
+        projectCount.push(0);
+      } else if (
+        recruitApplies[idx].recruitApplyId === projects[m].A_recruitApplyId
+      ) {
+        projectCount.push(parseInt(projects[m].Projects));
+        m++;
+      } else {
+        projectCount.push(0);
+      }
+    }
     return {
       recruitApplies,
-      applies,
+      projectCount,
     };
   }
 
