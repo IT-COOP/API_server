@@ -266,6 +266,7 @@ export class UserService {
             recruitStack.numberOfPeopleSet ||
           recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
         ) {
+          console.log([recruitStack, recruitTask]);
           // 이미 다 구함 에러처리 혹은 안 구하는 중
           throw myPageError.NotRecruitingError;
         }
@@ -288,6 +289,7 @@ export class UserService {
           !recruitTask ||
           recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
         ) {
+          console.log([recruitTask]);
           // 이미 다 구함 혹은 안 구함
           throw myPageError.NotRecruitingError;
         }
@@ -596,7 +598,6 @@ export class UserService {
       } else {
         projectCount.push(0);
       }
-      console.log(projectCount);
     }
     return {
       recruitApplies,

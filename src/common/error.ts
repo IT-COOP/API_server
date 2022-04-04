@@ -74,6 +74,8 @@ export const myPageError = {
   WrongAuthorError: new ForbiddenException('You Are Not The Author'),
   NoApplyToResponseError: new BadRequestException('There Is No Such Apply'),
   AlreadyRespondedError: new BadRequestException('Already Responded The Apply'),
-  NotRecruitingError: new BadRequestException('Wrong Apply To Response'),
+  NotRecruitingError: new BadRequestException(
+    'The Stack or Task Is Already Fulfilled',
+  ),
   MissingPostError: new BadRequestException('No Such Post'),
 };
