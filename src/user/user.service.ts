@@ -221,6 +221,7 @@ export class UserService {
       .select(['A.task', 'A.isAccepted', 'A.recruitApplyId'])
       .addSelect('U.nickname')
       .where('A.applicant = :applicant', { applicant })
+      .andWhere('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
     console.log(apply, '최초 apply 받자마자');
 
