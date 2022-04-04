@@ -562,6 +562,14 @@ export class UserService {
     // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
     const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
+      .addSelect([
+        'A.recruitApplyId',
+        'A.recruitPostId',
+        'A.applicant',
+        'A.task',
+        'A.applyMessage',
+        'A.isAccepted',
+      ])
       .addSelect('UR.userReputationPoint')
       .addSelect(['U.nickname', 'U.profileImgUrl', 'U.portfolioUrl'])
       .groupBy('A.recruitApplyId')
