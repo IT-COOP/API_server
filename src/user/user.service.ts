@@ -250,13 +250,13 @@ export class UserService {
         // 개발자임
         const recruitStack = await this.recruitStackRepository.findOne({
           where: {
-            recruitPostId: apply.recruitPostId,
+            recruitPostId,
             recruitStack: apply.task,
           },
         });
         const recruitTask = await this.recruitTaskRepository.findOne({
           where: {
-            recruitPostId: apply.recruitPostId,
+            recruitPostId,
             recruitTask: task,
           },
         });
