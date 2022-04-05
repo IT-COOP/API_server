@@ -5,9 +5,16 @@ import * as expressBasicAuth from 'express-basic-auth';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './http-exception.filter';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 
+const httpsOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/it-coop.site/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/it-coop.site/cert.pem'),
+};
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.use(
