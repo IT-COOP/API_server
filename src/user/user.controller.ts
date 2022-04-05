@@ -209,7 +209,7 @@ export class UserController {
   @UseGuards(StrictGuard)
   @Get('recruiting/accepted/:recruitPostId')
   @ApiOperation({ summary: '협업 신청 보기 - 수락자 명수' })
-  getRecruitAppliesProfileImgUrl(
+  getRecruitReputation(
     @Res({ passthrough: true }) res,
     @Param('recruitPostId', ParseIntPipe) recruitPostId,
   ) {
