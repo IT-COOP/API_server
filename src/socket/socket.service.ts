@@ -280,7 +280,7 @@ export class SocketService {
           eventType: createNotificationDto.eventType,
           eventContent: createNotificationDto.eventContent,
           targetId: createNotificationDto.targetId,
-          isRead: createNotificationDto.isRead,
+          isRead: false,
         });
         notifications.push(notification);
       }

@@ -235,8 +235,6 @@ export class UserService {
       return { success: true };
     }
     if (apply.isAccepted) {
-      console.log(apply, '에러 뜨고 있는 것');
-      console.log(apply.isAccepted);
       // 이미 허락했음
       throw myPageError.AlreadyRespondedError;
     }
@@ -561,7 +559,6 @@ export class UserService {
       .orderBy('A.recruitApplyId', 'DESC')
       .getRawMany();
 
-    // 완료된 것들은 nest 가장 깊은 곳에 있는 recruitPost가 null로 드고, 완료되지 않은 것들은 {recruitPostId}가 뜹니다.
     const recruitApplies = await this.recruitApplyRepository
       .createQueryBuilder('A')
       .addSelect([

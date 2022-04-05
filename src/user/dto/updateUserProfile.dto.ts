@@ -27,5 +27,6 @@ export class UpdateUserProfileDTO {
 
   @IsOptional()
   @IsString()
+  @IsUrl()
   portfolioUrl: string;
 }
