@@ -454,7 +454,9 @@ export class UserService {
     }
     const now = new Date();
     post.endAt = new Date(
-      now.setMinutes(now.getMinutes() + post.recruitDurationDays),
+      now.setMinutes(
+        now.getMinutes() + Math.floor(post.recruitDurationDays / 7),
+      ),
     );
 
     let participantCount = 1;
