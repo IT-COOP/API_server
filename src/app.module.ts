@@ -10,12 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './socialLogin/entity/Users';
 import { AuthModule } from './auth/auth.module';
 import { RecruitPostModule } from './recruit-post/recruit-post.module';
-import { InformationPostModule } from './information-post/information-post.module';
 import { UserModule } from './user/user.module';
-import { InformationComments } from './information-post/entities/InformationComments';
-import { InformationKeeps } from './information-post/entities/InformationKeeps';
-import { InformationLoves } from './information-post/entities/InformationLoves';
-import { InformationPosts } from './information-post/entities/InformationPosts';
 import { RecruitApplies } from './recruit-post/entities/RecruitApplies';
 import { RecruitComments } from './recruit-post/entities/RecruitComments';
 import { RecruitKeeps } from './recruit-post/entities/RecruitKeeps';
@@ -49,10 +44,6 @@ import { LoggingInterceptor } from './common/common.interceptor';
           database: configService.get('DB_DATABASE'),
           entities: [
             Users,
-            InformationComments,
-            InformationKeeps,
-            InformationLoves,
-            InformationPosts,
             RecruitApplies,
             RecruitComments,
             RecruitKeeps,
@@ -72,7 +63,6 @@ import { LoggingInterceptor } from './common/common.interceptor';
       },
     }),
     RecruitPostModule,
-    InformationPostModule,
     UserModule,
     SocketModule,
     ChatModule,

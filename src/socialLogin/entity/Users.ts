@@ -1,8 +1,4 @@
 import { Column, Entity, OneToMany } from 'typeorm';
-import { InformationComments } from '../../information-post/entities/InformationComments';
-import { InformationKeeps } from '../../information-post/entities/InformationKeeps';
-import { InformationLoves } from '../../information-post/entities/InformationLoves';
-import { InformationPosts } from '../../information-post/entities/InformationPosts';
 import { Notification } from '../../user/entities/Notification';
 import { RecruitApplies } from '../../recruit-post/entities/RecruitApplies';
 import { RecruitComments } from '../../recruit-post/entities/RecruitComments';
@@ -76,30 +72,6 @@ export class Users {
 
   @OneToMany(() => Chats, (chats) => chats.speaker2)
   chats: Chats[];
-
-  @OneToMany(
-    () => InformationComments,
-    (informationComments) => informationComments.user,
-  )
-  informationComments: InformationComments[];
-
-  @OneToMany(
-    () => InformationKeeps,
-    (informationKeeps) => informationKeeps.user,
-  )
-  informationKeeps: InformationKeeps[];
-
-  @OneToMany(
-    () => InformationLoves,
-    (informationLoves) => informationLoves.user,
-  )
-  informationLoves: InformationLoves[];
-
-  @OneToMany(
-    () => InformationPosts,
-    (informationPosts) => informationPosts.author2,
-  )
-  informationPosts: InformationPosts[];
 
   @OneToMany(
     () => Notification,
