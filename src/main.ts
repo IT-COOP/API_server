@@ -7,9 +7,10 @@ import { HttpExceptionFilter } from './http-exception.filter';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
+dotenv.config();
 const httpsOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/it-coop.site/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/it-coop.site/cert.pem'),
+  key: fs.readFileSync(process.env.DIR + 'privkey.pem'),
+  cert: fs.readFileSync(process.env.DIR + 'cert.pem'),
 };
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -49,5 +50,4 @@ async function bootstrap() {
   });
   await app.listen(3000);
 }
-dotenv.config();
 bootstrap();
