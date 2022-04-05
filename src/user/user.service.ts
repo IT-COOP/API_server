@@ -630,4 +630,33 @@ export class UserService {
       acceptedAppliesCount,
     };
   }
+
+  async getRecruitReputation(userId: string, recruitPostId: number) {
+    try {
+      const [reputations, members] = await Promise.all([
+        this.userReputationRepository.find({ recruitPostId }),
+        this.chatMemberRepository.find({ chatRoomId: recruitPostId }),
+      ]);
+      const existReputation = new Set();
+      const unratedUser = [];
+      for (let i = 0; i < reputations.length; i++) {
+        existReputation.add(reputations[i].userReputationReceiver);
+      }
+      for (let i = 0; i < members.length; i++) {
+        if (!existReputation.has(members[i].member)) {
+          unratedUser.push(members[i].member);
+        }
+      }
+      const unratedProjectMembers = await this.userRepository.findByIds(
+        unratedUser,
+        {
+          select: ['userId', 'nickname', 'profileImgUrl', 'activityPoint'],
+        },
+      );
+
+      return unratedProjectMembers;
+    } catch (e) {
+      throw new BadRequestException('Try again');
+    }
+  }
 }

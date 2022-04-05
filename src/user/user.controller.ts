@@ -205,4 +205,15 @@ export class UserController {
       recruitPostId,
     );
   }
+
+  @UseGuards(StrictGuard)
+  @Get('recruiting/accepted/:recruitPostId')
+  @ApiOperation({ summary: '협업 신청 보기 - 수락자 명수' })
+  getRecruitAppliesProfileImgUrl(
+    @Res({ passthrough: true }) res,
+    @Param('recruitPostId', ParseIntPipe) recruitPostId,
+  ) {
+    const userId = res.locals.user.userId;
+    return this.userService.getRecruitReputation(userId, recruitPostId);
+  }
 }
