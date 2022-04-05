@@ -58,7 +58,6 @@ import { LoggingInterceptor } from './common/common.interceptor';
           ],
           seeds: ['./database/seeds/**/*{.ts,.js}'],
           factories: ['./database/factories/**/*{.ts,.js}'],
-          synchronize: true,
         };
       },
     }),
