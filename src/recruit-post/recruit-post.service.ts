@@ -440,7 +440,7 @@ export class RecruitPostService {
       if (returned.author !== userId) {
         throw recruitError.WrongRequiredError;
       }
-      if (returned.endAt <= returned.createdAt) {
+      if (returned.endAt !== returned.createdAt) {
         throw recruitError.WrongRequiredError;
       }
     } catch (e) {
