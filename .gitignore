@@ -37,6 +37,10 @@ data/*
 !.vscode/extensions.json
 
 .env
+**/.env
+**/*.env
 docker.env
 src/auth/jwt/jwt.secret.ts
 /output
+*.pem
+**/*.pem
