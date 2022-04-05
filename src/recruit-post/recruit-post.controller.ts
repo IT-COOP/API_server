@@ -31,6 +31,7 @@ import { RecruitStacks } from './entities/RecruitStacks';
 import { RecruitTasks } from './entities/RecruitTasks';
 import { ResRecruitPostsDTO } from './dto/resRecruitPosts.dto';
 import { ResDetailPostDTO } from './dto/resDetailPost.dto';
+import { recruitError } from './../common/error';
 
 @ApiTags('프로젝트 게시판')
 @Controller('recruit')
@@ -79,13 +80,49 @@ export class RecruitPostController {
     @Query() conditions,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const order = parseInt(conditions.sort) || 0;
-    const items = parseInt(conditions.items) || 12;
-    const location = parseInt(conditions.loc) || 0;
-    const task = parseInt(conditions.task) || 0;
-    const stack = parseInt(conditions.stack) || 0;
-    const cur = parseInt(conditions.cur) || 0;
-    const over = parseInt(conditions.over) || 0;
+    let sort;
+    let items;
+    let loc;
+    let task;
+    let stack;
+    let cur;
+    let over;
+    const isNumber = /^[0-9]*$/;
+    if (isNumber.test(conditions.sort) || !conditions.sort) {
+      sort = parseInt(conditions.sort) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.items) || !conditions.items) {
+      items = parseInt(conditions.items) || 12;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.loc) || !conditions.loc) {
+      loc = parseInt(conditions.loc) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.task) || !conditions.task) {
+      task = parseInt(conditions.task) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.stack) || !conditions.stack) {
+      stack = parseInt(conditions.stack) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.cur) || !conditions.cur) {
+      cur = parseInt(conditions.cur) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
+    if (isNumber.test(conditions.over) || !conditions.over) {
+      over = parseInt(conditions.over) || 0;
+    } else {
+      throw recruitError.WrongRequiredError;
+    }
     const { userId } = res.locals.user ? res.locals.user : { userId: '' };
 
     if (items > 12) {
@@ -94,9 +131,9 @@ export class RecruitPostController {
     const recruitPosts: RecruitPosts[] =
       await this.recruitPostService.ReadAllRecruits(
         userId,
-        order,
+        sort,
         items,
-        location,
+        loc,
         task,
         stack,
         cur,
@@ -124,36 +161,6 @@ export class RecruitPostController {
 
         return obj;
       },
-    );
-
-    return recruits;
-  }
-
-  @ApiOperation({ summary: '협업 게시물 체크' })
-  @Get('check')
-  async checkRecruitCount(@Res({ passthrough: true }) res: Response) {
-    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-
-    if (!userId) {
-      return;
-    }
-    const recruits: any = await this.recruitPostService.readRecruitCount(
-      userId,
-    );
-
-    return recruits;
-  }
-
-  @ApiOperation({ summary: '협업 게시물 체크' })
-  @Get('check/apply')
-  async checkApplyCount(@Res({ passthrough: true }) res: Response) {
-    const { userId } = res.locals.user ? res.locals.user : { userId: '' };
-
-    if (!userId) {
-      return;
-    }
-    const recruits: any = await this.recruitPostService.readRecruitCount(
-      userId,
     );
 
     return recruits;

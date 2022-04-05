@@ -59,20 +59,16 @@ export class RecruitPostService {
         .leftJoinAndSelect('P.author2', 'U')
         .leftJoinAndSelect('P.recruitComments', 'C');
       if (!loginId) {
-        recruitQuery = recruitQuery
-          .leftJoinAndSelect('P.recruitKeeps', 'K')
-          .where('P.recruitPostId > 0');
+        recruitQuery = recruitQuery.leftJoinAndSelect('P.recruitKeeps', 'K');
       } else {
-        recruitQuery = recruitQuery
-          .leftJoinAndSelect(
-            'P.recruitKeeps',
-            'K',
-            'K.userId = :id and P.recruitPostId = K.recruitPostId',
-            {
-              id: loginId,
-            },
-          )
-          .where('P.recruitPostId > 0');
+        recruitQuery = recruitQuery.leftJoinAndSelect(
+          'P.recruitKeeps',
+          'K',
+          'K.userId = :id and P.recruitPostId = K.recruitPostId',
+          {
+            id: loginId,
+          },
+        );
       }
 
       let paginationQuery = recruitQuery;
@@ -149,7 +145,7 @@ export class RecruitPostService {
             .where('P.recruitPostId = :id', { id: recruitPostId })
             .orderBy('C.recruitCommentId', 'ASC')
             .getOne(),
-          await this.recruitPostsRepository
+          this.recruitPostsRepository
             .createQueryBuilder('P')
             .update()
             .set({ viewCount: () => 'viewCount + 1' })
@@ -178,7 +174,7 @@ export class RecruitPostService {
           .where('P.recruitPostId = :id', { id: recruitPostId })
           .orderBy('C.recruitCommentId', 'ASC')
           .getOne(),
-        await this.recruitPostsRepository
+        this.recruitPostsRepository
           .createQueryBuilder('P')
           .update()
           .set({ viewCount: () => 'viewCount + 1' })
@@ -355,26 +351,6 @@ export class RecruitPostService {
     }
   }
 
-  async readRecruitCount(userId) {
-    const returned = await this.usersRepository
-      .createQueryBuilder('U')
-      .leftJoin('U.recruitPosts', 'P')
-      .leftJoin('U.chatMembers', 'M')
-      .leftJoin('U.recruitApplies', 'A')
-      .select('COUNT(P.author)', 'postCount')
-      .addSelect('COUNT(M.member)', 'projectCount')
-      .addSelect('COUNT(A.applicant)', 'applyCount')
-      .where('U.userId = :userId', { userId })
-      .getRawOne();
-    if (
-      +returned.projectCount + returned.projectCount + returned.projectCount >
-      3
-    ) {
-      throw recruitError.MaxProgressProjectError;
-    }
-    return returned;
-  }
-
   async createApply(
     recruitPostId: number,
     apply: RecruitApplies,
@@ -462,6 +438,9 @@ export class RecruitPostService {
         recruitPostId: postId,
       });
       if (returned.author !== userId) {
+        throw recruitError.WrongRequiredError;
+      }
+      if (returned.endAt !== returned.createdAt) {
         throw recruitError.WrongRequiredError;
       }
     } catch (e) {
