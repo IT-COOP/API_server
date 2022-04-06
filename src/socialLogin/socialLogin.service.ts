@@ -312,6 +312,7 @@ export class SocialLoginService {
       profileImgUrl: completeFirstLoginDTO.profileImgUrl,
       portfolioUrl: completeFirstLoginDTO.portfolioUrl,
       technologyStack: completeFirstLoginDTO.technologyStack,
+      selfIntroduction: completeFirstLoginDTO.selfIntroduction,
       refreshToken,
     });
 

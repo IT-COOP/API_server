@@ -453,8 +453,21 @@ export class UserService {
       throw new BadRequestException('No Post To Run');
     }
     const now = new Date();
+    switch (post.recruitDurationDays) {
+      case 7:
+        post.recruitDurationDays = 1;
+        break;
+      case 14:
+        post.recruitDurationDays = 5;
+        break;
+      case 21:
+        post.recruitDurationDays = 10;
+      case 28:
+        post.recruitDurationDays = 20;
+        break;
+    }
     post.endAt = new Date(
-      now.setDate(now.getDate() + post.recruitDurationDays),
+      now.setMinutes(now.getMinutes() + post.recruitDurationDays),
     );
 
     let participantCount = 1;
