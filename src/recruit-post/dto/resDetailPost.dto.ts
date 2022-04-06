@@ -21,4 +21,5 @@ export class ResDetailPostDTO {
   public recruitComments: object[];
   public recruitTasks: RecruitTasks[];
   public recruitStacks: RecruitStacks[];
+  public status: number;
 }

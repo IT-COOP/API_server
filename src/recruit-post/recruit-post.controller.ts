@@ -197,6 +197,12 @@ export class RecruitPostController {
     details.recruitKeepCount = recruitPost.recruitKeepCount;
     details.viewCount = recruitPost.viewCount;
     details.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
+    details.status =
+      recruitPost.endAt === recruitPost.createdAt
+        ? 0
+        : recruitPost.endAt > new Date()
+        ? 1
+        : 2;
 
     details.createdAt = recruitPost.createdAt.toISOString();
     details.endAt = recruitPost.endAt.toISOString();
