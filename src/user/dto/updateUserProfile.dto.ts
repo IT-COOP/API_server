@@ -29,7 +29,7 @@ export class UpdateUserProfileDTO {
   @ApiProperty({
     description: '프로필 이미지 url',
   })
-  profileImgUrl;
+  profileImgUrl: string;
 
   @IsOptional()
   @IsString()
