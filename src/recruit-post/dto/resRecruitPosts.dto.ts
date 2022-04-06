@@ -14,6 +14,7 @@ export class ResRecruitPostsDTO {
   public recruitDurationWeeks: number;
   public endAt: string;
   public createdAt: string;
+  public status: number;
   public isKeeps: boolean;
   public recruitTasks: RecruitTasks[];
   public recruitStacks: RecruitStacks[];
