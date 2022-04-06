@@ -49,19 +49,17 @@ export const recruitError = {
     { message: 'You sent the wrong request.' },
     400,
   ),
+  WrongAuthorError: new ForbiddenException('You Are Not The Author'),
+  WrongApplicantError: new ForbiddenException('You Are Not The Applicant'),
+  RunningProjectError: new BadRequestException('Already Running Project'),
+  DuplicateOneRecruitApply: new BadRequestException(
+    'You have already applied.',
+  ),
+  MaxProgressProjectError: new BadRequestException(
+    ' You can only apply for three projects.',
+  ),
+  DuplicateOneRecruitKeep: new BadRequestException('You have already kept.'),
   DBqueryError: new HttpException({ message: 'Try again' }, 500),
-  DuplicateOneRecruitApply: new HttpException(
-    { message: 'You have already applied.' },
-    400,
-  ),
-  MaxProgressProjectError: new HttpException(
-    { message: ' You can only apply for three projects.' },
-    400,
-  ),
-  DuplicateOneRecruitKeep: new HttpException(
-    { message: 'You have already kept.' },
-    400,
-  ),
 };
 
 export const myPageError = {
