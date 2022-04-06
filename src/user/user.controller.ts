@@ -56,7 +56,7 @@ export class UserController {
   @Patch('profile')
   patchMyProfile(
     @Res({ passthrough: true }) res,
-    @Body(ValidationPipe) updateUserProfileDTO: UpdateUserProfileDTO,
+    @Body() updateUserProfileDTO: UpdateUserProfileDTO,
   ) {
     const userId = res.locals.user.userId;
     return this.userService.patchMyProfile(userId, updateUserProfileDTO);
