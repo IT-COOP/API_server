@@ -186,42 +186,7 @@ export class SocketService {
         .emit(EventServerToClient.msgToClient, {
           chat,
         });
-
-      const notifications = [];
-      this.chatMemberRepository
-        .createQueryBuilder('M')
-        .leftJoin('M.member2', 'U')
-        .addSelect(['U.nickname'])
-        .getMany()
-        .then((crews) => {
-          for (const crew of crews) {
-            if (crew.member === userId) continue;
-            const notification = this.notificationRepository.create({
-              notificationSender: userId,
-              eventType: EventType.chat,
-              eventContent: msgToServerDto.chat.slice(0, 30),
-              targetId: msgToServerDto.chatRoomId,
-              isRead: false,
-              notificationSender2: {
-                nickname: msgToServerDto.nickname,
-              },
-            });
-            notification.notificationReceiver = crew.member;
-            notifications.push(notification);
-          }
-
-          this.notificationRepository
-            .save(notifications)
-            .then((notifications) => {
-              for (const notification of notifications) {
-                server
-                  .to(notification.notificationReceiver)
-                  .emit(EventServerToClient.notificationToClient, notification);
-              }
-            });
-        });
     } catch (err) {
-      console.error(err);
       return {
         status: 'failure',
         data: err,

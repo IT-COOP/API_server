@@ -310,9 +310,6 @@ export class RecruitPostService {
         notifications.push(toPostNotification);
       }
     }
-
-    if (notifications.length)
-      await this.socketGateway.sendNotification(notifications);
   }
 
   //마무리

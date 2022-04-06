@@ -48,7 +48,6 @@ export class SocialLoginController {
     @Headers('authorization') accessTokenBearer: string,
     @Body(ValidationPipe) completeFistLoginDTO: CompleteFirstLoginDTO,
   ) {
-    console.log(completeFistLoginDTO);
     return this.socialLoginService.completeFirstLogin(
       accessTokenBearer,
       completeFistLoginDTO,
