@@ -153,9 +153,9 @@ export class RecruitPostController {
         obj.recruitCommentCount = item.recruitComments.length;
         obj.recruitDurationWeeks = item.recruitDurationDays / 7;
         obj.createdAt = item.createdAt.toISOString();
-        if (item.createdAt == item.endAt) obj.status = 0;
-        if (item.createdAt < item.endAt) obj.status = 1;
-        if (item.createdAt > item.endAt) obj.status = 2;
+        if (item.createdAt === item.endAt) obj.status = 0;
+        if (+Date.now() < +item.endAt) obj.status = 1;
+        if (+Date.now() > +item.endAt) obj.status = 2;
         obj.isKeeps = item.recruitKeeps.length ? true : false;
 
         obj.recruitTasks = item.recruitTasks;
