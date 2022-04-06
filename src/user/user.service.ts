@@ -660,7 +660,10 @@ export class UserService {
         existReputation.add(reputations[i].userReputationReceiver);
       }
       for (let i = 0; i < members.length; i++) {
-        if (!existReputation.has(members[i].member)) {
+        if (
+          !existReputation.has(members[i].member) &&
+          userId !== members[i].member
+        ) {
           unratedUser.push(members[i].member);
         }
       }
