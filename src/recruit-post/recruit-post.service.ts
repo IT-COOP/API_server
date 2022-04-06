@@ -278,7 +278,6 @@ export class RecruitPostService {
       })
       .getOne();
 
-    console.log(returned);
 
     const notifications = [];
     const toPostNotification = new CreateNotificationDto();
@@ -437,7 +436,7 @@ export class RecruitPostService {
       if (returned.author !== userId) {
         throw recruitError.WrongRequiredError;
       }
-      if (returned.endAt !== returned.createdAt) {
+      if (+returned.endAt !== +returned.createdAt) {
         throw recruitError.WrongRequiredError;
       }
     } catch (e) {
@@ -515,7 +514,6 @@ export class RecruitPostService {
         .execute();
       await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
       await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;
     } finally {
