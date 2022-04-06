@@ -18,6 +18,7 @@ import { RecruitTasks } from './RecruitTasks';
 import { UserReputation } from '../../user/entities/UserReputation';
 
 @Index('userId', ['author'], {})
+@Index(['createdAt', 'endAt'], {})
 @Entity('recruitPosts', { schema: 'test' })
 export class RecruitPosts {
   @PrimaryGeneratedColumn({
