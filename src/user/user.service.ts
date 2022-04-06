@@ -403,23 +403,24 @@ export class UserService {
     // 이거 orWhere하고 직접 뒤져보는 로직으로 조금 수정해야 할듯 함.
     const post = await this.recruitPostRepository
       .createQueryBuilder('P')
-      .leftJoinAndSelect('P.recruitApplies', 'A')
+      .leftJoin('P.chatRooms', 'CR')
+      .leftJoin('CR.chatMembers', 'CM')
       .leftJoin('P.author2', 'U')
       .addSelect(['U.nickname', 'U.profileImgUrl'])
+      .addSelect('CR.chatRoomId')
+      .addSelect('CM.member')
       .where('P.endAt != P.createdAt')
       .andWhere('P.endAt < :now', { now: new Date() })
       .andWhere('P.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
 
     if (!post) {
-      console.log(post);
-
       throw myPageError.UnableToRateError;
     }
 
     let canRate = 0;
-    for (const apply of post.recruitApplies) {
-      if (apply.applicant === userId || apply.applicant === receiver) canRate++;
+    for (const members of post.chatRooms.chatMembers) {
+      if (members.member === userId || members.member === receiver) canRate++;
     }
 
     if (canRate === 2) {
