@@ -392,7 +392,7 @@ export class UserService {
       .createQueryBuilder('R')
       .select('R.userReputationId')
       .where('R.userReputationSender = :receiver', { receiver })
-      .andWhere('R.recruitPostId = :', { recruitPostId })
+      .andWhere('R.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
     if (isRated) {
       console.log(isRated);
