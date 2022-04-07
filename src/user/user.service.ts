@@ -456,7 +456,7 @@ export class UserService {
     const now = new Date();
     switch (post.recruitDurationDays) {
       case 7:
-        post.recruitDurationDays = 1;
+        post.recruitDurationDays = 0.5;
         break;
       case 14:
         post.recruitDurationDays = 5;
@@ -676,18 +676,6 @@ export class UserService {
           select: ['userId', 'nickname', 'profileImgUrl', 'activityPoint'],
         },
       );
-      console.log(
-        'reputations',
-        reputations,
-        'members',
-        members,
-        'set 에 있음',
-        existReputation,
-        '\n',
-        'db에서 꺼내옴',
-        unratedProjectMembers,
-      );
-
       return unratedProjectMembers;
     } catch (e) {
       throw new BadRequestException('Try again');
