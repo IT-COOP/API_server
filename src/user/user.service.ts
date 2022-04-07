@@ -456,7 +456,7 @@ export class UserService {
     const now = new Date();
     switch (post.recruitDurationDays) {
       case 7:
-        post.recruitDurationDays = 0.5;
+        post.recruitDurationDays = 1;
         break;
       case 14:
         post.recruitDurationDays = 5;
