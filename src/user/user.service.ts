@@ -648,11 +648,12 @@ export class UserService {
   async getRecruitReputation(userId: string, recruitPostId: number) {
     try {
       const [reputations, members] = await Promise.all([
-        this.userReputationRepository
-          .createQueryBuilder()
-          .where('recruitPostId = :recruitPostId', { recruitPostId })
-          .andWhere('userReputationSender = :userId', { userId })
-          .getMany(),
+        this.userReputationRepository.find({
+          where: {
+            recruitPostId,
+            userReputationSender: userId,
+          },
+        }),
         this.chatMemberRepository.find({ chatRoomId: recruitPostId }),
       ]);
       const existReputation = new Set();
