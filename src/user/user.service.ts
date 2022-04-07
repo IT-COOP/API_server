@@ -646,12 +646,12 @@ export class UserService {
   }
 
   async getRecruitReputation(userId: string, recruitPostId: number) {
+    console.log(recruitPostId, '00000000000000000000000');
     try {
       const [reputations, members] = await Promise.all([
         this.userReputationRepository.find({
           where: {
-            recruitPostId,
-            userReputationSender: userId,
+            recruitPostId: recruitPostId,
           },
         }),
         this.chatMemberRepository.find({ chatRoomId: recruitPostId }),
@@ -659,7 +659,8 @@ export class UserService {
       const existReputation = new Set();
       const unratedUser = [];
       for (let i = 0; i < reputations.length; i++) {
-        existReputation.add(reputations[i].userReputationReceiver);
+        if (reputations[i].userReputationSender === userId)
+          existReputation.add(reputations[i].userReputationReceiver);
       }
       for (let i = 0; i < members.length; i++) {
         if (
