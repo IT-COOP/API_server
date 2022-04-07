@@ -674,6 +674,13 @@ export class UserService {
           select: ['userId', 'nickname', 'profileImgUrl', 'activityPoint'],
         },
       );
+      console.log(
+        'set 에 있음',
+        existReputation,
+        '\n',
+        'db에서 꺼내옴',
+        unratedProjectMembers,
+      );
 
       return unratedProjectMembers;
     } catch (e) {
