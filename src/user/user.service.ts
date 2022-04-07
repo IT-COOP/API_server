@@ -467,9 +467,7 @@ export class UserService {
         post.recruitDurationDays = 20;
         break;
     }
-    post.endAt = new Date(
-      now.setMinutes(now.getMinutes() + post.recruitDurationDays),
-    );
+    post.endAt = new Date(now.setSeconds(now.getSeconds() + 15));
 
     let participantCount = 1;
     const applies = await this.recruitApplyRepository
