@@ -10,12 +10,6 @@ export class MsgToServerDto {
 
   @IsString()
   @ApiProperty({
-    description: '채팅을 보내는 사람 nickname',
-  })
-  nickname: string;
-
-  @IsString()
-  @ApiProperty({
     description: '채팅',
   })
   chat: string;
