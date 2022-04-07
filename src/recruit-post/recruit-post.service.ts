@@ -47,7 +47,7 @@ export class RecruitPostService {
           .getRepository(RecruitPosts)
           .findOneOrFail(lastId);
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
 
@@ -123,7 +123,7 @@ export class RecruitPostService {
       const endQuery = await sortQuery.take(items).getMany();
 
       return endQuery;
-    } catch (e) {
+    } catch (error) {
       throw recruitError.DBqueryError;
     }
   }
@@ -182,7 +182,7 @@ export class RecruitPostService {
           .execute(),
       ]);
       return recruitPost;
-    } catch (e) {
+    } catch (error) {
       throw recruitError.DBqueryError;
     }
   }
@@ -250,7 +250,7 @@ export class RecruitPostService {
       } else {
         comment.commentDepth = 1;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
 
@@ -277,8 +277,6 @@ export class RecruitPostService {
         group: comment.commentGroup,
       })
       .getOne();
-
-    console.log(returned);
 
     const notifications = [];
     const toPostNotification = new CreateNotificationDto();
@@ -394,7 +392,7 @@ export class RecruitPostService {
       if (returned.author !== recruitPost.author) {
         throw recruitError.WrongRequiredError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
     try {
@@ -418,7 +416,7 @@ export class RecruitPostService {
       if (returned.userId !== comment.userId) {
         throw recruitError.WrongRequiredError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
     await this.recruitCommentsRepository
@@ -431,21 +429,21 @@ export class RecruitPostService {
 
   async deleteRecruitPost(postId: number, userId: string) {
     try {
-      const returned = await this.recruitPostsRepository.findOne({
+      const returned = await this.recruitPostsRepository.findOneOrFail({
         recruitPostId: postId,
       });
       if (returned.author !== userId) {
-        throw recruitError.WrongRequiredError;
+        throw recruitError.WrongAuthorError;
       }
-      if (returned.endAt !== returned.createdAt) {
-        throw recruitError.WrongRequiredError;
+      if (+returned.endAt !== +returned.createdAt) {
+        throw recruitError.RunningProjectError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
     try {
       await this.recruitPostsRepository.delete({ recruitPostId: postId });
-    } catch (e) {
+    } catch (error) {
       throw recruitError.DBqueryError;
     }
   }
@@ -467,15 +465,15 @@ export class RecruitPostService {
         .where('recruitCommentId = :commentId', { commentId })
         .getOneOrFail();
       if (returned.userId !== userId) {
-        throw recruitError.WrongRequiredError;
+        throw recruitError.WrongAuthorError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
 
     try {
       await this.recruitCommentsRepository.delete(commentId);
-    } catch (e) {
+    } catch (error) {
       throw recruitError.DBqueryError;
     }
   }
@@ -493,9 +491,9 @@ export class RecruitPostService {
         .where('K.recruitKeepId = :keepId', { keepId })
         .getOneOrFail();
       if (returned.userId != userId) {
-        throw recruitError.WrongRequiredError;
+        throw recruitError.WrongAuthorError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
 
@@ -515,7 +513,6 @@ export class RecruitPostService {
         .execute();
       await queryRunner.commitTransaction();
     } catch (error) {
-      console.error(error);
       await queryRunner.rollbackTransaction();
       throw recruitError.DBqueryError;
     } finally {
@@ -534,9 +531,9 @@ export class RecruitPostService {
     try {
       returned = await this.recruitAppliesRepository.findOneOrFail(applyId);
       if (returned.applicant !== userId) {
-        throw recruitError.WrongRequiredError;
+        throw recruitError.WrongApplicantError;
       }
-    } catch (e) {
+    } catch (error) {
       throw recruitError.WrongRequiredError;
     }
 
@@ -572,6 +569,7 @@ export class RecruitPostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      throw recruitError.DBqueryError;
     } finally {
       await queryRunner.release();
     }
