@@ -675,6 +675,10 @@ export class UserService {
         },
       );
       console.log(
+        'reputations',
+        reputations,
+        'members',
+        members,
         'set 에 있음',
         existReputation,
         '\n',
