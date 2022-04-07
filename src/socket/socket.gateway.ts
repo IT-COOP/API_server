@@ -39,7 +39,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.msgToServer)
   async handleSubmittedMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) mstToServerDto: MsgToServerDto,
+    @MessageBody() mstToServerDto: MsgToServerDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     return await this.socketService.handleSubmittedMessage(

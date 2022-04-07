@@ -646,19 +646,21 @@ export class UserService {
   }
 
   async getRecruitReputation(userId: string, recruitPostId: number) {
+    console.log(recruitPostId, '00000000000000000000000');
     try {
       const [reputations, members] = await Promise.all([
-        this.userReputationRepository
-          .createQueryBuilder()
-          .where('recruitPostId = :recruitPostId', { recruitPostId })
-          .andWhere('userReputationSender = :userId', { userId })
-          .getMany(),
+        this.userReputationRepository.find({
+          where: {
+            recruitPostId: recruitPostId,
+          },
+        }),
         this.chatMemberRepository.find({ chatRoomId: recruitPostId }),
       ]);
       const existReputation = new Set();
       const unratedUser = [];
       for (let i = 0; i < reputations.length; i++) {
-        existReputation.add(reputations[i].userReputationReceiver);
+        if (reputations[i].userReputationSender === userId)
+          existReputation.add(reputations[i].userReputationReceiver);
       }
       for (let i = 0; i < members.length; i++) {
         if (
