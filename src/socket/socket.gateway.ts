@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+import {} from '@nestjs/common';
 import {
   EventClientToServer,
   EventServerToClient,
@@ -53,7 +53,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.enterChatRoom)
   async handleChatRoomEntrance(
     @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) chatRoomId: number,
+    @MessageBody() chatRoomId: number,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     return await this.socketService.handleChatRoomEntrance(
@@ -66,7 +66,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(EventClientToServer.notificationToServer)
   async handleNotification(
     @ConnectedSocket() client: Socket,
-    @MessageBody(ValidationPipe) createNotificationDto: CreateNotificationDto,
+    @MessageBody() createNotificationDto: CreateNotificationDto,
   ) {
     const accessTokenBearer = client.handshake.headers.authorization;
     return await this.socketService.handleNotification(

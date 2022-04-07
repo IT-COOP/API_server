@@ -80,6 +80,7 @@ export class RecruitPostController {
     @Query() conditions,
     @Res({ passthrough: true }) res: Response,
   ) {
+    console.log('conditions', conditions);
     let sort;
     let items;
     let loc;
@@ -139,6 +140,7 @@ export class RecruitPostController {
         cur,
         over,
       );
+    console.log(222222222222);
 
     const recruits: ResRecruitPostsDTO[] = await recruitPosts.map(
       (item: RecruitPosts) => {
