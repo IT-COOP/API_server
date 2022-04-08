@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
 const whitelist = [
-  'https://d2g3jmj866i7dj.cloudfront.net/',
+  'https://d2g3jmj866i7dj.cloudfront.net',
   'https://it-coop.co.kr',
   'http://it-coop.s3-website.ap-northeast-2.amazonaws.com',
 ];
@@ -25,6 +25,8 @@ async function bootstrap() {
   app.enableCors({
     origin: function (origin, callback) {
       console.log(origin);
+      console.log(typeof origin);
+
       console.log(whitelist.indexOf(origin));
       whitelist.indexOf(origin) !== -1
         ? callback(null, true)
