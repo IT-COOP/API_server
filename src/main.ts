@@ -25,6 +25,7 @@ async function bootstrap() {
   app.enableCors({
     origin: function (origin, callback) {
       console.log(origin);
+      console.log(whitelist.indexOf(origin));
       whitelist.indexOf(origin) !== -1
         ? callback(null, true)
         : callback(new Error('Not allowed by CORS'));
