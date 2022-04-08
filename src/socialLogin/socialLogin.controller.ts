@@ -23,6 +23,7 @@ export class SocialLoginController {
   constructor(private readonly socialLoginService: SocialLoginService) {}
   @Get('kakao')
   kakaoLoginGetToken(@Query('code') code: string, @Res() res: Response) {
+    console.log('kakao');
     return this.socialLoginService.getKakaoToken(code, res);
   }
 
