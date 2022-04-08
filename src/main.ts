@@ -10,6 +10,7 @@ import * as fs from 'fs';
 const whitelist = [
   'https://d2g3jmj866i7dj.cloudfront.net/',
   'https://it-coop.co.kr',
+  'http://it-coop.s3-website.ap-northeast-2.amazonaws.com',
 ];
 
 dotenv.config();
