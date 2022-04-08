@@ -80,7 +80,6 @@ export class RecruitPostController {
     @Query() conditions,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('conditions', conditions);
     let sort;
     let items;
     let loc;
@@ -140,7 +139,6 @@ export class RecruitPostController {
         cur,
         over,
       );
-    console.log(222222222222);
 
     const recruits: ResRecruitPostsDTO[] = await recruitPosts.map(
       (item: RecruitPosts) => {
@@ -199,7 +197,6 @@ export class RecruitPostController {
     details.recruitKeepCount = recruitPost.recruitKeepCount;
     details.viewCount = recruitPost.viewCount;
     details.recruitDurationWeeks = recruitPost.recruitDurationDays / 7;
-    console.log(recruitPost);
     if (recruitPost.endAt.getTime() === recruitPost.createdAt.getTime())
       details.status = 0;
     else if (recruitPost.endAt.getTime() > Date.now()) details.status = 1;

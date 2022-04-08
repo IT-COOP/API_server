@@ -46,7 +46,6 @@ export class RecruitPostService {
         cursorPost = await this.connection
           .getRepository(RecruitPosts)
           .findOneOrFail(lastId);
-        console.log(333333333333);
       }
     } catch (error) {
       throw recruitError.WrongRequiredError;
@@ -71,7 +70,6 @@ export class RecruitPostService {
           },
         );
       }
-      console.log(44444444444444);
       let paginationQuery = recruitQuery;
       if (lastId && sort === 1) {
         const cursorKeepCount = cursorPost.recruitKeepCount;
@@ -92,7 +90,6 @@ export class RecruitPostService {
           },
         );
       }
-      console.log(555555555555555);
 
       let filterQuery = paginationQuery;
 
@@ -121,7 +118,6 @@ export class RecruitPostService {
           .orderBy('P.recruitKeepCount', 'DESC')
           .addOrderBy('P.recruitPostId', 'DESC');
       }
-      console.log(6666666666666666);
 
       const endQuery = await sortQuery.take(items).getMany();
 
