@@ -7,6 +7,11 @@ import { HttpExceptionFilter } from './http-exception.filter';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
+const whitelist = [
+  'https://d2g3jmj866i7dj.cloudfront.net/',
+  'https://it-coop.co.kr',
+];
+
 dotenv.config();
 const httpsOptions = {
   key: fs.readFileSync(process.env.DIR + 'privkey.pem'),
@@ -15,6 +20,13 @@ const httpsOptions = {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
+  });
+  app.enableCors({
+    origin: function (origin, callback) {
+      whitelist.indexOf(origin) !== -1
+        ? callback(null, true)
+        : callback(new Error('Not allowed by CORS'));
+    },
   });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -35,19 +47,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  app.enableCors({
-    origin: (origin, cb) => {
-      cb(
-        null,
-        true,
-        // process.env.whiteList.split(' ').indexOf(origin) !== -1
-        //   ? null
-        //   : new BadRequestException('Not Allowed CORS ERROR'),
-        // true,
-      );
-    },
-    credentials: true,
-  });
   await app.listen(3000);
 }
 bootstrap();
