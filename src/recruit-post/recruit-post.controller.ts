@@ -142,6 +142,7 @@ export class RecruitPostController {
 
     const recruits: ResRecruitPostsDTO[] = await recruitPosts.map(
       (item: RecruitPosts) => {
+        console.log(item);
         const obj = new ResRecruitPostsDTO();
         obj.recruitPostId = item.recruitPostId;
         obj.title = item.title;
