@@ -7,12 +7,6 @@ import { HttpExceptionFilter } from './http-exception.filter';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
-const whitelist = [
-  'https://d2g3jmj866i7dj.cloudfront.net',
-  'https://it-coop.co.kr',
-  'http://it-coop.s3-website.ap-northeast-2.amazonaws.com',
-];
-
 dotenv.config();
 const httpsOptions = {
   key: fs.readFileSync(process.env.DIR + 'privkey.pem'),
@@ -22,21 +16,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
   });
-  app.enableCors({
-    origin: function (origin, callback) {
-      console.log(origin);
-      console.log(typeof origin);
-
-      console.log(whitelist.indexOf(origin));
-      whitelist.indexOf(origin) !== -1
-        ? callback(null, true)
-        : callback(new Error('Not allowed by CORS'));
-    },
-    allowedHeaders:
-      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe',
-    methods: 'GET,PUT,POST,DELETE,UPDATE,OPTIONS',
-    credentials: true,
-  });
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.use(
