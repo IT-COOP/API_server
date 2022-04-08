@@ -27,6 +27,10 @@ async function bootstrap() {
         ? callback(null, true)
         : callback(new Error('Not allowed by CORS'));
     },
+    allowedHeaders:
+      'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Observe',
+    methods: 'GET,PUT,POST,DELETE,UPDATE,OPTIONS',
+    credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
