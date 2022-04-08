@@ -142,11 +142,10 @@ export class RecruitPostController {
 
     const recruits: ResRecruitPostsDTO[] = await recruitPosts.map(
       (item: RecruitPosts) => {
-        console.log(item);
         const obj = new ResRecruitPostsDTO();
         obj.recruitPostId = item.recruitPostId;
         obj.title = item.title;
-        obj.nickname = item.author2.nickname;
+        obj.nickname = item.author2 ? item.author2.nickname : '삭제된 사용자';
         obj.thumbImgUrl = item.thumbImgUrl;
         obj.recruitContent = item.recruitContent;
         obj.recruitLocation = item.recruitLocation;
