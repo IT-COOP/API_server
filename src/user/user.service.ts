@@ -391,7 +391,8 @@ export class UserService {
     const isRated = await this.userReputationRepository
       .createQueryBuilder('R')
       .select('R.userReputationId')
-      .where('R.userReputationSender = :receiver', { receiver })
+      .where('R.userReputationSender = :userId', { userId })
+      .andWhere('R.userReputationReceiver = :receiver', { receiver })
       .andWhere('R.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
     if (isRated) {
