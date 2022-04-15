@@ -457,18 +457,19 @@ export class UserService {
     const now = new Date();
     switch (post.recruitDurationDays) {
       case 7:
-        post.recruitDurationDays = 1;
+        post.recruitDurationDays = 15;
         break;
       case 14:
-        post.recruitDurationDays = 5;
+        post.recruitDurationDays = 30;
         break;
       case 21:
-        post.recruitDurationDays = 10;
+        post.recruitDurationDays = 40;
+        break;
       case 28:
-        post.recruitDurationDays = 20;
+        post.recruitDurationDays = 44;
         break;
     }
-    post.endAt = new Date(now.setSeconds(now.getSeconds() + 15));
+    post.endAt = new Date(now.setSeconds(now.getSeconds()));
 
     let participantCount = 1;
     const applies = await this.recruitApplyRepository
