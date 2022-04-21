@@ -206,7 +206,6 @@ export class UserService {
       where: { recruitPostId: recruitPostId },
       select: ['author'],
     });
-    console.log(post);
     if (!post) {
       throw myPageError.MissingPostError;
     }
@@ -223,7 +222,6 @@ export class UserService {
       .where('A.applicant = :applicant', { applicant })
       .andWhere('A.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
-    console.log(apply, '최초 apply 받자마자');
 
     if (!apply) {
       // 신청한 적도 없음!
@@ -265,7 +263,6 @@ export class UserService {
             recruitStack.numberOfPeopleSet ||
           recruitTask.numberOfPeopleRequired === recruitTask.numberOfPeopleSet
         ) {
-          console.log([recruitStack, recruitTask]);
           // 이미 다 구함 에러처리 혹은 안 구하는 중
           throw myPageError.NotRecruitingError;
         }
@@ -288,7 +285,6 @@ export class UserService {
           !recruitTask ||
           recruitTask.numberOfPeopleSet === recruitTask.numberOfPeopleRequired
         ) {
-          console.log([recruitTask]);
           // 이미 다 구함 혹은 안 구함
           throw myPageError.NotRecruitingError;
         }
@@ -305,7 +301,6 @@ export class UserService {
         `Something Went Wrong. Please Try Again.`,
       );
     }
-    console.log('마지막', apply);
 
     const notification = new CreateNotificationDto();
     notification.notificationReceiver = apply.applicant;
@@ -396,8 +391,6 @@ export class UserService {
       .andWhere('R.recruitPostId = :recruitPostId', { recruitPostId })
       .getOne();
     if (isRated) {
-      console.log(isRated);
-
       throw myPageError.UnableToRateTwiceError;
     }
 
@@ -646,7 +639,6 @@ export class UserService {
   }
 
   async getRecruitReputation(userId: string, recruitPostId: number) {
-    console.log(recruitPostId, '00000000000000000000000');
     try {
       const [reputations, members] = await Promise.all([
         this.userReputationRepository.find({

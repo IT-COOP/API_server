@@ -37,7 +37,6 @@ export class SocialLoginService {
     const grantType = 'authorization_code';
     const URL = `https://kauth.kakao.com/oauth/token`;
     let accessToken: string;
-    console.log('123123');
     try {
       const result = await axios({
         method: 'POST',
@@ -54,7 +53,6 @@ export class SocialLoginService {
       });
       accessToken = result.data.access_token;
     } catch (err) {
-      console.log('여기냐?');
       throw new HttpException(
         `error: ${err.response.data.error}, errorDescription: ${err.response.data.error_description}`,
         HttpStatus.UNAUTHORIZED,

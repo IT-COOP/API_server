@@ -24,7 +24,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public server: Server;
 
   async handleConnection(@ConnectedSocket() client: Socket) {
-    console.log('connected To socket');
     const accessTokenBearer = client.handshake.headers.authorization;
     client.emit(
       EventServerToClient.notificationToClient,
